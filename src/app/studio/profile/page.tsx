@@ -70,9 +70,11 @@ export default function AuthorProfilePage() {
       } else {
         setErrorMessage("Failed to update author profile. Please try again.");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error saving author profile:", err);
-      setErrorMessage("An unexpected error occurred while saving.");
+      const postgrestErr = err as { message?: string; details?: string };
+      const msg = postgrestErr?.details || postgrestErr?.message || (err instanceof Error ? err.message : null);
+      setErrorMessage(msg || "Failed to update author profile. Please try again.");
     } finally {
       setIsSaving(false);
     }

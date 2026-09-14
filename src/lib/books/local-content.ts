@@ -1,5 +1,21 @@
-import fs from "fs";
-import path from "path";
+// Use dynamic runtime require to prevent Webpack/Turbopack from bundling or crawling content/books/ directory during build
+function getFs(): typeof import("fs") | null {
+  if (typeof window !== "undefined") return null;
+  try {
+    return eval("require")("fs");
+  } catch {
+    return null;
+  }
+}
+
+function getPath(): typeof import("path") | null {
+  if (typeof window !== "undefined") return null;
+  try {
+    return eval("require")("path");
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Interface for saved chapter file in local storage.
@@ -12,7 +28,10 @@ export interface LocalChapterData {
   content: string;
 }
 
-const CONTENT_DIR = path.join(process.cwd(), "content", "books");
+function getContentDir(): string {
+  const p = getPath();
+  return p ? p.join(process.cwd(), "content", "books") : "";
+}
 
 /**
  * Sanitizes input slugs to prevent directory traversal attacks.
@@ -25,9 +44,11 @@ function sanitizeSlug(slug: string): string {
  * Resolves safe path to chapter content JSON file.
  */
 function getChapterFilePath(bookSlug: string, chapterSlug: string): string {
+  const p = getPath();
+  if (!p) return "";
   const safeBook = sanitizeSlug(bookSlug);
   const safeChapter = sanitizeSlug(chapterSlug);
-  return path.join(CONTENT_DIR, safeBook, `${safeChapter}.json`);
+  return p.join(getContentDir(), safeBook, `${safeChapter}.json`);
 }
 
 /**
@@ -38,9 +59,11 @@ export function hasLocalChapterContent(
   chapterSlug: string
 ): boolean {
   if (typeof window !== "undefined") return false;
+  const f = getFs();
+  if (!f) return false;
   try {
     const filePath = getChapterFilePath(bookSlug, chapterSlug);
-    return fs.existsSync(filePath);
+    return f.existsSync(filePath);
   } catch {
     return false;
   }
@@ -55,11 +78,13 @@ export function getLocalChapterContent(
   chapterSlug: string
 ): string | null {
   if (typeof window !== "undefined") return null;
+  const f = getFs();
+  if (!f) return null;
   try {
     const filePath = getChapterFilePath(bookSlug, chapterSlug);
-    if (!fs.existsSync(filePath)) return null;
+    if (!f.existsSync(filePath)) return null;
 
-    const raw = fs.readFileSync(filePath, "utf-8");
+    const raw = f.readFileSync(filePath, "utf-8");
     const parsed = JSON.parse(raw) as LocalChapterData;
     return parsed.content || null;
   } catch (err) {
@@ -75,17 +100,20 @@ export function getLocalBookChapters(
   bookSlug: string
 ): LocalChapterData[] {
   if (typeof window !== "undefined") return [];
+  const f = getFs();
+  const p = getPath();
+  if (!f || !p) return [];
   try {
     const safeBook = sanitizeSlug(bookSlug);
-    const bookDir = path.join(CONTENT_DIR, safeBook);
-    if (!fs.existsSync(bookDir)) return [];
+    const bookDir = p.join(getContentDir(), safeBook);
+    if (!f.existsSync(bookDir)) return [];
 
-    const files = fs.readdirSync(bookDir).filter((f) => f.endsWith(".json"));
+    const files = f.readdirSync(bookDir).filter((file: string) => file.endsWith(".json"));
     const chapters: LocalChapterData[] = [];
 
     for (const file of files) {
       try {
-        const raw = fs.readFileSync(path.join(bookDir, file), "utf-8");
+        const raw = f.readFileSync(p.join(bookDir, file), "utf-8");
         const parsed = JSON.parse(raw) as LocalChapterData;
         if (parsed && parsed.content) {
           chapters.push(parsed);

@@ -1148,7 +1148,7 @@ export async function updateAuthorProfile(
 
   if (error) {
     console.error("Error updating author profile:", error);
-    return null;
+    throw error;
   }
 
   return updated;
