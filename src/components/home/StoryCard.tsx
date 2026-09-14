@@ -3,37 +3,34 @@
 import * as React from "react";
 import Link from "next/link";
 import { Star, Clock, BookOpen, Bookmark } from "lucide-react";
-import { Story } from "@/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import type { BookWithAuthorAndGenres } from "@/types/books";
 
 interface StoryCardProps {
-  story: Story;
+  book: BookWithAuthorAndGenres;
 }
 
-export function StoryCard({ story }: StoryCardProps) {
+export function StoryCard({ book }: StoryCardProps) {
   const [isSaved, setIsSaved] = React.useState(false);
-
-  const slug = story.title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+  const gradient = book.cover_gradient || "from-amber-700 via-stone-800 to-zinc-950";
+  const genre = book.genres[0]?.name ?? "Story";
+  const authorName = book.author?.name ?? "Unknown Author";
 
   return (
     <div className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
       {/* Visual Cover Banner */}
       <div
-        className={`h-44 w-full bg-gradient-to-br ${story.coverGradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
+        className={`h-44 w-full bg-gradient-to-br ${gradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
       >
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
 
-        {/* Decorative corner glyphs */}
         <div className="relative z-10 flex items-start justify-between">
           <Badge
             variant="warm"
             className="bg-black/40 text-white border-white/20 backdrop-blur-xs text-[11px]"
           >
-            {story.genre}
+            {genre}
           </Badge>
 
           <button
@@ -51,59 +48,54 @@ export function StoryCard({ story }: StoryCardProps) {
           </button>
         </div>
 
-        {/* Cover Title Accent */}
         <div className="relative z-10">
-          <Link href={`/books/${slug}`}>
+          <Link href={`/books/${book.slug}`}>
             <h4 className="font-serif text-lg font-bold leading-snug line-clamp-2 text-white drop-shadow-xs hover:text-amber-200 transition-colors">
-              {story.title}
+              {book.title}
             </h4>
           </Link>
           <span className="text-xs text-white/80 line-clamp-1 mt-0.5">
-            by {story.author}
+            by {authorName}
           </span>
         </div>
       </div>
 
       {/* Card Body */}
       <div className="flex-1 flex flex-col p-4 sm:p-5 gap-3">
-        {/* Rating & Read time */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-1 text-amber-500 font-semibold">
             <Star className="w-3.5 h-3.5 fill-amber-500" />
-            <span>{story.rating.toFixed(1)}</span>
+            <span>{Number(book.average_rating).toFixed(1)}</span>
             <span className="text-muted-foreground font-normal">
-              ({story.reviewsCount})
+              ({book.ratings_count})
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            <span>{story.readTimeMinutes} min read</span>
+            <span>{book.estimated_read_time_minutes} min read</span>
           </div>
         </div>
 
-        {/* Excerpt */}
         <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-          {story.description}
+          {book.description}
         </p>
 
-        {/* Tags */}
         <div className="flex flex-wrap gap-1.5 mt-auto pt-2">
-          {story.tags.slice(0, 2).map((tag) => (
+          {book.genres.slice(0, 2).map((g) => (
             <span
-              key={tag}
+              key={g.id}
               className="text-[10px] px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground"
             >
-              #{tag}
+              #{g.name}
             </span>
           ))}
         </div>
 
-        {/* Card CTA */}
         <div className="pt-2 border-t border-border/60 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
-            {story.chaptersCount} Chapters
+            {book.total_chapters} Chapters
           </span>
-          <Link href={`/books/${slug}`}>
+          <Link href={`/books/${book.slug}`}>
             <Button variant="ghost" size="sm" className="text-xs gap-1.5 hover:text-primary cursor-pointer">
               <BookOpen className="w-3.5 h-3.5" />
               <span>Explore Book</span>
