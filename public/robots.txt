@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /settings/
+Disallow: /studio/
+
+Sitemap: ${process.env.NEXT_PUBLIC_APP_URL || 'https://taleora.app'}/sitemap.xml

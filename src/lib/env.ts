@@ -1,5 +1,10 @@
 /**
  * Safe Environment Variable configuration and validation for Taleora
+ *
+ * NOTE FOR NEXT.JS CLIENT BUNDLES:
+ * Next.js / Turbopack only inlines NEXT_PUBLIC_* variables when accessed
+ * as literal properties like `process.env.NEXT_PUBLIC_KEY`.
+ * Dynamic access like `process.env[key]` evaluates to undefined in the browser!
  */
 
 export interface AppEnv {
@@ -12,26 +17,23 @@ export interface AppEnv {
   isDevelopment: boolean;
 }
 
-function getEnvVar(key: string, defaultValue?: string): string {
-  const value = process.env[key] ?? defaultValue;
-  if (value === undefined) {
-    if (process.env.NODE_ENV === "production") {
-      console.warn(`[Environment Warning] Variable ${key} is not set.`);
-    }
-    return "";
-  }
-  return value;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "[Config] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. Copy .env.example to .env.local and fill in the values."
+  );
 }
 
 export const env: AppEnv = {
-  appName: getEnvVar("NEXT_PUBLIC_APP_NAME", "Taleora"),
-  appDescription: getEnvVar(
-    "NEXT_PUBLIC_APP_DESCRIPTION",
-    "A modern, immersive story and reading experience"
-  ),
-  appUrl: getEnvVar("NEXT_PUBLIC_APP_URL", "http://localhost:3000"),
-  supabaseUrl: getEnvVar("NEXT_PUBLIC_SUPABASE_URL", ""),
-  supabaseAnonKey: getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY", ""),
+  appName: process.env.NEXT_PUBLIC_APP_NAME || "Taleora",
+  appDescription:
+    process.env.NEXT_PUBLIC_APP_DESCRIPTION ||
+    "A modern, immersive story and reading experience",
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  supabaseUrl,
+  supabaseAnonKey,
   isProduction: process.env.NODE_ENV === "production",
   isDevelopment: process.env.NODE_ENV === "development",
 };

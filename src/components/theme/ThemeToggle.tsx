@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { Sun, Moon, Monitor } from "lucide-react";
 
 const emptySubscribe = () => () => {};

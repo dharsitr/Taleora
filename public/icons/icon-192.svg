@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1917" />
+      <stop offset="100%" stop-color="#0c0a09" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="50%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="pages" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fdfbf7" />
+      <stop offset="100%" stop-color="#f3ede2" />
+    </linearGradient>
+  </defs>
+  <!-- Background with subtle border -->
+  <rect width="192" height="192" rx="42" fill="url(#bg)" />
+  <rect x="2" y="2" width="188" height="188" rx="40" fill="none" stroke="url(#gold)" stroke-width="2" stroke-opacity="0.3" />
+  
+  <!-- Stylized Open Book -->
+  <g transform="translate(36, 46)">
+    <!-- Book Shadow -->
+    <path d="M 60 88 C 42 84, 18 86, 4 94 L 4 28 C 18 20, 42 18, 60 26 C 78 18, 102 20, 116 28 L 116 94 C 102 86, 78 84, 60 88 Z" fill="#000000" opacity="0.4" transform="translate(0, 4)" />
+    
+    <!-- Left Leaf / Page -->
+    <path d="M 60 84 C 42 80, 18 82, 4 90 L 4 24 C 18 16, 42 14, 60 22 Z" fill="url(#pages)" />
+    <!-- Left Page Shading -->
+    <path d="M 60 84 C 42 80, 18 82, 4 90 L 4 24 C 18 16, 42 14, 60 22 Z" fill="url(#gold)" opacity="0.08" />
+    <!-- Page text lines hint -->
+    <line x1="16" y1="36" x2="48" y2="33" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+    <line x1="16" y1="46" x2="48" y2="43" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+    <line x1="16" y1="56" x2="44" y2="53" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+    <line x1="16" y1="66" x2="40" y2="63" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+    
+    <!-- Right Leaf / Page -->
+    <path d="M 60 84 C 78 80, 102 82, 116 90 L 116 24 C 102 16, 78 14, 60 22 Z" fill="url(#pages)" />
+    <!-- Right Page Shading -->
+    <path d="M 60 84 C 78 80, 102 82, 116 90 L 116 24 C 102 16, 78 14, 60 22 Z" fill="url(#gold)" opacity="0.12" />
+    <!-- Page text lines hint -->
+    <line x1="72" y1="33" x2="104" y2="36" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+    <line x1="72" y1="43" x2="104" y2="46" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+    <line x1="72" y1="53" x2="100" y2="56" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+    <line x1="72" y1="63" x2="96" y2="66" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+
+    <!-- Center Spine Crease -->
+    <path d="M 60 22 L 60 84" stroke="url(#gold)" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Golden Silk Ribbon Bookmark -->
+    <path d="M 60 16 L 60 52 L 65 47 L 70 52 L 70 17 Z" fill="url(#gold)" />
+  </g>
+
+  <!-- Golden Sparkle Accent -->
+  <path d="M 142 36 L 144 42 L 150 44 L 144 46 L 142 52 L 140 46 L 134 44 L 140 42 Z" fill="url(#gold)" />
+</svg>

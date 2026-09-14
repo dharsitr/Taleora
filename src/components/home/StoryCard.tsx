@@ -14,6 +14,11 @@ interface StoryCardProps {
 export function StoryCard({ story }: StoryCardProps) {
   const [isSaved, setIsSaved] = React.useState(false);
 
+  const slug = story.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
   return (
     <div className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
       {/* Visual Cover Banner */}
@@ -48,9 +53,11 @@ export function StoryCard({ story }: StoryCardProps) {
 
         {/* Cover Title Accent */}
         <div className="relative z-10">
-          <h4 className="font-serif text-lg font-bold leading-snug line-clamp-2 text-white drop-shadow-xs">
-            {story.title}
-          </h4>
+          <Link href={`/books/${slug}`}>
+            <h4 className="font-serif text-lg font-bold leading-snug line-clamp-2 text-white drop-shadow-xs hover:text-amber-200 transition-colors">
+              {story.title}
+            </h4>
+          </Link>
           <span className="text-xs text-white/80 line-clamp-1 mt-0.5">
             by {story.author}
           </span>
@@ -96,10 +103,10 @@ export function StoryCard({ story }: StoryCardProps) {
           <span className="text-xs text-muted-foreground">
             {story.chaptersCount} Chapters
           </span>
-          <Link href="/library">
-            <Button variant="ghost" size="sm" className="text-xs gap-1.5 hover:text-primary">
+          <Link href={`/books/${slug}`}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1.5 hover:text-primary cursor-pointer">
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Read Story</span>
+              <span>Explore Book</span>
             </Button>
           </Link>
         </div>

@@ -11,11 +11,15 @@ import {
   X,
   Flame,
   Settings,
+  LogOut,
+  LogIn,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MAIN_NAV_ITEMS } from "./Sidebar";
+import { MAIN_NAV_ITEMS, AUTHOR_NAV_ITEMS } from "./Sidebar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { MOCK_READING_STATS } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth/use-auth";
 
 interface MobileNavProps {
   isOpen: boolean;
@@ -25,6 +29,7 @@ interface MobileNavProps {
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname();
   const stats = MOCK_READING_STATS;
+  const { user, profile, signOut } = useAuth();
 
   // Prevent background scrolling when mobile drawer is open
   React.useEffect(() => {
@@ -37,6 +42,9 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  const displayName =
+    profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Reader";
 
   return (
     <>
@@ -69,13 +77,47 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               </button>
             </div>
 
-            {/* Streak card */}
-            <div className="my-4 p-3 rounded-lg bg-secondary/50 border border-border/60 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span className="text-xs font-semibold">14 Day Streak</span>
+            {/* User Profile / Auth State Card */}
+            <div className="my-4 p-3 rounded-lg bg-secondary/50 border border-border/60 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <span className="text-xs font-semibold">
+                    {profile?.streak_days ?? 14} Day Streak
+                  </span>
+                </div>
+                <ThemeToggle />
               </div>
-              <ThemeToggle />
+
+              {user ? (
+                <div className="pt-2 border-t border-border/60">
+                  <p className="text-xs font-bold text-foreground truncate">
+                    {displayName}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate font-mono">
+                    {user.email}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+                  <Link
+                    href="/login"
+                    onClick={onClose}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-secondary text-foreground text-xs font-medium border border-border hover:bg-secondary/80 transition-colors"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Sign In</span>
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={onClose}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Register</span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Nav links */}
@@ -111,13 +153,62 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   </Link>
                 );
               })}
+
+              {/* Creator Studio for Mobile */}
+              <div className="pt-2 mt-2 border-t border-border/60 flex flex-col gap-1">
+                <span className="px-3.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Creation Studio
+                </span>
+                {AUTHOR_NAV_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname.startsWith(item.href);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "text-foreground/80 hover:bg-secondary"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-4 h-4 text-primary" />
+                        <span>{item.label}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </nav>
 
+            {/* Sign Out Button if Authenticated */}
+            {user && (
+              <div className="py-2 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    signOut();
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 w-full transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
+
             {/* Mini Goal Footer */}
-            <div className="pt-4 border-t border-border text-xs text-muted-foreground">
+            <div className="pt-3 border-t border-border text-xs text-muted-foreground">
               <div className="flex justify-between mb-1.5 font-medium text-foreground">
                 <span>Daily Reading</span>
-                <span>{stats.minutesReadToday} / {stats.dailyGoalMinutes}m</span>
+                <span>
+                  {stats.minutesReadToday} / {stats.dailyGoalMinutes}m
+                </span>
               </div>
               <div className="w-full bg-border h-1.5 rounded-full overflow-hidden">
                 <div

@@ -4,7 +4,7 @@ import * as React from "react";
 import { Settings, Eye, Type, Moon, Sun, Monitor, BellOff } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {

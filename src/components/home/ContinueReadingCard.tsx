@@ -79,8 +79,11 @@ export function ContinueReadingCard() {
               <span className="text-xs text-muted-foreground hidden sm:inline">
                 Estimated ~45m left in current section
               </span>
-              <Link href="/library" className="sm:ml-auto">
-                <Button size="sm" className="gap-2">
+              <Link
+                href="/read/the-cartographer-of-lost-constellations"
+                className="sm:ml-auto"
+              >
+                <Button size="sm" className="gap-2 cursor-pointer">
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Resume Chapter {story.currentChapter}</span>
                 </Button>

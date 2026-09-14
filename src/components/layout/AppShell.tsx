@@ -1,20 +1,38 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { Footer } from "./Footer";
+import { PwaRegistration } from "@/components/pwa/PwaRegistration";
+import { OfflineStatusBanner } from "@/components/offline/OfflineStatusBanner";
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+  const isReaderRoute = pathname.startsWith("/read");
+
+  if (isReaderRoute) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-200">
+        <PwaRegistration />
+        <OfflineStatusBanner />
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-200 selection:bg-primary/20 selection:text-primary">
+      <PwaRegistration />
+      <OfflineStatusBanner />
       {/* Skip to main content for accessibility */}
       <a
         href="#main-content"
