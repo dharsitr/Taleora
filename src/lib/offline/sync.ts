@@ -37,39 +37,60 @@ export async function downloadBookForOffline(
 
   try {
     updateProgress("downloading", 10, "Fetching book details...");
-    const supabase = createClient();
+    let bookData: any = null;
+    let chaptersData: any[] = [];
 
-    // 1. Fetch Book Details with Author and Genres
-    const { data: bookData, error: bookErr } = await supabase
-      .from("books")
-      .select(
-        `
-        *,
-        author:authors(*),
-        book_genres(
-          genre:genres(*)
-        )
-      `
-      )
-      .eq("id", bookId)
-      .single();
-
-    if (bookErr || !bookData) {
-      throw new Error(bookErr?.message || "Book metadata could not be fetched.");
+    // Attempt to fetch fully hydrated book & chapters via internal offline route
+    try {
+      const res = await fetch(`/api/books/${bookId}/offline`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.book && json.chapters?.length > 0) {
+          bookData = json.book;
+          chaptersData = json.chapters;
+        }
+      }
+    } catch {
+      // Fallback to direct client query below
     }
 
-    updateProgress("downloading", 35, "Fetching all published chapters...");
+    if (!bookData || chaptersData.length === 0) {
+      const supabase = createClient();
 
-    // 2. Fetch all published chapters
-    const { data: chaptersData, error: chaptersErr } = await supabase
-      .from("chapters")
-      .select("*")
-      .eq("book_id", bookId)
-      .eq("status", "published")
-      .order("chapter_number", { ascending: true });
+      // 1. Fetch Book Details with Author and Genres
+      const { data: bData, error: bookErr } = await supabase
+        .from("books")
+        .select(
+          `
+          *,
+          author:authors(*),
+          book_genres(
+            genre:genres(*)
+          )
+        `
+        )
+        .eq("id", bookId)
+        .single();
 
-    if (chaptersErr || !chaptersData || chaptersData.length === 0) {
-      throw new Error(chaptersErr?.message || "No published chapters found for this story.");
+      if (bookErr || !bData) {
+        throw new Error(bookErr?.message || "Book metadata could not be fetched.");
+      }
+      bookData = bData;
+
+      updateProgress("downloading", 35, "Fetching all published chapters...");
+
+      // 2. Fetch all published chapters
+      const { data: cData, error: chaptersErr } = await supabase
+        .from("chapters")
+        .select("*")
+        .eq("book_id", bookId)
+        .eq("status", "published")
+        .order("chapter_number", { ascending: true });
+
+      if (chaptersErr || !cData || cData.length === 0) {
+        throw new Error(chaptersErr?.message || "No published chapters found for this story.");
+      }
+      chaptersData = cData;
     }
 
     updateProgress("downloading", 70, "Caching book cover and formatting data...");

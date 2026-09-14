@@ -23,7 +23,14 @@ export function StoryCard({ book }: StoryCardProps) {
       <div
         className={`h-44 w-full bg-gradient-to-br ${gradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
       >
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+        {book.cover_image_url && (
+          <img
+            src={book.cover_image_url}
+            alt={book.title}
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/30 group-hover:from-black/75 transition-colors" />
 
         <div className="relative z-10 flex items-start justify-between">
           <Badge

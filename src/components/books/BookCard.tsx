@@ -25,10 +25,17 @@ export function BookCard({ book }: BookCardProps) {
       <div
         className={`h-48 w-full bg-gradient-to-br ${coverGradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
       >
-        <div className="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors" />
+        {book.cover_image_url && (
+          <img
+            src={book.cover_image_url}
+            alt={book.title}
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/35 group-hover:from-black/75 transition-colors" />
 
         {/* Decorative spine crease effect */}
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/20 z-10" />
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/25 z-10" />
 
         {/* Top bar: Genre Badge & Library Action Toggle */}
         <div className="relative z-10 flex items-start justify-between gap-2">

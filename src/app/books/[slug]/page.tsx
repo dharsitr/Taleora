@@ -93,10 +93,18 @@ export default async function BookDetailsPage({ params }: BookPageProps) {
           <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
             {/* Book Spine / Cover Mock */}
             <div className="w-36 h-52 sm:w-44 sm:h-64 rounded-xl bg-black/40 border border-white/25 shadow-2xl p-4 flex flex-col justify-between shrink-0 relative overflow-hidden backdrop-blur-xs">
-              <div className="absolute left-0 top-0 bottom-0 w-2 bg-white/20" />
+              {book.cover_image_url && (
+                <img
+                  src={book.cover_image_url}
+                  alt={book.title}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/35" />
+              <div className="absolute left-0 top-0 bottom-0 w-2 bg-white/20 z-10" />
               <Badge
                 variant="warm"
-                className="bg-black/50 text-white border-white/20 text-[10px] self-start"
+                className="bg-black/50 text-white border-white/20 text-[10px] self-start relative z-10"
               >
                 {primaryGenre}
               </Badge>

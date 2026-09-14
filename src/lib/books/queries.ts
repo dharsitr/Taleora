@@ -599,7 +599,22 @@ export async function getChapterReaderData(
     currentIdx = 0; // Default to first chapter
   }
 
-  const currentChapter = allChapters[currentIdx];
+  let currentChapter = allChapters[currentIdx];
+  if (
+    typeof window === "undefined" &&
+    (!currentChapter.content || currentChapter.content.trim() === "")
+  ) {
+    try {
+      const { getLocalChapterContent } = await import("./local-content");
+      const local = getLocalChapterContent(book.slug, currentChapter.slug);
+      if (local) {
+        currentChapter = { ...currentChapter, content: local };
+      }
+    } catch {
+      // Fallback gracefully
+    }
+  }
+
   const prevChapter = currentIdx > 0 ? allChapters[currentIdx - 1] : null;
   const nextChapter =
     currentIdx < allChapters.length - 1 ? allChapters[currentIdx + 1] : null;
