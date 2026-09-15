@@ -105,7 +105,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
     // Verify ownership
-    let checkQuery = supabase.from("books").select("id, user_id, slug").eq(isUuid ? "id" : "slug", slug);
+    const checkQuery = supabase.from("books").select("id, user_id, slug").eq(isUuid ? "id" : "slug", slug);
     const { data: existingStory, error: fetchErr } = await checkQuery.maybeSingle();
 
     if (fetchErr || !existingStory) {
@@ -169,3 +169,42 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     });
   });
 }
+
+// DELETE /api/stories/[slug]
+export async function DELETE(req: NextRequest, { params }: RouteProps) {
+  return withNetworkTelemetry(req, async () => {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized", message: "Authentication required to delete a story." },
+        { status: 401 }
+      );
+    }
+
+    const rateCheck = enforceRateLimit(req, "storyPublish", user.id);
+    if (!rateCheck.allowed) {
+      return rateCheck.response;
+    }
+
+    const { slug } = await params;
+    const { deleteBookSecurely } = await import("@/lib/books/deletion");
+    const result = await deleteBookSecurely(user.id, slug);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to delete story." },
+        { status: result.code || 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: result.message || "Story successfully deleted.",
+    });
+  });
+}
+

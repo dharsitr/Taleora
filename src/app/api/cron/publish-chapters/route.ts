@@ -15,13 +15,23 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // 2. Secret Authorization guard
+  // 2. Secret Authorization guard (Fail-Closed)
   const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Server Configuration Error: CRON_SECRET is not configured. Execution denied.",
+      },
+      { status: 500 }
+    );
+  }
+
   const authHeader = request.headers.get("authorization");
   const customSecretHeader = request.headers.get("x-cron-secret");
 
   const isAuthorized =
-    !cronSecret || // Local development without secret configured
     authHeader === `Bearer ${cronSecret}` ||
     customSecretHeader === cronSecret;
 

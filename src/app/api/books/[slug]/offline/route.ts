@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getLocalChapterContent } from "@/lib/books/local-content";
+import { enforceRateLimit } from "@/lib/network/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,12 @@ interface RouteProps {
 }
 
 export async function GET(request: NextRequest, { params }: RouteProps) {
+  // 1. Rate Limiting Check (protects database & storage from hydration flooding)
+  const rateCheck = enforceRateLimit(request, "publicRead");
+  if (!rateCheck.allowed) {
+    return rateCheck.response;
+  }
+
   const { slug } = await params;
   const supabase = await createClient();
 
@@ -77,9 +84,14 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
     return ch;
   });
 
-  return NextResponse.json({
-    success: true,
-    book: bookData,
-    chapters: hydratedChapters,
-  });
+  return NextResponse.json(
+    {
+      success: true,
+      book: bookData,
+      chapters: hydratedChapters,
+    },
+    {
+      headers: rateCheck.headers,
+    }
+  );
 }

@@ -11,13 +11,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Database,
-  ArrowDownRight,
   ShieldCheck,
   Server,
   Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import type { NetworkMetricsData, RequestLogEntry } from "@/lib/network/telemetry";
+import type { NetworkMetricsData } from "@/lib/network/telemetry";
 
 export function AdminNetworkTab() {
   const [metrics, setMetrics] = React.useState<NetworkMetricsData | null>(null);
@@ -64,11 +63,12 @@ export function AdminNetworkTab() {
     }
   };
 
+  const recentRequests = metrics?.recentRequests;
   const filteredLogs = React.useMemo(() => {
-    if (!metrics?.recentRequests) return [];
-    if (selectedMethod === "ALL") return metrics.recentRequests;
-    return metrics.recentRequests.filter((r) => r.method === selectedMethod);
-  }, [metrics?.recentRequests, selectedMethod]);
+    if (!recentRequests) return [];
+    if (selectedMethod === "ALL") return recentRequests;
+    return recentRequests.filter((r) => r.method === selectedMethod);
+  }, [recentRequests, selectedMethod]);
 
   if (isLoading && !metrics) {
     return (

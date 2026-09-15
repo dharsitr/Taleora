@@ -26,6 +26,7 @@ import { BookDetail, BookStatus, GenreRow, ReleaseCadence } from "@/types/books"
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/network/api-client";
+import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal";
 
 const GRADIENT_PRESETS = [
   {
@@ -86,6 +87,8 @@ export default function EditStoryDetailsPage() {
 
   const [isSaving, setIsSaving] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
@@ -203,24 +206,27 @@ export default function EditStoryDetailsPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setDeleteError(null);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!user || !bookId) return;
-    if (
-      !window.confirm(
-        `Are you sure you want to permanently delete "${title}" and all its chapters? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
 
     setIsDeleting(true);
+    setDeleteError(null);
     try {
       const ok = await deleteStory(user.id, bookId);
       if (ok) {
+        setIsDeleteModalOpen(false);
         router.push("/studio");
       } else {
-        setErrorMessage("Failed to delete story.");
+        setDeleteError("Failed to delete story. Please ensure you have permission and try again.");
       }
+    } catch (err) {
+      console.error("Error deleting story:", err);
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete story.");
     } finally {
       setIsDeleting(false);
     }
@@ -562,12 +568,12 @@ export default function EditStoryDetailsPage() {
           <Button
             type="button"
             variant="ghost"
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={isDeleting}
             className="text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 gap-2 cursor-pointer text-xs"
           >
             <Trash2 className="w-4 h-4" />
-            <span>{isDeleting ? "Deleting..." : "Delete Story"}</span>
+            <span>Delete Story</span>
           </Button>
 
           <div className="flex items-center gap-3">
@@ -590,6 +596,30 @@ export default function EditStoryDetailsPage() {
           </div>
         </div>
       </form>
+
+      {/* Secure Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Story Permanently"
+        itemName={title}
+        itemType="story"
+        details={[
+          "All published and draft chapters will be permanently erased",
+          "Uploaded cover artwork will be purged from storage",
+          "Reader bookmarks, highlights, and notes will be cascade-deleted",
+          "Reading progress and history for this story will be cleared",
+          "Community reviews, ratings, and reader comments will be deleted",
+        ]}
+        requireTextConfirmation={true}
+        expectedConfirmationText="DELETE"
+        isDeleting={isDeleting}
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteError(null);
+        }}
+      />
     </div>
   );
 }

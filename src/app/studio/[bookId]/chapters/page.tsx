@@ -26,6 +26,7 @@ import {
 import { BookDetail, ChapterRow } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal";
 
 export default function ChaptersManagerPage() {
   const params = useParams();
@@ -37,6 +38,8 @@ export default function ChaptersManagerPage() {
   const [loading, setLoading] = React.useState(true);
   const [isReordering, setIsReordering] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [chapterToDelete, setChapterToDelete] = React.useState<ChapterRow | null>(null);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -93,18 +96,27 @@ export default function ChaptersManagerPage() {
     }
   };
 
-  const handleDeleteChapter = async (chapterId: string, title: string) => {
-    if (!user) return;
-    if (!window.confirm(`Are you sure you want to delete chapter "${title}"?`)) {
-      return;
-    }
+  const handleDeleteClick = (chapter: ChapterRow) => {
+    setDeleteError(null);
+    setChapterToDelete(chapter);
+  };
 
-    setDeletingId(chapterId);
+  const handleConfirmDelete = async () => {
+    if (!user || !chapterToDelete) return;
+
+    setDeletingId(chapterToDelete.id);
+    setDeleteError(null);
     try {
-      const ok = await deleteChapter(user.id, chapterId);
+      const ok = await deleteChapter(user.id, chapterToDelete.id, bookId);
       if (ok) {
-        setChapters((prev) => prev.filter((c) => c.id !== chapterId));
+        setChapters((prev) => prev.filter((c) => c.id !== chapterToDelete.id));
+        setChapterToDelete(null);
+      } else {
+        setDeleteError("Failed to delete chapter. Please check your permissions.");
       }
+    } catch (err) {
+      console.error("Error deleting chapter:", err);
+      setDeleteError(err instanceof Error ? err.message : "Error deleting chapter.");
     } finally {
       setDeletingId(null);
     }
@@ -350,9 +362,7 @@ export default function ChaptersManagerPage() {
                     <button
                       type="button"
                       disabled={deletingId === chapter.id}
-                      onClick={() =>
-                        handleDeleteChapter(chapter.id, chapter.title)
-                      }
+                      onClick={() => handleDeleteClick(chapter)}
                       title="Delete Chapter"
                       className="p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
                     >
@@ -365,6 +375,26 @@ export default function ChaptersManagerPage() {
           })
         )}
       </div>
+
+      {/* Chapter Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={!!chapterToDelete}
+        title="Delete Chapter"
+        itemName={chapterToDelete?.title || "Chapter"}
+        itemType="chapter"
+        details={[
+          "Chapter reading content will be permanently removed",
+          "Reader bookmarks and highlights for this chapter will be cascade-deleted",
+          "Story total chapter count and estimated reading time will be automatically updated",
+        ]}
+        isDeleting={!!deletingId}
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setChapterToDelete(null);
+          setDeleteError(null);
+        }}
+      />
     </div>
   );
 }

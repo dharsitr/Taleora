@@ -1,4 +1,5 @@
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/network/api-client";
 import {
   AuthorRow,
   AuthorStats,
@@ -389,7 +390,9 @@ export async function getBookBySlug(slugOrId: string): Promise<BookDetail | null
     query = query.eq("slug", decoded);
   }
 
-  let { data, error } = await query.maybeSingle();
+  const result = await query.maybeSingle();
+  let data = result.data;
+  const error = result.error;
 
   // If not found by exact decoded slug, try raw slug or prefix fallback
   if (!data && !error && !isUuid) {
@@ -1519,20 +1522,13 @@ export async function deleteStory(
   userId: string,
   bookId: string
 ): Promise<boolean> {
-  const supabase = createBrowserClient();
-
-  const { error } = await supabase
-    .from("books")
-    .delete()
-    .eq("id", bookId)
-    .eq("user_id", userId);
-
-  if (error) {
-    console.error("Error deleting story:", error);
+  try {
+    const res = await apiClient.delete<{ message: string }>(`/api/stories/${bookId}`);
+    return res.ok;
+  } catch (err) {
+    console.error("Error deleting story:", err);
     return false;
   }
-
-  return true;
 }
 
 /**
@@ -1737,33 +1733,32 @@ export async function updateChapter(
  */
 export async function deleteChapter(
   userId: string,
-  chapterId: string
+  chapterId: string,
+  bookId?: string
 ): Promise<boolean> {
-  const supabase = createBrowserClient();
+  try {
+    let resolvedBookId = bookId;
+    if (!resolvedBookId) {
+      const supabase = createBrowserClient();
+      const { data } = await supabase
+        .from("chapters")
+        .select("book_id")
+        .eq("id", chapterId)
+        .maybeSingle();
+      resolvedBookId = data?.book_id;
+    }
 
-  // Get book_id first
-  const { data: existing } = await supabase
-    .from("chapters")
-    .select("book_id")
-    .eq("id", chapterId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (!existing) return false;
-
-  const { error } = await supabase
-    .from("chapters")
-    .delete()
-    .eq("id", chapterId)
-    .eq("user_id", userId);
-
-  if (error) {
-    console.error("Error deleting chapter:", error);
+    if (resolvedBookId) {
+      const res = await apiClient.delete<{ message: string }>(
+        `/api/stories/${resolvedBookId}/chapters/${chapterId}`
+      );
+      return res.ok;
+    }
+    return false;
+  } catch (err) {
+    console.error("Error deleting chapter:", err);
     return false;
   }
-
-  await refreshBookTotals(existing.book_id);
-  return true;
 }
 
 /**

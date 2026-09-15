@@ -17,6 +17,40 @@ import {
 import { saveReadingProgress } from "@/lib/books/queries";
 import { recordReadingSession } from "@/lib/stats/queries";
 
+interface OfflineBookPayload {
+  id: string;
+  title: string;
+  slug: string;
+  subtitle?: string | null;
+  description?: string | null;
+  cover_image_url?: string | null;
+  cover_gradient?: string | null;
+  author?: {
+    id: string;
+    name: string;
+    slug: string;
+    avatar_url?: string | null;
+  } | null;
+  book_genres?: Array<{
+    genre: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
+  }>;
+}
+
+interface OfflineChapterPayload {
+  id: string;
+  book_id: string;
+  chapter_number: number;
+  title: string;
+  slug: string;
+  content?: string | null;
+  word_count?: number | null;
+  estimated_read_minutes?: number | null;
+}
+
 /**
  * Download a book and all published chapters for offline reading.
  */
@@ -37,8 +71,8 @@ export async function downloadBookForOffline(
 
   try {
     updateProgress("downloading", 10, "Fetching book details...");
-    let bookData: any = null;
-    let chaptersData: any[] = [];
+    let bookData: OfflineBookPayload | null = null;
+    let chaptersData: OfflineChapterPayload[] = [];
 
     // Attempt to fetch fully hydrated book & chapters via internal offline route
     try {
@@ -127,17 +161,17 @@ export async function downloadBookForOffline(
       id: bookData.id,
       title: bookData.title,
       slug: bookData.slug,
-      subtitle: bookData.subtitle,
-      description: bookData.description,
-      cover_image_url: bookData.cover_image_url,
-      cover_gradient: bookData.cover_gradient,
+      subtitle: bookData.subtitle ?? null,
+      description: bookData.description ?? null,
+      cover_image_url: bookData.cover_image_url ?? null,
+      cover_gradient: bookData.cover_gradient ?? null,
       cover_data_url: coverDataUrl,
       author: bookData.author
         ? {
             id: bookData.author.id,
             name: bookData.author.name,
             slug: bookData.author.slug,
-            avatar_url: bookData.author.avatar_url,
+            avatar_url: bookData.author.avatar_url ?? null,
           }
         : null,
       genres: Array.isArray(bookData.book_genres)

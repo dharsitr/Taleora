@@ -62,6 +62,7 @@ Taleora incorporates fundamental Computer Networks mechanics into real-world app
 ## 🚀 Key Application Features
 
 - ✍️ **Author Studio**: Create stories, draft chapters, set custom cover gradients/accents, configure publication status, and schedule releases.
+- 🗑️ **Secure Deletion & Cascade Cleanups**: Authors can permanently delete their own chapters or entire stories. Automatically purges storage assets (cover images and chapter JSON payloads), clears orphaned reading metadata, resets dependent bookmarks, and enforces double-confirmation modal UX to eliminate accidental deletes.
 - 📖 **Immersive Reader**: Distraction-free reader with customizable typography, warm color themes, progress tracking, inline highlights, and bookmarks.
 - 💬 **Social & Community**: Rate and review books, comment on chapters, follow authors, and receive real-time notifications.
 - 🛡️ **Governance & Admin**: Content moderation, community report triage, audit logs, and real-time network infrastructure telemetry.
@@ -88,9 +89,11 @@ Taleora incorporates fundamental Computer Networks mechanics into real-world app
 | `POST` | `/api/stories` | User | Create a new user-generated story (rate-limited) |
 | `GET` | `/api/stories/[slug]` | Public | Fetch story details and chapter index (ETag cached) |
 | `PUT` | `/api/stories/[slug]` | Author | Update story details or publication status |
+| `DELETE` | `/api/stories/[slug]` | Author | Permanently delete a story, its chapters, storage assets, and metadata |
 | `GET` | `/api/stories/[slug]/chapters` | Public | List chapters for a story |
 | `POST` | `/api/stories/[slug]/chapters` | Author | Publish a new chapter for an author's story |
 | `GET` | `/api/stories/[slug]/chapters/[chapterSlug]` | Public | Fetch chapter reading content (ETag cached) |
+| `DELETE` | `/api/stories/[slug]/chapters/[chapterSlug]` | Author | Permanently delete a chapter and remove associated storage content |
 | `GET` | `/api/notifications` | User | Fetch notifications for authenticated user |
 | `POST` | `/api/notifications` | User | Mark notifications as read |
 | `GET` | `/api/admin/network-metrics` | Admin | Fetch live network telemetry snapshot |

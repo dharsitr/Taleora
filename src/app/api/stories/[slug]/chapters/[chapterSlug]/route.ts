@@ -86,3 +86,42 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
     );
   });
 }
+
+// DELETE /api/stories/[slug]/chapters/[chapterSlug]
+export async function DELETE(req: NextRequest, { params }: RouteProps) {
+  return withNetworkTelemetry(req, async () => {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized", message: "Authentication required to delete a chapter." },
+        { status: 401 }
+      );
+    }
+
+    const rateCheck = enforceRateLimit(req, "storyPublish", user.id);
+    if (!rateCheck.allowed) {
+      return rateCheck.response;
+    }
+
+    const { slug, chapterSlug } = await params;
+    const { deleteChapterSecurely } = await import("@/lib/books/deletion");
+    const result = await deleteChapterSecurely(user.id, slug, chapterSlug);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to delete chapter." },
+        { status: result.code || 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: result.message || "Chapter successfully deleted.",
+    });
+  });
+}
+

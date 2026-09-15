@@ -24,6 +24,7 @@ import {
 import { BookDetail, ChapterRow, ChapterStatus, ScheduleType } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal";
 
 export default function EditChapterPage() {
   const params = useParams();
@@ -50,6 +51,8 @@ export default function EditChapterPage() {
 
   const [isSaving, setIsSaving] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
@@ -179,16 +182,27 @@ export default function EditChapterPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setDeleteError(null);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!user || !chapterId) return;
-    if (!window.confirm(`Delete chapter "${title}" permanently?`)) return;
 
     setIsDeleting(true);
+    setDeleteError(null);
     try {
-      const ok = await deleteChapter(user.id, chapterId);
+      const ok = await deleteChapter(user.id, chapterId, bookId);
       if (ok) {
+        setIsDeleteModalOpen(false);
         router.push(`/studio/${bookId}/chapters`);
+      } else {
+        setDeleteError("Failed to delete chapter. Please check your permissions.");
       }
+    } catch (err) {
+      console.error("Error deleting chapter:", err);
+      setDeleteError(err instanceof Error ? err.message : "Error deleting chapter.");
     } finally {
       setIsDeleting(false);
     }
@@ -485,12 +499,12 @@ export default function EditChapterPage() {
           <Button
             type="button"
             variant="ghost"
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={isDeleting}
             className="text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 gap-2 cursor-pointer text-xs"
           >
             <Trash2 className="w-4 h-4" />
-            <span>{isDeleting ? "Deleting..." : "Delete Chapter"}</span>
+            <span>Delete Chapter</span>
           </Button>
 
           <div className="flex items-center gap-3">
@@ -513,6 +527,26 @@ export default function EditChapterPage() {
           </div>
         </div>
       </form>
+
+      {/* Chapter Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Chapter Permanently"
+        itemName={title || "Chapter"}
+        itemType="chapter"
+        details={[
+          "Chapter reading content will be permanently purged",
+          "Reader bookmarks and highlights for this chapter will be cascade-deleted",
+          "Story total chapter count and estimated reading time will be automatically recalculated",
+        ]}
+        isDeleting={isDeleting}
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteError(null);
+        }}
+      />
     </div>
   );
 }
