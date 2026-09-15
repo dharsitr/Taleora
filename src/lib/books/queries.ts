@@ -361,38 +361,72 @@ export async function getPersonalizedRecommendations(
 export async function getBookBySlug(slugOrId: string): Promise<BookDetail | null> {
   const supabase = createBrowserClient();
 
-  // Try finding by slug first, otherwise by UUID id
+  const raw = (slugOrId || "").trim();
+  const decoded = decodeURIComponent(raw);
+
   const isUuid =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      slugOrId
+      decoded
     );
+
+  const selectFields = `
+    *,
+    author:authors(*),
+    book_genres(
+      genre:genres(*)
+    ),
+    chapters(*)
+  `;
 
   let query = supabase
     .from("books")
-    .select(
-      `
-      *,
-      author:authors(*),
-      book_genres(
-        genre:genres(*)
-      ),
-      chapters(
-        *
-      )
-    `
-    )
+    .select(selectFields)
     .eq("status", "published");
 
   if (isUuid) {
-    query = query.eq("id", slugOrId);
+    query = query.eq("id", decoded);
   } else {
-    query = query.eq("slug", slugOrId);
+    query = query.eq("slug", decoded);
   }
 
-  const { data, error } = await query.maybeSingle();
+  let { data, error } = await query.maybeSingle();
+
+  // If not found by exact decoded slug, try raw slug or prefix fallback
+  if (!data && !error && !isUuid) {
+    if (raw !== decoded) {
+      const rawRes = await supabase
+        .from("books")
+        .select(selectFields)
+        .eq("status", "published")
+        .eq("slug", raw)
+        .maybeSingle();
+      if (rawRes.data) {
+        data = rawRes.data;
+      }
+    }
+
+    if (!data) {
+      // Prefix fallback if slug was slightly truncated in an old link
+      const prefix = decoded.split("-").slice(0, 4).join("-");
+      if (prefix.length >= 6) {
+        const fallbackRes = await supabase
+          .from("books")
+          .select(selectFields)
+          .eq("status", "published")
+          .ilike("slug", `${prefix}%`)
+          .limit(1)
+          .maybeSingle();
+        if (fallbackRes.data) {
+          data = fallbackRes.data;
+        }
+      }
+    }
+  }
 
   if (error || !data) {
-    console.error("Error fetching book details:", error);
+    if (error) {
+      console.error("Error fetching book details:", error);
+    }
     return null;
   }
 
@@ -549,8 +583,12 @@ export async function getChapterReaderData(
 ): Promise<ChapterReaderData | null> {
   const supabase = createBrowserClient();
 
-  // 1. Fetch book with author and genres
-  const { data: bookData, error: bookErr } = await supabase
+  const rawBookSlug = (bookSlug || "").trim();
+  const safeBookSlug = decodeURIComponent(rawBookSlug);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(safeBookSlug);
+
+  // 1. Fetch book with author and genres (supports both slug and UUID)
+  let bookQuery = supabase
     .from("books")
     .select(
       `
@@ -561,12 +599,18 @@ export async function getChapterReaderData(
       )
     `
     )
-    .eq("slug", bookSlug)
-    .eq("status", "published")
-    .maybeSingle();
+    .eq("status", "published");
+
+  if (isUuid) {
+    bookQuery = bookQuery.eq("id", safeBookSlug);
+  } else {
+    bookQuery = bookQuery.eq("slug", safeBookSlug);
+  }
+
+  const { data: bookData, error: bookErr } = await bookQuery.maybeSingle();
 
   if (bookErr || !bookData) {
-    console.error("Error fetching book for reader:", bookErr);
+    console.error("Error fetching book for reader:", bookErr || "Book not found");
     return null;
   }
 
@@ -581,34 +625,34 @@ export async function getChapterReaderData(
     .order("chapter_number", { ascending: true });
 
   if (chaptersErr || !chaptersData || chaptersData.length === 0) {
-    console.error("Error fetching chapters for reader:", chaptersErr);
+    console.error("Error fetching chapters for reader:", chaptersErr || "No chapters");
     return null;
   }
 
   const allChapters = chaptersData;
 
-  // 3. Resolve target chapter: by slug or fallback to first chapter
+  // 3. Resolve target chapter: by slug/id or fallback to first chapter
   let currentIdx = -1;
   if (chapterSlug) {
-    currentIdx = allChapters.findIndex((ch) => ch.slug === chapterSlug);
+    const safeChapterSlug = decodeURIComponent(chapterSlug).trim();
+    currentIdx = allChapters.findIndex(
+      (ch) => ch.slug === safeChapterSlug || ch.id === safeChapterSlug
+    );
     if (currentIdx === -1) {
-      // Specified chapter slug was not found
-      return null;
+      // Fallback gracefully to first chapter if slug was not matched
+      currentIdx = 0;
     }
   } else {
     currentIdx = 0; // Default to first chapter
   }
 
   let currentChapter = allChapters[currentIdx];
-  if (
-    typeof window === "undefined" &&
-    (!currentChapter.content || currentChapter.content.trim() === "")
-  ) {
+  if (!currentChapter.content || currentChapter.content.trim() === "") {
     try {
-      const { getLocalChapterContent } = await import("./local-content");
-      const local = getLocalChapterContent(book.slug, currentChapter.slug);
-      if (local) {
-        currentChapter = { ...currentChapter, content: local };
+      const { getChapterContentWithFallback } = await import("./chapter-storage");
+      const text = await getChapterContentWithFallback(book.slug, currentChapter.slug);
+      if (text) {
+        currentChapter = { ...currentChapter, content: text };
       }
     } catch {
       // Fallback gracefully

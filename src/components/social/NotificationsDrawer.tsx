@@ -12,6 +12,7 @@ import {
   Feather,
   Sparkles,
   Loader2,
+  Radio,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { NotificationRow, NotificationType } from "@/types/social";
@@ -21,6 +22,7 @@ import {
   markAllNotificationsAsRead,
 } from "@/lib/social/queries";
 import { Button } from "@/components/ui/Button";
+import { useWebSocketNotifications } from "@/lib/network/websocket-notifications";
 
 interface NotificationsDrawerProps {
   isOpen: boolean;
@@ -39,6 +41,18 @@ export function NotificationsDrawer({
   const [notifications, setNotifications] = React.useState<NotificationRow[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [isMarkingAll, setIsMarkingAll] = React.useState<boolean>(false);
+
+  // Real-time WebSocket connection for live notification stream
+  const { status: wsStatus } = useWebSocketNotifications({
+    userId: user?.id,
+    onNotificationReceived: (newNotif) => {
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === newNotif.id)) return prev;
+        return [newNotif, ...prev];
+      });
+      onCountChange?.(notifications.filter((n) => !n.is_read).length + 1);
+    },
+  });
 
   React.useEffect(() => {
     if (!isOpen || !user) return;
@@ -178,9 +192,32 @@ export function NotificationsDrawer({
               <Bell className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif text-base font-bold text-foreground">
-                Activity Notifications
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-serif text-base font-bold text-foreground">
+                  Activity Notifications
+                </h3>
+                <span
+                  className={`flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded-full border ${
+                    wsStatus === "connected"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                      : wsStatus === "connecting"
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                      : "bg-secondary text-muted-foreground border-border"
+                  }`}
+                  title={`WebSocket Status: ${wsStatus}`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      wsStatus === "connected"
+                        ? "bg-emerald-500 animate-pulse"
+                        : wsStatus === "connecting"
+                        ? "bg-amber-500 animate-ping"
+                        : "bg-muted-foreground"
+                    }`}
+                  />
+                  <span>WS {wsStatus === "connected" ? "Live" : wsStatus}</span>
+                </span>
+              </div>
               <p className="text-[11px] text-muted-foreground">
                 {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
               </p>

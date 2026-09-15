@@ -141,4 +141,4 @@ export interface AdminAuditLogDisplayItem {
   created_at: string;
 }
 
-export type AdminTab = "overview" | "reports" | "books" | "users" | "reviews" | "logs";
+export type AdminTab = "overview" | "reports" | "books" | "users" | "reviews" | "logs" | "network";

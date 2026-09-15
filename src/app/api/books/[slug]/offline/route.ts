@@ -60,12 +60,18 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
     );
   }
 
-  // 3. Hydrate chapters with local content if empty in DB
+  // 3. Hydrate chapters with local content or Supabase Storage if empty in DB
+  const { fetchBookChaptersFromStorage } = await import("@/lib/books/chapter-storage");
+  const storageChapters = await fetchBookChaptersFromStorage(bookData.slug);
+
   const hydratedChapters = chaptersData.map((ch) => {
     if (!ch.content || ch.content.trim() === "") {
       const localContent = getLocalChapterContent(bookData.slug, ch.slug);
       if (localContent) {
         return { ...ch, content: localContent };
+      }
+      if (storageChapters && storageChapters[ch.slug]) {
+        return { ...ch, content: storageChapters[ch.slug] };
       }
     }
     return ch;

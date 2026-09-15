@@ -28,6 +28,7 @@ import {
 } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/network/api-client";
 
 export default function NewChapterPage() {
   const params = useParams();
@@ -170,24 +171,26 @@ export default function NewChapterPage() {
     setErrorMessage(null);
 
     try {
-      const created = await createChapter(user.id, bookId, {
-        title: title.trim(),
-        slug: slug.trim() || `chapter-${chapterNumber}`,
-        chapter_number: chapterNumber,
-        content: content.trim(),
-        status,
-        schedule_type: scheduleType,
-        scheduled_for: finalScheduledFor,
-      });
+      const res = await apiClient.post<{ message: string; chapter: unknown }>(
+        `/api/stories/${bookId}/chapters`,
+        {
+          chapter_number: chapterNumber,
+          title: title.trim(),
+          content: content.trim(),
+          status: status === "published" ? "published" : "draft",
+        }
+      );
 
-      if (created) {
+      if (res.ok) {
         router.push(`/studio/${bookId}/chapters`);
       } else {
-        setErrorMessage("Failed to save chapter.");
+        setErrorMessage(res.error || "Failed to save chapter.");
       }
     } catch (err) {
-      console.error("Error creating chapter:", err);
-      setErrorMessage("An unexpected error occurred.");
+      console.error("Error creating chapter via API:", err);
+      setErrorMessage(
+        err instanceof Error ? err.message : "Network error creating chapter."
+      );
     } finally {
       setIsSubmitting(false);
     }

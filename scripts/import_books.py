@@ -18,6 +18,7 @@ import html
 import random
 import hashlib
 import zipfile
+import gzip
 import argparse
 import threading
 import unicodedata
@@ -337,6 +338,29 @@ class TaleoraImporter:
         except Exception:
             return None
 
+    def upload_chapter_bundle(self, book_slug: str, chapters: list) -> str:
+        """Uploads compressed chapter bundle to 'book-chapters' storage bucket."""
+        if self.dry_run or not chapters:
+            return None
+
+        chapters_dict = {ch["slug"]: ch["content"] for ch in chapters}
+        raw_json = json.dumps(chapters_dict, ensure_ascii=False).encode("utf-8")
+        gz_data = gzip.compress(raw_json)
+
+        file_path = f"{book_slug}.json"
+        endpoint = f"/storage/v1/object/book-chapters/{file_path}"
+
+        try:
+            self._request(
+                "POST",
+                endpoint,
+                data=gz_data,
+                headers={"Content-Type": "application/json", "x-upsert": "true"},
+            )
+            return f"{self.supabase_url}/storage/v1/object/public/book-chapters/{file_path}"
+        except Exception:
+            return None
+
     def parse_epub(self, file_path: str, initial_genre: str):
         """Parses EPUB archive: extracts metadata, cover, and ordered chapters."""
         with zipfile.ZipFile(file_path, "r") as z:
@@ -480,8 +504,139 @@ class TaleoraImporter:
                 "chapters": chapters,
             }
 
+    def parse_pdf(self, file_path: str, initial_genre: str):
+        """Parses PDF document: extracts metadata, cover image from page 1, and chapters."""
+        try:
+            import fitz  # PyMuPDF
+        except ImportError:
+            raise ImportError(
+                "PyMuPDF ('fitz') is required to parse PDF books. Please run with .venv: .venv/bin/python scripts/import_books.py"
+            )
+
+        doc = fitz.open(file_path)
+        meta = doc.metadata or {}
+
+        base_name = os.path.splitext(os.path.basename(file_path))[0]
+        title = (meta.get("title") or "").strip()
+        author = (meta.get("author") or "").strip()
+
+        # Parse 'Title — Author' or 'Title - Author' from filename if metadata is generic/empty
+        if ("—" in base_name or " - " in base_name) and (not title or not author):
+            sep = "—" if "—" in base_name else " - "
+            parts = base_name.split(sep, 1)
+            if not title:
+                title = parts[0].strip()
+            if not author:
+                author = parts[1].strip()
+
+        if not title or len(title) < 2:
+            title = base_name.strip()
+        if not author or len(author) < 2:
+            author = "Unknown Author"
+
+        description = (meta.get("subject") or "").strip()
+        if not description:
+            description = f"A {initial_genre.lower()} work by {author}."
+
+        # Extract Cover Image from Page 0
+        cover_bytes = None
+        cover_ext = "jpg"
+        if len(doc) > 0:
+            try:
+                page0 = doc[0]
+                pix = page0.get_pixmap(dpi=150)
+                cover_bytes = pix.tobytes("jpeg")
+                cover_ext = "jpg"
+            except Exception:
+                cover_bytes = None
+
+        # Extract Chapters
+        chapters = []
+        toc = doc.get_toc()  # [[lvl, title, page_1_indexed], ...]
+        total_pages = len(doc)
+
+        if toc and len(toc) >= 2:
+            min_lvl = min(item[0] for item in toc)
+            main_toc = [item for item in toc if item[0] <= min_lvl + 1]
+
+            for i, item in enumerate(main_toc):
+                ch_title = item[1].strip()
+                start_page = max(1, item[2]) - 1
+                if i + 1 < len(main_toc):
+                    end_page = max(start_page + 1, min(total_pages, main_toc[i + 1][2] - 1))
+                else:
+                    end_page = total_pages
+
+                if start_page >= total_pages:
+                    continue
+
+                ch_text_parts = []
+                for p_num in range(start_page, end_page):
+                    p_text = doc[p_num].get_text("text").strip()
+                    if p_text:
+                        ch_text_parts.append(p_text)
+
+                prose = "\n\n".join(ch_text_parts).strip()
+                words = prose.split()
+                word_count = len(words)
+
+                if word_count < 15 and len(main_toc) > 1:
+                    continue
+
+                ch_num = len(chapters) + 1
+                ch_slug = f"chapter-{ch_num}-{slugify(ch_title)[:30]}".rstrip("-")
+                read_mins = max(1, round(word_count / 200))
+
+                chapters.append({
+                    "chapter_number": ch_num,
+                    "title": ch_title or f"Chapter {ch_num}",
+                    "slug": ch_slug,
+                    "content": prose,
+                    "word_count": word_count,
+                    "estimated_read_minutes": read_mins,
+                })
+
+        # Fallback if no TOC or TOC produced 0 chapters: chunk pages into digestible chapters
+        if not chapters and total_pages > 0:
+            pages_per_chapter = 10 if total_pages > 30 else (5 if total_pages > 10 else total_pages)
+            for ch_idx, start_page in enumerate(range(0, total_pages, pages_per_chapter), 1):
+                end_page = min(total_pages, start_page + pages_per_chapter)
+                ch_text_parts = []
+                for p_num in range(start_page, end_page):
+                    p_text = doc[p_num].get_text("text").strip()
+                    if p_text:
+                        ch_text_parts.append(p_text)
+
+                prose = "\n\n".join(ch_text_parts).strip()
+                words = prose.split()
+                word_count = len(words)
+
+                ch_title = f"Chapter {ch_idx}" if total_pages > pages_per_chapter else "Complete Story"
+                ch_slug = f"chapter-{ch_idx}"
+                read_mins = max(1, round(word_count / 200))
+
+                chapters.append({
+                    "chapter_number": ch_idx,
+                    "title": ch_title,
+                    "slug": ch_slug,
+                    "content": prose,
+                    "word_count": word_count,
+                    "estimated_read_minutes": read_mins,
+                })
+
+        doc.close()
+
+        return {
+            "title": title,
+            "author": author,
+            "description": description,
+            "cover_bytes": cover_bytes,
+            "cover_ext": cover_ext,
+            "chapters": chapters,
+        }
+
     def import_book(self, file_path: str) -> dict:
-        """Processes and imports a single ebook file."""
+        """Processes and imports a single ebook (EPUB or PDF) file."""
         # 1. Determine Initial Genre from Folder Name
         parent_dir = os.path.basename(os.path.dirname(file_path))
         genre_name = parent_dir if parent_dir and parent_dir != self.base_dir else "General Fiction"
@@ -491,8 +646,11 @@ class TaleoraImporter:
             if file_path in self.existing_file_paths or file_path in self.progress:
                 return {"status": "skipped", "file": file_path, "reason": "Already imported"}
 
-        # 2. Parse EPUB
-        parsed = self.parse_epub(file_path, genre_name)
+        # 2. Parse EPUB or PDF
+        if file_path.lower().endswith(".pdf"):
+            parsed = self.parse_pdf(file_path, genre_name)
+        else:
+            parsed = self.parse_epub(file_path, genre_name)
         title = parsed["title"]
         author = parsed["author"]
         description = parsed["description"]
@@ -544,6 +702,9 @@ class TaleoraImporter:
             ch_file = os.path.join(book_content_dir, f"{ch['slug']}.json")
             with open(ch_file, "w", encoding="utf-8") as f:
                 json.dump(ch_data, f, ensure_ascii=False)
+
+        # 3b. Upload Chapter Bundle to Supabase Storage 'book-chapters'
+        self.upload_chapter_bundle(book_slug, chapters)
 
         # 4. Resolve Genre and Author IDs in Supabase
         genre_id = self.get_or_create_genre(genre_name)
@@ -659,10 +820,11 @@ def main():
         os.remove(PROGRESS_FILE)
         print("🧹 Progress tracking file reset.")
 
-    # Find all ebook files
-    search_dir = args.dir if os.path.exists(args.dir) else "book"
-    pattern = os.path.join(search_dir, "**", "*.epub")
-    all_files = sorted(glob.glob(pattern, recursive=True))
+    # Find all ebook files (EPUB & PDF)
+    search_dir = args.dir if os.path.exists(args.dir) else ("books" if os.path.exists("books") else "book")
+    epubs = glob.glob(os.path.join(search_dir, "**", "*.epub"), recursive=True)
+    pdfs = glob.glob(os.path.join(search_dir, "**", "*.pdf"), recursive=True)
+    all_files = sorted(epubs + pdfs)
 
     if args.genre:
         all_files = [f for f in all_files if args.genre.lower() in f.lower()]

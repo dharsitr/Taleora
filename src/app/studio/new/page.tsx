@@ -20,6 +20,7 @@ import {
 import { GenreRow, BookStatus, ReleaseCadence } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/network/api-client";
 
 const GRADIENT_PRESETS = [
   {
@@ -145,29 +146,28 @@ export default function CreateStoryPage() {
     setErrorMessage(null);
 
     try {
-      const created = await createStory(user.id, {
+      // Dispatch via resilient REST API transport
+      const res = await apiClient.post<{ message: string; story: { id: string } }>("/api/stories", {
         title: title.trim(),
         subtitle: subtitle.trim() || null,
-        slug: slug.trim() || slugify(title),
         description: description.trim() || null,
         genreIds: selectedGenres,
         cover_gradient: selectedGradient,
         cover_accent: accentColor,
-        cover_image_url: coverType === "upload" ? coverImageUrl : null,
         status,
         release_schedule: releaseSchedule,
       });
 
-      if (created) {
+      if (res.ok && res.data?.story) {
         // Direct to chapters management to begin writing Chapter 1!
-        router.push(`/studio/${created.id}/chapters`);
+        router.push(`/studio/${res.data.story.id}/chapters`);
       } else {
-        setErrorMessage("Failed to create story. Please check inputs.");
+        setErrorMessage(res.error || "Failed to create story. Please check inputs.");
       }
     } catch (err) {
-      console.error("Error creating story:", err);
+      console.error("Error creating story via API:", err);
       setErrorMessage(
-        err instanceof Error ? err.message : "Failed to create story."
+        err instanceof Error ? err.message : "Network error creating story."
       );
     } finally {
       setIsSubmitting(false);

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "import:books": "python3 scripts/import_books.py"
+    "import:books": "python3 scripts/import_books.py",
+    "upload:chapters": "python3 scripts/upload_book_chapters.py",
+    "sync:books": "python3 scripts/sync_collection.py"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

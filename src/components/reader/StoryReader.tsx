@@ -261,6 +261,45 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     };
   }, [book.id, currentChapter.id]);
 
+  // Dynamic chapter text hydration if server did not include it
+  const [chapterContent, setChapterContent] = React.useState(
+    currentChapter.content || ""
+  );
+  const [isFetchingContent, setIsFetchingContent] = React.useState(
+    !currentChapter.content || currentChapter.content.trim() === ""
+  );
+
+  React.useEffect(() => {
+    if (currentChapter.content && currentChapter.content.trim() !== "") {
+      setChapterContent(currentChapter.content);
+      setIsFetchingContent(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsFetchingContent(true);
+
+    import("@/lib/books/chapter-storage")
+      .then(({ getChapterContentWithFallback }) => {
+        getChapterContentWithFallback(book.slug, currentChapter.slug)
+          .then((text) => {
+            if (isMounted && text) {
+              setChapterContent(text);
+            }
+          })
+          .finally(() => {
+            if (isMounted) setIsFetchingContent(false);
+          });
+      })
+      .catch(() => {
+        if (isMounted) setIsFetchingContent(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [book.slug, currentChapter.slug, currentChapter.content]);
+
   // Hook up Pagination Engine
   const {
     pages,
@@ -270,7 +309,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     goToPage,
     jumpToParagraph,
   } = usePagePaginator({
-    content: currentChapter.content,
+    content: chapterContent,
     settings,
     containerRef,
     initialParagraphIndex: initialParams.pIndex,
@@ -1016,6 +1055,16 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
 
       {/* Main Book-Style Paginated Canvas */}
       <main className="flex-1 w-full flex flex-col justify-center items-center overflow-hidden relative">
+        {isFetchingContent && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+              <p className="font-serif text-sm text-muted-foreground animate-pulse">
+                Opening {currentChapter.title}...
+              </p>
+            </div>
+          </div>
+        )}
         <BookCanvas
           ref={containerRef}
           pages={pages}

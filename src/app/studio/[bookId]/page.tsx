@@ -25,6 +25,7 @@ import {
 import { BookDetail, BookStatus, GenreRow, ReleaseCadence } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/network/api-client";
 
 const GRADIENT_PRESETS = [
   {
@@ -172,28 +173,31 @@ export default function EditStoryDetailsPage() {
     setSuccessMessage(null);
 
     try {
-      const updated = await updateStory(user.id, bookId, {
-        title: title.trim(),
-        subtitle: subtitle.trim() || null,
-        slug: slug.trim(),
-        description: description.trim() || null,
-        genreIds: selectedGenres,
-        cover_gradient: selectedGradient,
-        cover_accent: accentColor,
-        cover_image_url: coverType === "upload" ? coverImageUrl : null,
-        status,
-        release_schedule: releaseSchedule,
-      });
+      const res = await apiClient.put<{ message: string; story: unknown }>(
+        `/api/stories/${bookId}`,
+        {
+          title: title.trim(),
+          subtitle: subtitle.trim() || null,
+          description: description.trim() || null,
+          genreIds: selectedGenres,
+          cover_gradient: selectedGradient,
+          cover_accent: accentColor,
+          status,
+          release_schedule: releaseSchedule,
+        }
+      );
 
-      if (updated) {
+      if (res.ok) {
         setSuccessMessage("Story details saved successfully!");
         setTimeout(() => setSuccessMessage(null), 3500);
       } else {
-        setErrorMessage("Failed to update story.");
+        setErrorMessage(res.error || "Failed to update story.");
       }
     } catch (err) {
-      console.error("Error updating story:", err);
-      setErrorMessage("An unexpected error occurred while saving.");
+      console.error("Error updating story via API:", err);
+      setErrorMessage(
+        err instanceof Error ? err.message : "Network error updating story."
+      );
     } finally {
       setIsSaving(false);
     }

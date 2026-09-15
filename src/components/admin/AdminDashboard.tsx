@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Activity,
   ArrowLeft,
+  Radio,
 } from "lucide-react";
 import Link from "next/link";
 import type {
@@ -36,6 +37,7 @@ import { AdminBooksTab } from "./AdminBooksTab";
 import { AdminUsersTab } from "./AdminUsersTab";
 import { AdminReviewsTab } from "./AdminReviewsTab";
 import { AdminAuditLogsTab } from "./AdminAuditLogsTab";
+import { AdminNetworkTab } from "./AdminNetworkTab";
 
 interface AdminDashboardProps {
   currentUserId: string;
@@ -101,6 +103,7 @@ export function AdminDashboard({
     { id: "users", label: "Users & Authors", icon: <Users className="w-4 h-4" /> },
     { id: "reviews", label: "Reviews & Comments", icon: <MessageSquare className="w-4 h-4" /> },
     { id: "logs", label: "Audit Logs", icon: <Activity className="w-4 h-4" /> },
+    { id: "network", label: "Network Monitor", icon: <Radio className="w-4 h-4 text-emerald-500" /> },
   ];
 
   return (
@@ -227,6 +230,8 @@ export function AdminDashboard({
             onRefresh={refreshAllData}
           />
         )}
+
+        {activeTab === "network" && <AdminNetworkTab />}
       </main>
     </div>
   );
