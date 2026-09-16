@@ -5,6 +5,15 @@
  * - Cryptographic ETag calculation for Conditional GET (RFC 7232)
  * - 304 Not Modified generation to eliminate redundant payload transfers
  * - Targeted cache invalidation upon story publishing and updates
+ *
+ * PRODUCTION DEPLOYMENT & SCALING ARCHITECTURE (ARCH-01):
+ * - Single-Instance / Docker Container: The in-memory Map store is optimal, zero-dependency,
+ *   and provides sub-millisecond cache lookups and invalidation with zero network hops.
+ * - Horizontal Multi-Instance / Serverless Scaling: In multi-container Docker clusters,
+ *   Kubernetes pods, or serverless platforms (Vercel, AWS Lambda), process memory is isolated
+ *   per instance. For horizontal scaling, swap this in-memory backing store with a distributed
+ *   cache such as Redis (Upstash) or Next.js native revalidateTag/unstable_cache. No Redis
+ *   dependency is required for single-instance deployments.
  */
 
 import { NextRequest, NextResponse } from "next/server";

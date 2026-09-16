@@ -41,15 +41,17 @@ const SecureAuthStorage = {
 };
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const supabasePublishableKey =
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabasePublishableKey) {
   throw new Error(
-    "[Config] EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY must be set in .env"
+    "[Config] EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or legacy EXPO_PUBLIC_SUPABASE_ANON_KEY) must be set in .env"
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {
     storage: SecureAuthStorage,
     autoRefreshToken: true,

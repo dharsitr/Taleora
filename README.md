@@ -122,8 +122,15 @@ NEXT_PUBLIC_APP_DESCRIPTION="A modern, immersive story and reading experience"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 NEXT_PUBLIC_SUPABASE_URL="https://<your-project-id>.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="<your-anon-key>"
-SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"
+# Modern Publishable Key (Recommended)
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
+# Legacy Anon Key (Supported fallback)
+# NEXT_PUBLIC_SUPABASE_ANON_KEY="<your-legacy-anon-key>"
+
+# Server-Only Secret Key (NEVER expose to browser/client)
+SUPABASE_SECRET_KEY="sb_secret_..."
+# Legacy Service Role Key (Supported fallback)
+# SUPABASE_SERVICE_ROLE_KEY="<your-legacy-service-role-key>"
 ```
 
 ### 3. Run Development Server

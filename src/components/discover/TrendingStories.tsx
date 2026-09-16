@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Flame, Star, BookOpen, Clock } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
 
@@ -95,10 +96,12 @@ export function TrendingStories({ books, loading }: TrendingStoriesProps) {
               {/* Book Cover Thumbnail */}
               <div className="relative w-20 h-28 shrink-0 rounded-xl overflow-hidden shadow-sm border border-border/60 group-hover:scale-[1.02] transition-transform">
                 {book.cover_image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={book.cover_image_url}
                     alt={book.title}
+                    fill
+                    sizes="80px"
+                    unoptimized={!book.cover_image_url.includes(".supabase.co") && !book.cover_image_url.startsWith("/")}
                     className="w-full h-full object-cover"
                   />
                 ) : (

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Star, Clock, BookOpen, Bookmark } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -24,9 +25,12 @@ export function StoryCard({ book }: StoryCardProps) {
         className={`h-44 w-full bg-gradient-to-br ${gradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
       >
         {book.cover_image_url && (
-          <img
+          <Image
             src={book.cover_image_url}
             alt={book.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            unoptimized={!book.cover_image_url.includes(".supabase.co") && !book.cover_image_url.startsWith("/")}
             className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
         )}

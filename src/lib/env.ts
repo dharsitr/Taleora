@@ -12,17 +12,20 @@ export interface AppEnv {
   appDescription: string;
   appUrl: string;
   supabaseUrl: string;
-  supabaseAnonKey: string;
+  supabasePublishableKey: string;
+  supabaseAnonKey: string; // Backward-compatible alias for supabasePublishableKey
   isProduction: boolean;
   isDevelopment: boolean;
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabasePublishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabasePublishableKey) {
   throw new Error(
-    "[Config] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. Copy .env.example to .env.local and fill in the values."
+    "[Config] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or legacy NEXT_PUBLIC_SUPABASE_ANON_KEY) must be set. Copy .env.example to .env.local and fill in the values."
   );
 }
 
@@ -33,7 +36,8 @@ export const env: AppEnv = {
     "A modern, immersive story and reading experience",
   appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   supabaseUrl,
-  supabaseAnonKey,
+  supabasePublishableKey,
+  supabaseAnonKey: supabasePublishableKey,
   isProduction: process.env.NODE_ENV === "production",
   isDevelopment: process.env.NODE_ENV === "development",
 };

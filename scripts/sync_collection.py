@@ -468,10 +468,10 @@ def main():
 
     env = load_env()
     url = env.get("NEXT_PUBLIC_SUPABASE_URL")
-    key = env.get("SUPABASE_SERVICE_ROLE_KEY")
+    key = env.get("SUPABASE_SECRET_KEY") or env.get("SUPABASE_SERVICE_ROLE_KEY")
 
     if not url or not key:
-        print("❌ Error: Supabase credentials missing in .env.local")
+        print("❌ Error: Supabase credentials missing in .env.local (require NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY / SUPABASE_SERVICE_ROLE_KEY)")
         sys.exit(1)
 
     # Collect disk files

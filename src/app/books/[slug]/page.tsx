@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -94,9 +95,13 @@ export default async function BookDetailsPage({ params }: BookPageProps) {
             {/* Book Spine / Cover Mock */}
             <div className="w-36 h-52 sm:w-44 sm:h-64 rounded-xl bg-black/40 border border-white/25 shadow-2xl p-4 flex flex-col justify-between shrink-0 relative overflow-hidden backdrop-blur-xs">
               {book.cover_image_url && (
-                <img
+                <Image
                   src={book.cover_image_url}
                   alt={book.title}
+                  fill
+                  sizes="(max-width: 640px) 144px, 176px"
+                  priority
+                  unoptimized={!book.cover_image_url.includes(".supabase.co") && !book.cover_image_url.startsWith("/")}
                   className="absolute inset-0 w-full h-full object-cover object-center"
                 />
               )}

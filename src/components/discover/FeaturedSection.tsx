@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Sparkles, BookOpen, Star, ArrowRight } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
 import { Button } from "@/components/ui/Button";
@@ -65,10 +66,12 @@ export function FeaturedSection({ books, loading }: FeaturedSectionProps) {
               {/* Cover Column */}
               <div className="relative w-full sm:w-48 h-56 sm:h-auto shrink-0 overflow-hidden bg-muted">
                 {book.cover_image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={book.cover_image_url}
                     alt={book.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 192px"
+                    unoptimized={!book.cover_image_url.includes(".supabase.co") && !book.cover_image_url.startsWith("/")}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (

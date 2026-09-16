@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Star, Clock, BookOpen, Layers } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
 import { Badge } from "@/components/ui/Badge";
@@ -26,9 +27,12 @@ export function BookCard({ book }: BookCardProps) {
         className={`h-48 w-full bg-gradient-to-br ${coverGradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
       >
         {book.cover_image_url && (
-          <img
+          <Image
             src={book.cover_image_url}
             alt={book.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            unoptimized={!book.cover_image_url.includes(".supabase.co") && !book.cover_image_url.startsWith("/")}
             className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
         )}

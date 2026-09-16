@@ -28,12 +28,12 @@ A comprehensive production readiness audit was performed across security, databa
 | **SEC-01** | Storage / RLS | **CRITICAL** | Missing DELETE RLS policy on `book-chapters` storage bucket | **RESOLVED & VERIFIED ✅** |
 | **SEC-02** | API Security | **HIGH** | Cron publishing route allows unauthenticated access if `CRON_SECRET` is unset | **RESOLVED & VERIFIED ✅** |
 | **PERF-01** | API Rate Limiting | **HIGH** | Heavy offline hydration endpoint (`/api/books/[slug]/offline`) lacks rate limiting | **RESOLVED & VERIFIED ✅** |
-| **ARCH-01** | Scalability / Cache | **MEDIUM** | In-memory ETag cache and rate limiter store state locally in process memory | Documented for Cluster Scale |
-| **SEC-03** | Database / RPC | **MEDIUM** | `is_admin` and `is_admin_or_moderator` executable via PostgREST RPC by `authenticated` | Needs Remediation |
-| **PERF-02** | Database / RLS | **MEDIUM** | Multiple permissive UPDATE policies on `books`, `authors`, and `chapters` | Recommended Optimization |
-| **REL-01** | Realtime WebSockets | **MEDIUM** | WebSocket hook re-subscribes repeatedly due to unstable callback reference | Needs Remediation |
-| **UX-01** | Performance / LCP | **LOW** | Direct `<img>` tags used instead of `<Image />` from `next/image` in cards | Minor Optimization |
-| **SEC-04** | Auth Policy | **LOW** | HaveIBeenPwned leaked password protection disabled in Supabase project | Project Dashboard Setting |
+| **ARCH-01** | Scalability / Cache | **MEDIUM** | In-memory ETag cache and rate limiter store state locally in process memory | **DOCUMENTED ARCHITECTURE ✅** (Single-Instance Ready) |
+| **SEC-03** | Database / RPC | **MEDIUM** | `is_admin` and `is_admin_or_moderator` executable via PostgREST RPC by `authenticated` | **RESOLVED & VERIFIED ✅** |
+| **PERF-02** | Database / RLS | **MEDIUM** | Multiple permissive UPDATE policies on `books`, `authors`, and `chapters` | **RESOLVED & VERIFIED ✅** |
+| **REL-01** | Realtime WebSockets | **MEDIUM** | WebSocket hook re-subscribes repeatedly due to unstable callback reference | **RESOLVED & VERIFIED ✅** |
+| **UX-01** | Performance / LCP | **LOW** | Direct `<img>` tags used instead of `<Image />` from `next/image` in cards | **RESOLVED & VERIFIED ✅** |
+| **SEC-04** | Auth Policy | **LOW** | HaveIBeenPwned leaked password protection disabled in Supabase project | **MANAGED DASHBOARD SETTING ⚠️** |
 
 ---
 
@@ -86,49 +86,74 @@ A comprehensive production readiness audit was performed across security, databa
 ### Medium Severity Findings
 
 #### [ARCH-01] In-Memory Caching & Rate Limiting in Serverless / Multi-Instance Deployments
-- **Location:** `src/lib/network/cache.ts:20` & `src/lib/network/rate-limiter.ts:18`
-- **Evidence:**
-  Both `NetworkCacheStore` and `SlidingWindowRateLimiter` use in-process `Map` instances (`private cache = new Map(...)`).
-- **Impact:** In a multi-container Docker cluster or serverless deployment (Vercel, AWS Lambda), memory is not shared across instances. Story cache invalidation (`storyCache.flush()`) on Instance A will not invalidate cached data on Instance B.
-- **Remediation:** For single-server or Docker deployments with sticky sessions, the current implementation functions correctly. For horizontally scaled serverless deployments, migrate backing stores to Redis (Upstash) or rely on Next.js native `revalidateTag` / `unstable_cache`.
+- **Location:** `src/lib/network/cache.ts:20` & `src/lib/security/rate-limit.ts:13`
+- **Current Design & Behavior:**
+  - Both `NetworkCacheStore` (`src/lib/network/cache.ts`) and `SlidingWindowRateLimiter` (`src/lib/security/rate-limit.ts`) use in-process `Map` stores.
+  - **Single-Instance Deployment (VPS, Single-Container Docker, Dedicated Node.js)**: The implementation is 100% production-ready, zero-dependency, and offers sub-millisecond lookups with zero network overhead.
+- **Horizontal & Serverless Multi-Instance Scaling Architecture:**
+  - In a horizontally scaled architecture (multi-container Kubernetes clusters, multi-region AWS ECS, or serverless platforms like Vercel / AWS Lambda), process memory is isolated per node.
+  - Story cache invalidation (`storyCache.flush()`) on Node A will not invalidate Node B's local cache, and rate-limiting budgets will be partitioned per instance.
+  - **Production Migration Path**: When horizontally scaling across multiple instances, swap the local backing store with an external distributed cache (such as Upstash Redis via `@upstash/redis` and `@upstash/ratelimit`) or Next.js native `unstable_cache` with tag invalidation (`revalidateTag`). No external Redis dependency is introduced now to keep single-instance production lean.
+- **Status:** **DOCUMENTED ARCHITECTURE ✅** (Single-Instance Ready)
 
 #### [SEC-03] Security Definer Functions Callable via PostgREST RPC
 - **Location:** Supabase Database Advisor (`0029_authenticated_security_definer_function_executable`)
 - **Evidence:**
   `public.is_admin(user_id uuid)` and `public.is_admin_or_moderator(user_id uuid)` were defined with `security definer`. In PostgreSQL, functions in `public` grant execute to `PUBLIC` by default unless explicitly revoked from `PUBLIC`.
-- **Impact:** While they return booleans and do not escalate privileges, authenticated users can probe any UUID via `/rest/v1/rpc/is_admin` to enumerate administrative accounts.
-- **Remediation:** Execute `REVOKE ALL ON FUNCTION public.is_admin(uuid) FROM PUBLIC;` and `REVOKE ALL ON FUNCTION public.is_admin_or_moderator(uuid) FROM PUBLIC;`.
+- **Impact:** While they return booleans and do not escalate privileges, authenticated users could probe any UUID via `/rest/v1/rpc/is_admin` to enumerate administrative accounts.
+- **Remediation & Verification:**
+  - Applied migration `20260916000001_secure_admin_rpc_and_consolidate_rls.sql`:
+    - Revoked all execution on `public.is_admin` and `public.is_admin_or_moderator` from `PUBLIC`, `anon`, and `authenticated`.
+    - Granted execution strictly to server/internal roles (`postgres`, `service_role`).
+    - Migrated RLS policies to use indexed profile subqueries (`exists (select 1 from public.profiles where id = (select auth.uid()) and role in ('admin', 'moderator') and is_suspended = false)`), preserving complete admin/moderator authorization without requiring public RPC execution.
+  - Verified with Supabase Database Advisor: both functions eliminated from `0029_authenticated_security_definer_function_executable`.
+- **Status:** **RESOLVED & VERIFIED ✅**
 
 #### [PERF-02] Multiple Permissive UPDATE Policies on Database Tables
 - **Location:** Supabase Performance Advisor (`0006_multiple_permissive_policies`)
 - **Evidence:**
-  `public.books`, `public.authors`, and `public.chapters` each have two separate permissive `UPDATE` policies (e.g. "Authors can update their own books" AND "Admins and moderators can update any book").
-- **Impact:** PostgreSQL evaluates both policies on every update query.
-- **Remediation:** Combine into a single unified policy:
-  ```sql
-  using ((select auth.uid()) = user_id or public.is_admin_or_moderator((select auth.uid())))
-  ```
+  `public.books`, `public.authors`, and `public.chapters` each had two separate permissive `UPDATE` policies (e.g. "Authors can update their own books" AND "Admins and moderators can update any book").
+- **Impact:** PostgreSQL evaluated both policies on every update query.
+- **Remediation & Verification:**
+  - Consolidated into single unified `UPDATE` policies on `books`, `authors`, and `chapters` in migration `20260916000001_secure_admin_rpc_and_consolidate_rls.sql`.
+  - Preserved exact author self-ownership (`(select auth.uid()) = user_id`) and admin/moderator authorization.
+  - Verified with Supabase Performance Advisor: `0006_multiple_permissive_policies` completely cleared (0 findings across all tables).
+- **Status:** **RESOLVED & VERIFIED ✅**
 
 #### [REL-01] WebSocket Channel Thrashing in `NotificationsDrawer`
 - **Location:** `src/components/social/NotificationsDrawer.tsx:48` & `src/lib/network/websocket-notifications.ts:93`
 - **Evidence:**
-  `NotificationsDrawer` passes an inline function `onNotificationReceived: (newNotif) => { ... }` without `useCallback`. The hook `useWebSocketNotifications` specifies `onNotificationReceived` in its `useEffect` dependency array.
-- **Impact:** Whenever the drawer renders (such as when loading state changes), the effect cleans up and re-opens the Supabase Realtime channel, generating unnecessary WebSocket connection cycles.
-- **Remediation:** Store `onNotificationReceived` in a `useRef` inside `useWebSocketNotifications` or wrap the drawer handler in `useCallback`.
+  `NotificationsDrawer` passed an inline function `onNotificationReceived: (newNotif) => { ... }` without `useCallback`. The hook `useWebSocketNotifications` specified `onNotificationReceived` in its `useEffect` dependency array.
+- **Impact:** Whenever the drawer rendered (such as when loading state changed), the effect cleaned up and re-opened the Supabase Realtime channel, generating unnecessary WebSocket connection cycles.
+- **Remediation & Verification:**
+  - Stored `onNotificationReceived` and `onStatusChange` in `React.useRef` inside `useWebSocketNotifications`, isolating the subscription `useEffect` dependencies strictly to `[userId]`.
+  - Wrapped `handleNotificationReceived` in `React.useCallback` in `NotificationsDrawer.tsx` and computed unread count accurately from functional state updater.
+  - Verified via 5 automated tests in `src/__tests__/network/websocket-notifications.test.ts`.
+- **Status:** **RESOLVED & VERIFIED ✅**
 
 ---
 
 ### Low Severity Findings
 
 #### [UX-01] Unoptimized `<img>` Tags in Story and Book Cards
-- **Location:** `src/components/books/BookCard.tsx:29`, `src/components/home/StoryCard.tsx:27`, `src/app/books/[slug]/page.tsx:97`
-- **Impact:** Bypasses Next.js image optimization (WebP conversion, responsive sizes, lazy loading).
-- **Remediation:** Replace with `<Image />` from `next/image` or maintain standard `<img>` if cover art is dynamically tinted.
+- **Location:** `src/components/books/BookCard.tsx`, `src/components/home/StoryCard.tsx`, `src/app/books/[slug]/page.tsx`, `src/components/discover/FeaturedSection.tsx`, `src/components/discover/TrendingStories.tsx`
+- **Remediation & Verification:**
+  - Migrated eligible cover art `<img>` elements to Next.js `<Image />` (`next/image`) with responsive `sizes`, WebP automatic compression, and `priority` on the main book details view.
+  - Preserved dynamic atmospheric gradient overlays (`bg-gradient-to-t`) and book spine creases across all cards and detail views.
+  - Maintained standard `<img>` for offline storage views (`src/app/offline/page.tsx` and `src/components/offline/OfflineStorageManager.tsx`) where cover art is hydrated locally from IndexedDB as Base64 data URLs during complete network disconnections.
+  - Eliminated all `@next/next/no-img-element` ESLint warnings across the entire application codebase.
+- **Status:** **RESOLVED & VERIFIED ✅**
 
-#### [SEC-04] HaveIBeenPwned Leaked Password Protection Disabled
+#### [SEC-04] HaveIBeenPwned Leaked Password Protection
 - **Location:** Supabase Security Advisor (`0014_auth_leaked_password_protection`)
-- **Impact:** Users can register with compromised credentials found in public credential dumps.
-- **Remediation:** Enable "Leaked Password Protection" under Supabase Project Settings > Authentication > Password Security.
+- **Status & Verification:**
+  - **Verified Status:** Disabled by default in the Supabase cloud project (`tqcxnzmfcgortjkjlisu`).
+  - **Remediation Requirement:** This is a managed Supabase GoTrue Auth service feature that cannot be toggled via client-side code or PostgreSQL SQL migrations.
+  - **Required Dashboard Action:**
+    1. Log in to the [Supabase Dashboard](https://supabase.com/dashboard/project/tqcxnzmfcgortjkjlisu/settings/auth).
+    2. Navigate to **Authentication > Password Security** (or **Project Settings > Auth**).
+    3. Toggle ON **"Prevent the use of leaked passwords"** (validates password strength and rejects compromised passwords against HaveIBeenPwned.org).
+- **Status:** **MANAGED DASHBOARD SETTING ⚠️** (Actionable Guide Documented)
 
 ---
 

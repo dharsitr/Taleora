@@ -14,14 +14,15 @@ export function createAdminClient() {
     );
   }
 
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
+  const secretOrServiceKey =
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secretOrServiceKey) {
     throw new Error(
-      "[Configuration Error] SUPABASE_SERVICE_ROLE_KEY is not defined in environment variables."
+      "[Configuration Error] SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY) is not defined in environment variables."
     );
   }
 
-  return createClient<Database>(env.supabaseUrl, serviceRoleKey, {
+  return createClient<Database>(env.supabaseUrl, secretOrServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

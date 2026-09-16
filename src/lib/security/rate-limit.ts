@@ -2,6 +2,15 @@
  * Sliding-window in-memory rate limiter for Taleora.
  * Protects against brute force, denial-of-service, content spam,
  * and malicious scraping across API routes and Server Actions.
+ *
+ * PRODUCTION DEPLOYMENT & SCALING ARCHITECTURE (ARCH-01):
+ * - Single-Instance / Docker Container: The in-memory Map store operates with zero external
+ *   dependencies and sub-millisecond atomic updates within the Node.js event loop.
+ * - Horizontal Multi-Instance / Serverless Scaling: In multi-container Docker clusters,
+ *   Kubernetes pods, or serverless deployments, rate-limit counters reside in separate process
+ *   memories. For horizontal multi-instance scaling, configure a distributed store such as
+ *   Upstash Redis (@upstash/ratelimit) using an atomic sliding-window algorithm. No Redis
+ *   dependency is required for single-instance deployments.
  */
 
 interface RateLimitRecord {

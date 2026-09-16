@@ -101,12 +101,12 @@ class TaleoraImporter:
         self.base_dir = base_dir if os.path.exists(base_dir) else "book"
         self.env = load_env()
         self.supabase_url = self.env.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip("/")
-        self.service_role_key = self.env.get("SUPABASE_SERVICE_ROLE_KEY", "")
+        self.service_role_key = self.env.get("SUPABASE_SECRET_KEY") or self.env.get("SUPABASE_SERVICE_ROLE_KEY", "")
         self.lock = threading.Lock()
 
         if not self.dry_run and (not self.supabase_url or not self.service_role_key):
             raise ValueError(
-                "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment or .env.local"
+                "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY/SUPABASE_SERVICE_ROLE_KEY in environment or .env.local"
             )
 
         os.makedirs(".temp", exist_ok=True)

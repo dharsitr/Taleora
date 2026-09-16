@@ -36,17 +36,27 @@ export function useWebSocketNotifications({
   const [status, setStatus] = React.useState<WebSocketConnectionStatus>("disconnected");
   const [liveNotifications, setLiveNotifications] = React.useState<NotificationRow[]>([]);
   const channelRef = React.useRef<RealtimeChannel | null>(null);
+  const onNotificationReceivedRef = React.useRef(onNotificationReceived);
+  const onStatusChangeRef = React.useRef(onStatusChange);
+
+  React.useEffect(() => {
+    onNotificationReceivedRef.current = onNotificationReceived;
+  }, [onNotificationReceived]);
+
+  React.useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
 
   React.useEffect(() => {
     if (!userId) {
       setStatus("disconnected");
-      onStatusChange?.("disconnected");
+      onStatusChangeRef.current?.("disconnected");
       return;
     }
 
     const supabase = createClient();
     setStatus("connecting");
-    onStatusChange?.("connecting");
+    onStatusChangeRef.current?.("connecting");
 
     const channelName = `realtime:user_notifications:${userId}`;
     const channel = supabase.channel(channelName);
@@ -64,21 +74,21 @@ export function useWebSocketNotifications({
         (payload) => {
           const newNotification = payload.new as NotificationRow;
           setLiveNotifications((prev) => [newNotification, ...prev]);
-          if (onNotificationReceived) {
-            onNotificationReceived(newNotification);
+          if (onNotificationReceivedRef.current) {
+            onNotificationReceivedRef.current(newNotification);
           }
         }
       )
       .subscribe((subscribeStatus) => {
         if (subscribeStatus === "SUBSCRIBED") {
           setStatus("connected");
-          onStatusChange?.("connected");
+          onStatusChangeRef.current?.("connected");
         } else if (subscribeStatus === "TIMED_OUT" || subscribeStatus === "CHANNEL_ERROR") {
           setStatus("error");
-          onStatusChange?.("error");
+          onStatusChangeRef.current?.("error");
         } else if (subscribeStatus === "CLOSED") {
           setStatus("disconnected");
-          onStatusChange?.("disconnected");
+          onStatusChangeRef.current?.("disconnected");
         }
       });
 
@@ -88,9 +98,9 @@ export function useWebSocketNotifications({
         channelRef.current = null;
       }
       setStatus("disconnected");
-      onStatusChange?.("disconnected");
+      onStatusChangeRef.current?.("disconnected");
     };
-  }, [userId, onNotificationReceived, onStatusChange]);
+  }, [userId]);
 
   return {
     status,

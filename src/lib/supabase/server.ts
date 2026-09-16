@@ -12,7 +12,7 @@ export async function createClient() {
 
   return createServerClient<Database>(
     env.supabaseUrl,
-    env.supabaseAnonKey,
+    env.supabasePublishableKey,
     {
       cookies: {
         getAll() {

@@ -13,7 +13,6 @@ export function Footer() {
                 <BookOpen className="w-4 h-4" />
               </div>
               <span className="font-serif text-lg font-bold">Taleora</span>
-              <span className="text-xs text-muted-foreground">· Phase 01 Story Reader</span>
             </div>
             <p className="text-xs text-muted-foreground max-w-sm">
               Designed for readers who cherish immersive narratives, distraction-free typography, and quiet hours with great books.
@@ -43,13 +42,7 @@ export function Footer() {
             <Feather className="w-3.5 h-3.5 text-primary" />
             <span>for story lovers everywhere.</span>
           </p>
-          <div className="flex items-center gap-3">
-            <span>Next.js 15+ App Router</span>
-            <span>·</span>
-            <span>TypeScript</span>
-            <span>·</span>
-            <span>Tailwind CSS</span>
-          </div>
+          <p>© {new Date().getFullYear()} Taleora. All rights reserved.</p>
         </div>
       </div>
     </footer>

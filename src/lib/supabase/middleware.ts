@@ -40,7 +40,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient<Database>(
     env.supabaseUrl,
-    env.supabaseAnonKey,
+    env.supabasePublishableKey,
     {
       cookies: {
         getAll() {

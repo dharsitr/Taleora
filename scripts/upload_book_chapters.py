@@ -147,10 +147,10 @@ def main():
 
     env = load_env()
     supabase_url = env.get("NEXT_PUBLIC_SUPABASE_URL")
-    service_role_key = env.get("SUPABASE_SERVICE_ROLE_KEY")
+    service_role_key = env.get("SUPABASE_SECRET_KEY") or env.get("SUPABASE_SERVICE_ROLE_KEY")
 
     if not supabase_url or not service_role_key:
-        print("❌ Error: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in .env.local")
+        print("❌ Error: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY/SUPABASE_SERVICE_ROLE_KEY missing in .env.local")
         sys.exit(1)
 
     if not os.path.exists(CONTENT_DIR):

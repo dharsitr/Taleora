@@ -12,7 +12,6 @@ import {
   Feather,
   Sparkles,
   Loader2,
-  Radio,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { NotificationRow, NotificationType } from "@/types/social";
@@ -42,16 +41,23 @@ export function NotificationsDrawer({
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [isMarkingAll, setIsMarkingAll] = React.useState<boolean>(false);
 
+  const handleNotificationReceived = React.useCallback(
+    (newNotif: NotificationRow) => {
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === newNotif.id)) return prev;
+        const updated = [newNotif, ...prev];
+        const unread = updated.filter((n) => !n.is_read).length;
+        onCountChange?.(unread);
+        return updated;
+      });
+    },
+    [onCountChange]
+  );
+
   // Real-time WebSocket connection for live notification stream
   const { status: wsStatus } = useWebSocketNotifications({
     userId: user?.id,
-    onNotificationReceived: (newNotif) => {
-      setNotifications((prev) => {
-        if (prev.some((n) => n.id === newNotif.id)) return prev;
-        return [newNotif, ...prev];
-      });
-      onCountChange?.(notifications.filter((n) => !n.is_read).length + 1);
-    },
+    onNotificationReceived: handleNotificationReceived,
   });
 
   React.useEffect(() => {
