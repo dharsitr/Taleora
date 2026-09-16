@@ -16,6 +16,7 @@ export interface ValidatedStoryInput {
   subtitle: string | null;
   description: string | null;
   genreIds: string[];
+  cover_image_url?: string | null;
   cover_gradient: string;
   cover_accent: string;
   status: "draft" | "published";
@@ -61,6 +62,16 @@ export function validateStoryPayload(raw: unknown): ValidationResult<ValidatedSt
       .map((g) => g.trim());
   }
 
+  // Cover Image URL (optional)
+  let cover_image_url: string | null | undefined = undefined;
+  if ("cover_image_url" in input) {
+    if (typeof input.cover_image_url === "string" && input.cover_image_url.trim()) {
+      cover_image_url = input.cover_image_url.trim();
+    } else {
+      cover_image_url = null;
+    }
+  }
+
   // Cover Gradient & Accent
   const cover_gradient =
     typeof input.cover_gradient === "string" && input.cover_gradient.trim()
@@ -93,6 +104,7 @@ export function validateStoryPayload(raw: unknown): ValidationResult<ValidatedSt
       subtitle,
       description,
       genreIds,
+      cover_image_url,
       cover_gradient,
       cover_accent,
       status,

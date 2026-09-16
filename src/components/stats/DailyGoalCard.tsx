@@ -17,10 +17,10 @@ export function DailyGoalCard({
   dailyGoalMinutes,
   onOpenGoalModal,
 }: DailyGoalCardProps) {
-  const safeGoal = Math.max(1, dailyGoalMinutes);
-  const percent = Math.min(100, Math.round((todayMinutes / safeGoal) * 100));
-  const isCompleted = todayMinutes >= safeGoal;
-  const remaining = Math.max(0, safeGoal - todayMinutes);
+  const hasGoal = dailyGoalMinutes > 0;
+  const percent = hasGoal ? Math.min(100, Math.round((todayMinutes / dailyGoalMinutes) * 100)) : 0;
+  const isCompleted = hasGoal && todayMinutes >= dailyGoalMinutes;
+  const remaining = hasGoal ? Math.max(0, dailyGoalMinutes - todayMinutes) : 0;
 
   return (
     <Card className="relative overflow-hidden border-border/80 bg-card">
@@ -37,7 +37,7 @@ export function DailyGoalCard({
             className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Adjust</span>
+            <span>{hasGoal ? "Adjust" : "Set Goal"}</span>
           </Button>
         </div>
 
@@ -45,7 +45,7 @@ export function DailyGoalCard({
           <CardTitle className="text-3xl font-bold font-serif text-foreground">
             {todayMinutes}{" "}
             <span className="text-lg font-normal text-muted-foreground font-sans">
-              / {safeGoal} min
+              / {dailyGoalMinutes} min
             </span>
           </CardTitle>
           <span
@@ -68,7 +68,9 @@ export function DailyGoalCard({
         </div>
 
         <CardDescription className="text-xs">
-          {isCompleted ? (
+          {!hasGoal ? (
+            <span>Set your daily reading goal to track your reading habit and progress.</span>
+          ) : isCompleted ? (
             <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 mt-0.5">
               <Sparkles className="w-3.5 h-3.5" />
               Outstanding! You hit today&apos;s literary target.

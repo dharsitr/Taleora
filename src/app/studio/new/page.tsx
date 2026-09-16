@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
-  createStory,
   getGenres,
   slugify,
   uploadCoverImage,
@@ -152,6 +151,7 @@ export default function CreateStoryPage() {
         subtitle: subtitle.trim() || null,
         description: description.trim() || null,
         genreIds: selectedGenres,
+        cover_image_url: coverType === "upload" ? coverImageUrl : null,
         cover_gradient: selectedGradient,
         cover_accent: accentColor,
         status,

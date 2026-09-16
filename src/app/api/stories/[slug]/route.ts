@@ -136,17 +136,31 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
 
     const input = validation.data;
 
+    const updatePayload: {
+      title: string;
+      subtitle: string | null;
+      description: string | null;
+      cover_gradient: string;
+      cover_accent: string;
+      status: "draft" | "published";
+      published_at: string | null;
+      cover_image_url?: string | null;
+    } = {
+      title: input.title,
+      subtitle: input.subtitle,
+      description: input.description,
+      cover_gradient: input.cover_gradient,
+      cover_accent: input.cover_accent,
+      status: input.status,
+      published_at: input.status === "published" ? new Date().toISOString() : null,
+    };
+    if (input.cover_image_url !== undefined) {
+      updatePayload.cover_image_url = input.cover_image_url;
+    }
+
     const { data: updated, error: updateErr } = await supabase
       .from("books")
-      .update({
-        title: input.title,
-        subtitle: input.subtitle,
-        description: input.description,
-        cover_gradient: input.cover_gradient,
-        cover_accent: input.cover_accent,
-        status: input.status,
-        published_at: input.status === "published" ? new Date().toISOString() : null,
-      })
+      .update(updatePayload)
       .eq("id", existingStory.id)
       .select("*, author:authors(*)")
       .single();

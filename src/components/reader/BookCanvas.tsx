@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, CheckCircle2, BookOpen } from "lucide-react";
 import { ChapterRow, HighlightColor, HighlightRow, ReaderSettings } from "@/types/books";
@@ -31,6 +32,7 @@ interface BookCanvasProps {
   coverState?: "closed" | "opening" | "open" | "closing";
   onOpenBook?: () => void;
   authorName?: string;
+  coverImageUrl?: string | null;
 }
 
 interface SinglePageRenderProps {
@@ -309,6 +311,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
       coverState = "open",
       onOpenBook,
       authorName,
+      coverImageUrl,
     },
     ref
   ) {
@@ -382,11 +385,26 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
             ref={ref}
             onClick={onOpenBook}
             className={cn(
-              "relative w-full max-w-sm sm:max-w-md h-[calc(100vh-140px)] min-h-[480px] max-h-[720px] rounded-2xl p-6 sm:p-8 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 book-cover-casing border group hover:scale-[1.01] select-none",
+              "relative w-full max-w-sm sm:max-w-md h-[calc(100vh-140px)] min-h-[480px] max-h-[720px] rounded-2xl p-6 sm:p-8 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 book-cover-casing border group hover:scale-[1.01] select-none overflow-hidden",
               coverRimClasses
             )}
             title="Click to Open Book"
           >
+            {/* Uploaded Cover Image Artwork */}
+            {coverImageUrl && (
+              <>
+                <Image
+                  src={coverImageUrl}
+                  alt={bookTitle}
+                  fill
+                  priority
+                  unoptimized={!coverImageUrl.includes(".supabase.co") && !coverImageUrl.startsWith("/")}
+                  className="absolute inset-0 w-full h-full object-cover object-center rounded-2xl pointer-events-none"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/40 rounded-2xl pointer-events-none" />
+              </>
+            )}
+
             {/* Stacked Pages on Right Edge */}
             <div className="absolute inset-y-3 right-0 w-3.5 rounded-r-md book-pages-stack-right pointer-events-none" />
             {/* Leather spine on Left Edge */}
@@ -398,23 +416,23 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
 
             {/* Top Label */}
             <div className="pt-4 z-10">
-              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] text-amber-500/80">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] text-amber-500/90 drop-shadow-sm">
                 Taleora Edition
               </span>
             </div>
 
             {/* Center Book Title & Embellishments */}
             <div className="flex flex-col items-center gap-3 z-10 px-4 my-auto">
-              <div className="text-amber-500/60 text-xs tracking-widest font-serif">
+              <div className="text-amber-500/70 text-xs tracking-widest font-serif drop-shadow-sm">
                 ❦ · ❦ · ❦
               </div>
-              <h1 className="font-serif text-2xl sm:text-4xl font-bold tracking-tight text-amber-100 drop-shadow-md leading-snug">
+              <h1 className="font-serif text-2xl sm:text-4xl font-bold tracking-tight text-amber-100 drop-shadow-lg leading-snug">
                 {bookTitle}
               </h1>
-              <p className="text-xs sm:text-sm font-serif italic text-amber-200/75 mt-1">
+              <p className="text-xs sm:text-sm font-serif italic text-amber-200/90 mt-1 drop-shadow-sm">
                 By {authorName || "Author"}
               </p>
-              <div className="mt-2 text-[11px] font-mono uppercase tracking-wider text-amber-400/60">
+              <div className="mt-2 text-[11px] font-mono uppercase tracking-wider text-amber-400/80 drop-shadow-sm">
                 Chapter {chapterNumber} · {chapterTitle}
               </div>
             </div>
@@ -616,20 +634,32 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                       )}
                       style={{ transform: "rotateY(180deg)" }}
                     >
+                      {coverImageUrl && (
+                        <>
+                          <Image
+                            src={coverImageUrl}
+                            alt={bookTitle}
+                            fill
+                            unoptimized={!coverImageUrl.includes(".supabase.co") && !coverImageUrl.startsWith("/")}
+                            className="absolute inset-0 w-full h-full object-cover object-center rounded-r-xl pointer-events-none"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/40 rounded-r-xl pointer-events-none" />
+                        </>
+                      )}
                       <div className="absolute inset-4 rounded-xl book-cover-foil-border pointer-events-none" />
                       <div className="absolute top-0 right-10 z-30 book-ribbon pointer-events-none" />
-                      <div className="pt-6 select-none text-[10px] uppercase tracking-widest text-amber-500/80">
+                      <div className="pt-6 select-none text-[10px] uppercase tracking-widest text-amber-500/90 z-10">
                         Taleora Edition
                       </div>
-                      <div className="flex flex-col items-center gap-2 my-auto px-4 select-none">
+                      <div className="flex flex-col items-center gap-2 my-auto px-4 select-none z-10">
                         <h2 className="font-serif text-2xl font-bold text-amber-100 drop-shadow-md">
                           {bookTitle}
                         </h2>
-                        <p className="text-xs font-serif italic text-amber-200/75">
+                        <p className="text-xs font-serif italic text-amber-200/90">
                           By {authorName || "Author"}
                         </p>
                       </div>
-                      <div className="pb-6 select-none text-[10px] font-mono uppercase tracking-wider text-amber-400/60">
+                      <div className="pb-6 select-none text-[10px] font-mono uppercase tracking-wider text-amber-400/80 z-10">
                         Chapter {chapterNumber}
                       </div>
                     </div>
@@ -821,20 +851,32 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                         coverRimClasses
                       )}
                     >
+                      {coverImageUrl && (
+                        <>
+                          <Image
+                            src={coverImageUrl}
+                            alt={bookTitle}
+                            fill
+                            unoptimized={!coverImageUrl.includes(".supabase.co") && !coverImageUrl.startsWith("/")}
+                            className="absolute inset-0 w-full h-full object-cover object-center rounded-xl pointer-events-none"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/40 rounded-xl pointer-events-none" />
+                        </>
+                      )}
                       <div className="absolute inset-4 rounded-xl book-cover-foil-border pointer-events-none" />
                       <div className="absolute top-0 right-10 z-30 book-ribbon pointer-events-none" />
-                      <div className="pt-6 select-none text-[10px] uppercase tracking-widest text-amber-500/80">
+                      <div className="pt-6 select-none text-[10px] uppercase tracking-widest text-amber-500/90 z-10">
                         Taleora Edition
                       </div>
-                      <div className="flex flex-col items-center gap-2 my-auto px-4 select-none">
+                      <div className="flex flex-col items-center gap-2 my-auto px-4 select-none z-10">
                         <h2 className="font-serif text-2xl font-bold text-amber-100 drop-shadow-md">
                           {bookTitle}
                         </h2>
-                        <p className="text-xs font-serif italic text-amber-200/75">
+                        <p className="text-xs font-serif italic text-amber-200/90">
                           By {authorName || "Author"}
                         </p>
                       </div>
-                      <div className="pb-6 select-none text-[10px] font-mono uppercase tracking-wider text-amber-400/60">
+                      <div className="pb-6 select-none text-[10px] font-mono uppercase tracking-wider text-amber-400/80 z-10">
                         Chapter {chapterNumber}
                       </div>
                     </div>

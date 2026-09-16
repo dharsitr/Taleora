@@ -180,6 +180,7 @@ export async function POST(req: NextRequest) {
         subtitle: input.subtitle,
         slug: uniqueSlug,
         description: input.description,
+        cover_image_url: input.cover_image_url || null,
         cover_gradient: input.cover_gradient,
         cover_accent: input.cover_accent,
         status: input.status,

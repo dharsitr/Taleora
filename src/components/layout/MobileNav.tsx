@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { MAIN_NAV_ITEMS, AUTHOR_NAV_ITEMS } from "./Sidebar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { MOCK_READING_STATS } from "@/lib/mock-data";
+import { useDailyReadingProgress } from "@/lib/stats/use-daily-reading-progress";
 import { useAuth } from "@/lib/auth/use-auth";
 
 interface MobileNavProps {
@@ -28,7 +28,11 @@ interface MobileNavProps {
 
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname();
-  const stats = MOCK_READING_STATS;
+  const {
+    minutesReadToday,
+    dailyGoalMinutes,
+    progressPercent,
+  } = useDailyReadingProgress();
   const { user, profile, signOut } = useAuth();
 
   // Prevent background scrolling when mobile drawer is open
@@ -203,25 +207,26 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             )}
 
             {/* Mini Goal Footer */}
-            <div className="pt-3 border-t border-border text-xs text-muted-foreground">
+            <Link
+              href="/goals"
+              onClick={onClose}
+              className="pt-3 border-t border-border text-xs text-muted-foreground block hover:text-foreground transition-colors cursor-pointer"
+            >
               <div className="flex justify-between mb-1.5 font-medium text-foreground">
                 <span>Daily Reading</span>
                 <span>
-                  {stats.minutesReadToday} / {stats.dailyGoalMinutes}m
+                  {minutesReadToday} / {dailyGoalMinutes}m
                 </span>
               </div>
               <div className="w-full bg-border h-1.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-primary h-full"
+                  className="bg-primary h-full transition-all duration-300"
                   style={{
-                    width: `${Math.min(
-                      (stats.minutesReadToday / stats.dailyGoalMinutes) * 100,
-                      100
-                    )}%`,
+                    width: `${Math.min(progressPercent, 100)}%`,
                   }}
                 />
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       )}

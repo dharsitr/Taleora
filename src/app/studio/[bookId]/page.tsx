@@ -19,7 +19,6 @@ import {
   deleteStory,
   getAuthorStory,
   getGenres,
-  updateStory,
   uploadCoverImage,
 } from "@/lib/books/queries";
 import { BookDetail, BookStatus, GenreRow, ReleaseCadence } from "@/types/books";
@@ -183,6 +182,7 @@ export default function EditStoryDetailsPage() {
           subtitle: subtitle.trim() || null,
           description: description.trim() || null,
           genreIds: selectedGenres,
+          cover_image_url: coverType === "upload" ? coverImageUrl : null,
           cover_gradient: selectedGradient,
           cover_accent: accentColor,
           status,

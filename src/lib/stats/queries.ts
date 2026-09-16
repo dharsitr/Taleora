@@ -55,6 +55,10 @@ export async function recordReadingSession(input: {
       return null;
     }
 
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("reading-session-recorded"));
+    }
+
     return data as ReadingSessionRow;
   } catch (err) {
     console.error("Failed to record reading session:", err);
@@ -63,7 +67,7 @@ export async function recordReadingSession(input: {
 }
 
 /**
- * Get user reading goals or return default if not yet saved.
+ * Get user reading goals or return zero defaults if not yet set by the user.
  */
 export async function getUserReadingGoal(userId: string): Promise<ReadingGoalRow> {
   const supabase = createClient();
@@ -78,9 +82,9 @@ export async function getUserReadingGoal(userId: string): Promise<ReadingGoalRow
     return {
       id: "default",
       user_id: userId,
-      daily_minutes_goal: DEFAULT_GOALS.daily_minutes_goal,
-      weekly_days_goal: DEFAULT_GOALS.weekly_days_goal,
-      annual_books_goal: DEFAULT_GOALS.annual_books_goal,
+      daily_minutes_goal: 0,
+      weekly_days_goal: 0,
+      annual_books_goal: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -119,6 +123,10 @@ export async function updateUserReadingGoal(
   if (error) {
     console.error("Error updating reading goals:", error);
     return null;
+  }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("reading-goals-updated", { detail: data }));
   }
 
   return data as ReadingGoalRow;

@@ -1093,6 +1093,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
           coverState={bookCoverState}
           onOpenBook={handleOpenBook}
           authorName={book.author?.name}
+          coverImageUrl={book.cover_image_url || undefined}
         />
       </main>
 

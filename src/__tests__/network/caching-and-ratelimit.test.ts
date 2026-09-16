@@ -79,11 +79,13 @@ describe("Request Validation", () => {
       subtitle: "A story about protocols",
       description: "Exploring packet routing.",
       genreIds: ["sci-fi"],
+      cover_image_url: "https://example.com/cover.png",
       status: "published",
     });
 
     expect(valid.success).toBe(true);
     expect(valid.data?.title).toBe("The Digital Frontier");
+    expect(valid.data?.cover_image_url).toBe("https://example.com/cover.png");
     expect(valid.data?.status).toBe("published");
   });
 

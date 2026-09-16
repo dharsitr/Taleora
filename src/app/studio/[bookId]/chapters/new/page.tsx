@@ -15,10 +15,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
-  createChapter,
   getAuthorStory,
   getStoryChaptersForAuthor,
-  slugify,
 } from "@/lib/books/queries";
 import {
   BookDetail,
@@ -43,7 +41,6 @@ export default function NewChapterPage() {
   // Form states
   const [title, setTitle] = React.useState("");
   const [chapterNumber, setChapterNumber] = React.useState<number>(1);
-  const [slug, setSlug] = React.useState("");
   const [content, setContent] = React.useState("");
 
   // Scheduling states
@@ -72,7 +69,6 @@ export default function NewChapterPage() {
         const nextNum = (c.length > 0 ? Math.max(...c.map((x) => x.chapter_number)) : 0) + 1;
         setChapterNumber(nextNum);
         setTitle(`Chapter ${nextNum}`);
-        setSlug(`chapter-${nextNum}`);
 
         // Default scheduled datetime to tomorrow 6:00 PM local
         const tomorrow = new Date();
@@ -100,9 +96,7 @@ export default function NewChapterPage() {
   const estimatedReadMinutes = Math.max(1, Math.ceil(wordCount / 200));
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setTitle(val);
-    setSlug(slugify(val) || `chapter-${chapterNumber}`);
+    setTitle(e.target.value);
   };
 
   // Compute calculated target date based on scheduling cadence
