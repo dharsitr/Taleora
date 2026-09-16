@@ -177,14 +177,20 @@ export default function NewChapterPage() {
           chapter_number: chapterNumber,
           title: title.trim(),
           content: content.trim(),
-          status: status === "published" ? "published" : "draft",
+          status: status,
+          schedule_type: scheduleType,
+          scheduled_for: finalScheduledFor,
         }
       );
 
       if (res.ok) {
         router.push(`/studio/${bookId}/chapters`);
       } else {
-        setErrorMessage(res.error || "Failed to save chapter.");
+        const detailsObj = res.details as Record<string, unknown> | undefined;
+        const detailMsg =
+          (typeof detailsObj?.message === "string" ? detailsObj.message : null) ||
+          (typeof detailsObj?.error === "string" ? detailsObj.error : null);
+        setErrorMessage(detailMsg || res.error || "Failed to save chapter.");
       }
     } catch (err) {
       console.error("Error creating chapter via API:", err);

@@ -94,4 +94,37 @@ describe("Reader & Publishing Workflow Security Suite", () => {
       expect(json.error).toContain("Rate limit exceeded");
     });
   });
+
+  describe("Chapter Creation & Validation Guard", () => {
+    it("successfully validates chapter input with schedule parameters", async () => {
+      const { validateChapterPayload } = await import("@/lib/network/validation");
+      const result = validateChapterPayload({
+        chapter_number: 1,
+        title: "Chapter 1",
+        content: "This is valid chapter story prose content for Taleora reader.",
+        status: "scheduled",
+        schedule_type: "specific_date",
+        scheduled_for: "2026-09-20T12:00:00.000Z",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data?.chapter_number).toBe(1);
+      expect(result.data?.title).toBe("Chapter 1");
+      expect(result.data?.status).toBe("scheduled");
+      expect(result.data?.schedule_type).toBe("specific_date");
+      expect(result.data?.scheduled_for).toBe("2026-09-20T12:00:00.000Z");
+    });
+
+    it("rejects empty or insufficient chapter prose content", async () => {
+      const { validateChapterPayload } = await import("@/lib/network/validation");
+      const result = validateChapterPayload({
+        chapter_number: 1,
+        title: "Chapter 1",
+        content: "too short",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.errors?.content).toContain("at least 10 characters");
+    });
+  });
 });

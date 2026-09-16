@@ -105,7 +105,9 @@ export interface ValidatedChapterInput {
   chapter_number: number;
   title: string;
   content: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "scheduled";
+  schedule_type?: string;
+  scheduled_for?: string | null;
 }
 
 export function validateChapterPayload(raw: unknown): ValidationResult<ValidatedChapterInput> {
@@ -140,8 +142,15 @@ export function validateChapterPayload(raw: unknown): ValidationResult<Validated
   }
 
   // Status
-  const status: "draft" | "published" =
-    input.status === "draft" ? "draft" : "published";
+  let status: "draft" | "published" | "scheduled" = "draft";
+  if (input.status === "published") {
+    status = "published";
+  } else if (input.status === "scheduled") {
+    status = "scheduled";
+  }
+
+  const schedule_type = typeof input.schedule_type === "string" ? input.schedule_type : "immediate";
+  const scheduled_for = typeof input.scheduled_for === "string" ? input.scheduled_for : null;
 
   if (Object.keys(errors).length > 0) {
     return { success: false, errors };
@@ -154,6 +163,8 @@ export function validateChapterPayload(raw: unknown): ValidationResult<Validated
       title: sanitizeText(rawTitle, 150),
       content: sanitizeText(rawContent, 100000, { preserveNewlines: true }),
       status,
+      schedule_type,
+      scheduled_for,
     },
   };
 }

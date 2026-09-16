@@ -40,7 +40,7 @@ export async function GET(req: NextRequest, { params }: RouteProps) {
 
     const { data: chapters, error } = await supabase
       .from("chapters")
-      .select("id, chapter_number, title, slug, status, word_count, estimated_read_time_minutes, published_at")
+      .select("id, chapter_number, title, slug, status, word_count, estimated_read_minutes, published_at")
       .eq("book_id", book.id)
       .order("chapter_number", { ascending: true });
 
@@ -110,12 +110,19 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     const input = validation.data;
     const words = input.content.trim().split(/\s+/).filter(Boolean).length;
     const readTime = Math.max(1, Math.round(words / 200));
-    const chapterSlug = `chapter-${input.chapter_number}-${slugify(input.title) || "part"}`;
+    const baseSlug = slugify(input.title) || `chapter-${input.chapter_number}`;
+    const chapterSlug = `chapter-${input.chapter_number}-${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+
+    let publishedAt: string | null = null;
+    if (input.status === "published") {
+      publishedAt = new Date().toISOString();
+    }
 
     const { data: chapter, error: insertErr } = await supabase
       .from("chapters")
       .insert({
         book_id: book.id,
+        user_id: user.id,
         chapter_number: input.chapter_number,
         title: input.title,
         slug: chapterSlug,
@@ -123,7 +130,9 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
         word_count: words,
         estimated_read_minutes: readTime,
         status: input.status,
-        published_at: input.status === "published" ? new Date().toISOString() : null,
+        schedule_type: input.schedule_type || "immediate",
+        scheduled_for: input.status === "scheduled" ? (input.scheduled_for || null) : null,
+        published_at: publishedAt,
       })
       .select()
       .single();
