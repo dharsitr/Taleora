@@ -11,6 +11,11 @@ import {
   getTrendingBooks,
 } from "@/lib/books/queries";
 import {
+  getCachedDiscoverSections,
+  setCachedDiscoverSections,
+  getCachedBooks,
+} from "@/lib/books/cache";
+import {
   BookWithAuthorAndGenres,
   BookSortOption,
   GenreWithCount,
@@ -42,19 +47,42 @@ function DiscoverContent() {
   const [dateRange, setDateRange] = React.useState<"all" | "month" | "year">("all");
   const [sortBy, setSortBy] = React.useState<BookSortOption>(initialSort);
 
-  // Data States
-  const [catalogBooks, setCatalogBooks] = React.useState<BookWithAuthorAndGenres[]>([]);
-  const [trendingBooks, setTrendingBooks] = React.useState<BookWithAuthorAndGenres[]>([]);
-  const [featuredBooks, setFeaturedBooks] = React.useState<BookWithAuthorAndGenres[]>([]);
+  // Synchronous cache checks for instant 0ms frame rendering
+  const cachedSections = React.useMemo(() => getCachedDiscoverSections(), []);
+  const initialCatalogKey = `books:query:${JSON.stringify({
+    search: initialQuery,
+    genreSlug: initialGenre,
+    tag: initialTag || undefined,
+    minRating: initialMinRating > 0 ? initialMinRating : undefined,
+    dateRange: "all",
+    sort: initialSort,
+  })}`;
+  const cachedInitialCatalog = React.useMemo(
+    () => getCachedBooks(initialCatalogKey),
+    [initialCatalogKey]
+  );
+
+  // Data States initialized from cache
+  const [catalogBooks, setCatalogBooks] = React.useState<BookWithAuthorAndGenres[]>(
+    cachedInitialCatalog || []
+  );
+  const [trendingBooks, setTrendingBooks] = React.useState<BookWithAuthorAndGenres[]>(
+    cachedSections?.trending || []
+  );
+  const [featuredBooks, setFeaturedBooks] = React.useState<BookWithAuthorAndGenres[]>(
+    cachedSections?.featured || []
+  );
   const [recommendations, setRecommendations] = React.useState<{
     books: BookWithAuthorAndGenres[];
     reason: string;
   }>({ books: [], reason: "" });
-  const [genres, setGenres] = React.useState<GenreWithCount[]>([]);
+  const [genres, setGenres] = React.useState<GenreWithCount[]>(
+    cachedSections?.genres || []
+  );
 
-  // Loading and Error States
-  const [loadingCatalog, setLoadingCatalog] = React.useState(true);
-  const [loadingSections, setLoadingSections] = React.useState(true);
+  // Loading and Error States (false immediately if data cached!)
+  const [loadingCatalog, setLoadingCatalog] = React.useState(!cachedInitialCatalog);
+  const [loadingSections, setLoadingSections] = React.useState(!cachedSections);
   const [error, setError] = React.useState<string | null>(null);
 
   // Sync state changes with URL
@@ -116,6 +144,11 @@ function DiscoverContent() {
           setGenres(genreStats);
           setRecommendations(recs);
           setLoadingSections(false);
+          setCachedDiscoverSections({
+            trending,
+            featured,
+            genres: genreStats,
+          });
         }
       })
       .catch((err) => {

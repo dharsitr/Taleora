@@ -137,6 +137,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={true}
                     onClick={onClose}
                     className={cn(
                       "flex items-center justify-between px-3.5 py-3 rounded-lg text-sm font-medium transition-colors",
@@ -171,6 +172,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      prefetch={true}
                       onClick={onClose}
                       className={cn(
                         "flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
@@ -209,6 +211,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             {/* Mini Goal Footer */}
             <Link
               href="/goals"
+              prefetch={true}
               onClick={onClose}
               className="pt-3 border-t border-border text-xs text-muted-foreground block hover:text-foreground transition-colors cursor-pointer"
             >
@@ -235,6 +238,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border px-3 py-2 flex items-center justify-around shadow-lg">
         <Link
           href="/"
+          prefetch={true}
           className={cn(
             "flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs transition-colors",
             pathname === "/" ? "text-primary font-semibold" : "text-muted-foreground"
@@ -246,6 +250,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
 
         <Link
           href="/library"
+          prefetch={true}
           className={cn(
             "flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs transition-colors",
             pathname.startsWith("/library")
@@ -258,10 +263,11 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
         </Link>
 
         <Link
-          href="/explore"
+          href="/discover"
+          prefetch={true}
           className={cn(
             "flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs transition-colors",
-            pathname.startsWith("/explore")
+            pathname.startsWith("/discover") || pathname.startsWith("/explore")
               ? "text-primary font-semibold"
               : "text-muted-foreground"
           )}
@@ -272,6 +278,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
 
         <Link
           href="/goals"
+          prefetch={true}
           className={cn(
             "flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs transition-colors",
             pathname.startsWith("/goals")
@@ -285,6 +292,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
 
         <Link
           href="/settings"
+          prefetch={true}
           className={cn(
             "flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs transition-colors",
             pathname.startsWith("/settings")

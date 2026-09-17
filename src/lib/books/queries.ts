@@ -1,5 +1,46 @@
+import { cache as reactCache } from "react";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import { apiClient } from "@/lib/network/api-client";
+import {
+  getCachedBooks,
+  setCachedBooks,
+  getCachedTrending,
+  setCachedTrending,
+  getCachedFeatured,
+  setCachedFeatured,
+  getCachedGenres,
+  setCachedGenres,
+  getCachedBookDetail,
+  setCachedBookDetail,
+  getCachedChapterReader,
+  setCachedChapterReader,
+  invalidatePublicStoryCaches,
+  getUserLibraryCache,
+  setUserLibraryCache,
+  invalidateUserLibraryCache,
+  getUserBookmarksCache,
+  setUserBookmarksCache,
+  getUserHighlightsCache,
+  setUserHighlightsCache,
+  invalidateUserArchivesCache,
+  getAuthorStudioCache,
+  setAuthorStudioCache,
+  invalidateAuthorStudioCache,
+} from "./cache";
+export {
+  invalidatePublicStoryCaches,
+  getUserLibraryCache,
+  setUserLibraryCache,
+  invalidateUserLibraryCache,
+  getUserBookmarksCache,
+  setUserBookmarksCache,
+  getUserHighlightsCache,
+  setUserHighlightsCache,
+  invalidateUserArchivesCache,
+  getAuthorStudioCache,
+  setAuthorStudioCache,
+  invalidateAuthorStudioCache,
+};
 import {
   AuthorRow,
   AuthorStats,
@@ -46,6 +87,12 @@ function transformBook(raw: any): BookWithAuthorAndGenres {
 export async function getBooks(
   options: BookFilterOptions = {}
 ): Promise<BookWithAuthorAndGenres[]> {
+  const cacheKey = `books:query:${JSON.stringify(options)}`;
+  const cached = getCachedBooks(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = createBrowserClient();
   let query = supabase
     .from("books")
@@ -150,6 +197,10 @@ export async function getBooks(
     );
   }
 
+  if (books && books.length > 0) {
+    setCachedBooks(cacheKey, books, 60);
+  }
+
   return books;
 }
 
@@ -159,6 +210,11 @@ export async function getBooks(
 export async function getTrendingBooks(
   limit: number = 6
 ): Promise<BookWithAuthorAndGenres[]> {
+  const cached = getCachedTrending(limit);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = createBrowserClient();
   const { data, error } = await supabase
     .from("books")
@@ -181,7 +237,11 @@ export async function getTrendingBooks(
     return [];
   }
 
-  return data.map(transformBook);
+  const result = data.map(transformBook);
+  if (result.length > 0) {
+    setCachedTrending(limit, result);
+  }
+  return result;
 }
 
 /**
@@ -190,6 +250,11 @@ export async function getTrendingBooks(
 export async function getFeaturedBooks(
   limit: number = 4
 ): Promise<BookWithAuthorAndGenres[]> {
+  const cached = getCachedFeatured(limit);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = createBrowserClient();
   const { data, error } = await supabase
     .from("books")
@@ -212,13 +277,22 @@ export async function getFeaturedBooks(
     return [];
   }
 
-  return data.map(transformBook);
+  const result = data.map(transformBook);
+  if (result.length > 0) {
+    setCachedFeatured(limit, result);
+  }
+  return result;
 }
 
 /**
  * Fetch all genres with the count of published books in each category.
  */
 export async function getGenreStats(): Promise<GenreWithCount[]> {
+  const cached = getCachedGenres();
+  if (cached) {
+    return cached;
+  }
+
   const supabase = createBrowserClient();
 
   const { data: genresData, error: genresErr } = await supabase
@@ -251,10 +325,16 @@ export async function getGenreStats(): Promise<GenreWithCount[]> {
     countsByGenre[item.genre_id] = (countsByGenre[item.genre_id] || 0) + 1;
   }
 
-  return genresData.map((g) => ({
+  const result = genresData.map((g) => ({
     ...g,
     bookCount: countsByGenre[g.id] || 0,
   }));
+
+  if (result.length > 0) {
+    setCachedGenres(result);
+  }
+
+  return result;
 }
 
 /**
@@ -359,7 +439,12 @@ export async function getPersonalizedRecommendations(
 /**
  * Fetch a single book by slug or ID with author, genres, and published chapters.
  */
-export async function getBookBySlug(slugOrId: string): Promise<BookDetail | null> {
+async function fetchBookBySlugUncached(slugOrId: string): Promise<BookDetail | null> {
+  const cached = getCachedBookDetail(slugOrId);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = createBrowserClient();
 
   const raw = (slugOrId || "").trim();
@@ -445,13 +530,25 @@ export async function getBookBySlug(slugOrId: string): Promise<BookDetail | null
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .sort((a: any, b: any) => a.chapter_number - b.chapter_number);
 
-  return {
+  const bookDetail: BookDetail = {
     ...data,
     author: data.author,
     genres,
     chapters,
   };
+
+  setCachedBookDetail(slugOrId, bookDetail);
+  if (bookDetail.slug && bookDetail.slug !== slugOrId) {
+    setCachedBookDetail(bookDetail.slug, bookDetail);
+  }
+  if (bookDetail.id && bookDetail.id !== slugOrId) {
+    setCachedBookDetail(bookDetail.id, bookDetail);
+  }
+
+  return bookDetail;
 }
+
+export const getBookBySlug = reactCache(fetchBookBySlugUncached);
 
 /**
  * Fetch all available genres.
@@ -474,6 +571,11 @@ export async function getGenres(): Promise<GenreRow[]> {
  * Fetch all books currently in the authenticated user's library (reading_progress).
  */
 export async function getUserLibrary(userId: string): Promise<LibraryItem[]> {
+  const cached = getUserLibraryCache(userId);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = createBrowserClient();
   const { data, error } = await supabase
     .from("reading_progress")
@@ -498,7 +600,7 @@ export async function getUserLibrary(userId: string): Promise<LibraryItem[]> {
     return [];
   }
 
-  return data
+  const result: LibraryItem[] = data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((item: any) => item.book)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -506,6 +608,9 @@ export async function getUserLibrary(userId: string): Promise<LibraryItem[]> {
       ...item,
       book: transformBook(item.book),
     }));
+
+  setUserLibraryCache(userId, result);
+  return result;
 }
 
 /**
@@ -553,6 +658,7 @@ export async function addToLibrary(
     console.error("Error adding to library:", error);
     return false;
   }
+  invalidateUserLibraryCache(userId);
   return true;
 }
 
@@ -574,16 +680,22 @@ export async function removeFromLibrary(
     console.error("Error removing from library:", error);
     return false;
   }
+  invalidateUserLibraryCache(userId);
   return true;
 }
 
 /**
  * Fetch chapter reader data: current chapter, adjacent chapters, all chapters, and book metadata.
  */
-export async function getChapterReaderData(
+async function fetchChapterReaderDataUncached(
   bookSlug: string,
   chapterSlug?: string
 ): Promise<ChapterReaderData | null> {
+  const cached = getCachedChapterReader(bookSlug, chapterSlug);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = createBrowserClient();
 
   const rawBookSlug = (bookSlug || "").trim();
@@ -666,14 +778,19 @@ export async function getChapterReaderData(
   const nextChapter =
     currentIdx < allChapters.length - 1 ? allChapters[currentIdx + 1] : null;
 
-  return {
+  const result: ChapterReaderData = {
     book,
     currentChapter,
     allChapters,
     prevChapter,
     nextChapter,
   };
+
+  setCachedChapterReader(bookSlug, chapterSlug, result);
+  return result;
 }
+
+export const getChapterReaderData = reactCache(fetchChapterReaderDataUncached);
 
 /**
  * Save user reading progress securely in Supabase under RLS.
@@ -711,6 +828,7 @@ export async function saveReadingProgress(
     return false;
   }
 
+  invalidateUserLibraryCache(userId);
   return true;
 }
 
@@ -778,6 +896,7 @@ export async function createBookmark(
     return null;
   }
 
+  invalidateUserArchivesCache(userId);
   return data;
 }
 
@@ -799,6 +918,7 @@ export async function deleteBookmark(
     console.error("Error deleting bookmark:", error);
     return false;
   }
+  invalidateUserArchivesCache(userId);
   return true;
 }
 
@@ -809,6 +929,13 @@ export async function getUserBookmarks(
   userId: string,
   bookId?: string
 ): Promise<BookmarkWithDetails[]> {
+  if (!bookId) {
+    const cached = getUserBookmarksCache(userId);
+    if (cached) {
+      return cached;
+    }
+  }
+
   const supabase = createBrowserClient();
   let query = supabase
     .from("bookmarks")
@@ -839,11 +966,17 @@ export async function getUserBookmarks(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data.map((item: any) => ({
+  const result = data.map((item: any) => ({
     ...item,
     book: transformBook(item.book),
     chapter: item.chapter,
   }));
+
+  if (!bookId) {
+    setUserBookmarksCache(userId, result);
+  }
+
+  return result;
 }
 
 /**
@@ -882,6 +1015,7 @@ export async function createHighlight(
     return null;
   }
 
+  invalidateUserArchivesCache(userId);
   return data;
 }
 
@@ -920,6 +1054,7 @@ export async function updateHighlightNote(
     return null;
   }
 
+  invalidateUserArchivesCache(userId);
   return data;
 }
 
@@ -941,6 +1076,7 @@ export async function deleteHighlight(
     console.error("Error deleting highlight:", error);
     return false;
   }
+  invalidateUserArchivesCache(userId);
   return true;
 }
 
@@ -975,6 +1111,13 @@ export async function getUserHighlights(
   userId: string,
   bookId?: string
 ): Promise<HighlightWithDetails[]> {
+  if (!bookId) {
+    const cached = getUserHighlightsCache(userId);
+    if (cached) {
+      return cached;
+    }
+  }
+
   const supabase = createBrowserClient();
   let query = supabase
     .from("highlights")
@@ -1005,11 +1148,17 @@ export async function getUserHighlights(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data.map((item: any) => ({
+  const result = data.map((item: any) => ({
     ...item,
     book: transformBook(item.book),
     chapter: item.chapter,
   }));
+
+  if (!bookId) {
+    setUserHighlightsCache(userId, result);
+  }
+
+  return result;
 }
 
 /**
@@ -1433,6 +1582,9 @@ export async function createStory(
     await supabase.from("book_genres").insert(genreInserts);
   }
 
+  invalidatePublicStoryCaches();
+  invalidateAuthorStudioCache(userId);
+
   return transformBook(book);
 }
 
@@ -1512,6 +1664,9 @@ export async function updateStory(
     }
   }
 
+  invalidatePublicStoryCaches(updatedBook.slug);
+  invalidateAuthorStudioCache(userId);
+
   return transformBook(updatedBook);
 }
 
@@ -1524,6 +1679,10 @@ export async function deleteStory(
 ): Promise<boolean> {
   try {
     const res = await apiClient.delete<{ message: string }>(`/api/stories/${bookId}`);
+    if (res.ok) {
+      invalidatePublicStoryCaches();
+      invalidateAuthorStudioCache(userId);
+    }
     return res.ok;
   } catch (err) {
     console.error("Error deleting story:", err);
@@ -1648,6 +1807,9 @@ export async function createChapter(
   // Refresh book chapter totals
   await refreshBookTotals(bookId);
 
+  invalidatePublicStoryCaches();
+  invalidateAuthorStudioCache(userId);
+
   return chapter;
 }
 
@@ -1725,6 +1887,9 @@ export async function updateChapter(
 
   await refreshBookTotals(updated.book_id);
 
+  invalidatePublicStoryCaches();
+  invalidateAuthorStudioCache(userId);
+
   return updated;
 }
 
@@ -1752,6 +1917,10 @@ export async function deleteChapter(
       const res = await apiClient.delete<{ message: string }>(
         `/api/stories/${resolvedBookId}/chapters/${chapterId}`
       );
+      if (res.ok) {
+        invalidatePublicStoryCaches();
+        invalidateAuthorStudioCache(userId);
+      }
       return res.ok;
     }
     return false;
@@ -1780,6 +1949,7 @@ export async function reorderChapters(
     return false;
   }
 
+  invalidatePublicStoryCaches();
   return true;
 }
 

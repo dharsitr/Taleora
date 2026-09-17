@@ -25,6 +25,11 @@ import {
   getUserLibrary,
 } from "@/lib/books/queries";
 import {
+  getUserBookmarksCache,
+  getUserHighlightsCache,
+  getUserLibraryCache,
+} from "@/lib/books/cache";
+import {
   BookmarkWithDetails,
   HighlightWithDetails,
   LibraryItem,
@@ -43,11 +48,22 @@ export default function BookmarksPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = React.useState<ActiveTab>("bookmarks");
 
-  // Data states
-  const [bookmarks, setBookmarks] = React.useState<BookmarkWithDetails[]>([]);
-  const [highlights, setHighlights] = React.useState<HighlightWithDetails[]>([]);
-  const [libraryItems, setLibraryItems] = React.useState<LibraryItem[]>([]);
-  const [isLoaded, setIsLoaded] = React.useState(false);
+  const cachedBookmarks = user ? getUserBookmarksCache(user.id) : null;
+  const cachedHighlights = user ? getUserHighlightsCache(user.id) : null;
+  const cachedLibrary = user ? getUserLibraryCache(user.id) : null;
+  const isInitiallyCached = Boolean(cachedBookmarks || cachedHighlights || cachedLibrary);
+
+  // Data states initialized from cache for instant 0ms transition
+  const [bookmarks, setBookmarks] = React.useState<BookmarkWithDetails[]>(
+    cachedBookmarks || []
+  );
+  const [highlights, setHighlights] = React.useState<HighlightWithDetails[]>(
+    cachedHighlights || []
+  );
+  const [libraryItems, setLibraryItems] = React.useState<LibraryItem[]>(
+    cachedLibrary || []
+  );
+  const [isLoaded, setIsLoaded] = React.useState(isInitiallyCached);
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Modal state for editing notes
@@ -56,6 +72,15 @@ export default function BookmarksPage() {
 
   React.useEffect(() => {
     if (!user) return;
+
+    // Seed state immediately if cache exists
+    const bCache = getUserBookmarksCache(user.id);
+    const hCache = getUserHighlightsCache(user.id);
+    const lCache = getUserLibraryCache(user.id);
+    if (bCache) setBookmarks(bCache);
+    if (hCache) setHighlights(hCache);
+    if (lCache) setLibraryItems(lCache);
+    if (bCache || hCache || lCache) setIsLoaded(true);
 
     let isMounted = true;
 
@@ -174,7 +199,7 @@ export default function BookmarksPage() {
             </p>
           </div>
 
-          <Link href="/explore">
+          <Link href="/discover" prefetch={true}>
             <Button variant="outline" size="sm" className="gap-2 cursor-pointer">
               <Compass className="w-4 h-4 text-primary" />
               <span>Explore Stories</span>
@@ -539,7 +564,7 @@ export default function BookmarksPage() {
                   Explore the catalog and add titles to your personal shelf.
                 </p>
               </div>
-              <Link href="/explore">
+              <Link href="/discover" prefetch={true}>
                 <Button size="sm" className="gap-2 mt-2">
                   <Sparkles className="w-4 h-4" />
                   <span>Discover Stories</span>

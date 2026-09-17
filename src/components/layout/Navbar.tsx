@@ -151,7 +151,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
               <PwaInstallButton className="hidden md:inline-flex" />
 
               {/* Author Studio CTA */}
-              <Link href="/studio">
+              <Link href="/studio" prefetch={true}>
                 <Button
                   size="sm"
                   variant="outline"
@@ -227,6 +227,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                       {(profile?.role === "admin" || profile?.role === "moderator") && (
                         <Link
                           href="/admin"
+                          prefetch={true}
                           onClick={() => setDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 transition-colors mb-1"
                         >
@@ -237,6 +238,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
                       <Link
                         href="/studio"
+                        prefetch={true}
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
                       >
@@ -246,6 +248,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
                       <Link
                         href="/library"
+                        prefetch={true}
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
@@ -255,6 +258,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
                       <Link
                         href="/goals"
+                        prefetch={true}
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
@@ -264,6 +268,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
                       <Link
                         href="/settings"
+                        prefetch={true}
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
@@ -273,6 +278,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
                       <Link
                         href="/offline"
+                        prefetch={true}
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >

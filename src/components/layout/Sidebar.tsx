@@ -66,6 +66,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={cn(
                   "flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
@@ -107,6 +108,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={cn(
                   "flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
@@ -132,6 +134,7 @@ export function Sidebar() {
       {/* Daily Reading Progress Card */}
       <Link
         href="/goals"
+        prefetch={true}
         className="mt-auto p-4 rounded-xl border border-border/70 bg-secondary/40 flex flex-col gap-3 hover:border-primary/50 transition-all cursor-pointer group"
         title={hasGoal ? "View and adjust Reading Goals" : "Set your Daily Reading Goal"}
       >

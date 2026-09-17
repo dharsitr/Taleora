@@ -12,19 +12,17 @@ export const metadata = {
     "Immerse yourself in curated tales and distraction-free stories. Warm paper aesthetics, responsive reader shell, and gentle reading habit tracking.",
 };
 
-export default async function Home() {
-  // Fetch real data server-side
-  const [books, supabase] = await Promise.all([
-    getBooks({ sort: "newest" }),
-    createClient(),
-  ]);
+async function UserContinueReading() {
+  let progressData = null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  // Fetch current user's in-progress reading (most recently read book)
-  let currentRead = null;
-  if (user) {
-    const { data } = await supabase
+    const { data: currentRead } = await supabase
       .from("reading_progress")
       .select(`
         progress_percentage,
@@ -38,13 +36,26 @@ export default async function Home() {
       .order("last_read_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    currentRead = data;
+    if (!currentRead) return null;
+    progressData = currentRead;
+  } catch (err) {
+    console.warn("Could not load user reading progress on home:", err);
+    return null;
   }
+
+  if (!progressData) return null;
+  return <ContinueReadingCard progress={progressData} />;
+}
+
+export default async function Home() {
+  const books = await getBooks({ sort: "newest" });
 
   return (
     <div className="flex flex-col gap-10">
       <HeroSection />
-      {currentRead && <ContinueReadingCard progress={currentRead} />}
+      <React.Suspense fallback={null}>
+        <UserContinueReading />
+      </React.Suspense>
       <CuratedShelves books={books} />
       <ReadingPhilosophy />
     </div>

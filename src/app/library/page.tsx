@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { getUserLibrary, removeFromLibrary } from "@/lib/books/queries";
+import { getUserLibraryCache } from "@/lib/books/cache";
 import { LibraryItem } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -28,9 +29,10 @@ import { OfflineBook } from "@/types/offline";
 
 export default function LibraryPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const [libraryItems, setLibraryItems] = React.useState<LibraryItem[]>([]);
+  const cachedInitial = user ? getUserLibraryCache(user.id) : null;
+  const [libraryItems, setLibraryItems] = React.useState<LibraryItem[]>(cachedInitial || []);
   const [offlineBooks, setOfflineBooks] = React.useState<OfflineBook[]>([]);
-  const [isLoaded, setIsLoaded] = React.useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(Boolean(cachedInitial));
   const [activeTab, setActiveTab] = React.useState<
     "all" | "reading" | "saved" | "completed" | "downloaded"
   >("all");
@@ -55,6 +57,13 @@ export default function LibraryPage() {
 
   React.useEffect(() => {
     if (!user) return;
+
+    // If cache available, seed immediately
+    const cached = getUserLibraryCache(user.id);
+    if (cached) {
+      setLibraryItems(cached);
+      setIsLoaded(true);
+    }
 
     let isMounted = true;
     getUserLibrary(user.id)
@@ -139,7 +148,7 @@ export default function LibraryPage() {
               <span>Storage Manager ({offlineBooks.length})</span>
             </Button>
 
-            <Link href="/explore">
+            <Link href="/discover" prefetch={true}>
               <Button variant="outline" size="sm" className="gap-2 cursor-pointer text-xs">
                 <Compass className="w-4 h-4 text-primary" />
                 <span>Explore More Books</span>
@@ -355,7 +364,7 @@ export default function LibraryPage() {
               You haven&apos;t added any stories to your library yet. Explore our curated collections and save tales that inspire you.
             </p>
           </div>
-          <Link href="/explore">
+          <Link href="/discover" prefetch={true}>
             <Button size="md" className="gap-2 mt-2">
               <Sparkles className="w-4 h-4" />
               <span>Browse Curated Catalog</span>

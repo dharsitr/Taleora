@@ -28,45 +28,72 @@ import {
   AuthorStoryWithCounts,
   BookStatus,
 } from "@/types/books";
+import {
+  getAuthorStudioCache,
+  setAuthorStudioCache,
+} from "@/lib/books/cache";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 
 export default function AuthorStudioPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const [author, setAuthor] = React.useState<AuthorRow | null>(null);
-  const [stats, setStats] = React.useState<AuthorStats>({
-    totalStories: 0,
-    publishedChapters: 0,
-    scheduledChapters: 0,
-    draftChapters: 0,
-    totalWords: 0,
-  });
-  const [stories, setStories] = React.useState<AuthorStoryWithCounts[]>([]);
+  const cachedStudio = user ? getAuthorStudioCache(user.id) : null;
+
+  const [author, setAuthor] = React.useState<AuthorRow | null>(
+    cachedStudio?.author || null
+  );
+  const [stats, setStats] = React.useState<AuthorStats>(
+    cachedStudio?.stats || {
+      totalStories: 0,
+      publishedChapters: 0,
+      scheduledChapters: 0,
+      draftChapters: 0,
+      totalWords: 0,
+    }
+  );
+  const [stories, setStories] = React.useState<AuthorStoryWithCounts[]>(
+    cachedStudio?.stories || []
+  );
   const [filterStatus, setFilterStatus] = React.useState<"all" | BookStatus>("all");
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(!cachedStudio);
 
   React.useEffect(() => {
     if (!user) return;
+
+    // Seed from cache if available
+    const cached = getAuthorStudioCache(user.id);
+    if (cached) {
+      setAuthor(cached.author);
+      setStats(cached.stats);
+      setStories(cached.stories);
+      setLoading(false);
+    }
+
     let isMounted = true;
 
     const loadData = async () => {
       try {
         const defaultName =
           user.user_metadata?.full_name || user.email?.split("@")[0] || "Author";
-        const authorProfile = await getOrCreateAuthorProfile(user.id, defaultName);
-        if (!isMounted) return;
-        setAuthor(authorProfile);
 
-        const [authorStats, authorStories] = await Promise.all([
+        // Fetch author profile, statistics, and stories in parallel to eliminate waterfall
+        const [authorProfile, authorStats, authorStories] = await Promise.all([
+          getOrCreateAuthorProfile(user.id, defaultName),
           getAuthorStats(user.id),
           getAuthorStories(user.id),
         ]);
 
         if (isMounted) {
+          setAuthor(authorProfile);
           setStats(authorStats);
           setStories(authorStories);
           setLoading(false);
+          setAuthorStudioCache(user.id, {
+            author: authorProfile,
+            stats: authorStats,
+            stories: authorStories,
+          });
         }
       } catch (err) {
         console.error("Error loading author studio:", err);

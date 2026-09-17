@@ -1,39 +1,17 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import * as React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-
-function ExploreRedirectContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  React.useEffect(() => {
-    const q = searchParams.toString();
-    router.replace(q ? `/discover?${q}` : "/discover");
-  }, [router, searchParams]);
-
-  return (
-    <div className="flex items-center justify-center min-h-[50vh]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        <span className="text-xs text-muted-foreground font-serif">
-          Opening Discover Catalog...
-        </span>
-      </div>
-    </div>
-  );
-}
-
-export default function ExplorePage() {
-  return (
-    <React.Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        </div>
-      }
-    >
-      <ExploreRedirectContent />
-    </React.Suspense>
-  );
+export default async function ExplorePage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const searchParams = await props.searchParams;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams || {})) {
+    if (typeof value === "string") {
+      params.set(key, value);
+    } else if (Array.isArray(value)) {
+      value.forEach((v) => params.append(key, v));
+    }
+  }
+  const query = params.toString();
+  redirect(query ? `/discover?${query}` : "/discover");
 }
