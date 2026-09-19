@@ -10,7 +10,6 @@ import {
   Target,
   Settings,
   Sparkles,
-  BookOpen,
   CheckCircle2,
   Feather,
 } from "lucide-react";

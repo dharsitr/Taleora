@@ -1,0 +1,7 @@
+# Taleora Security Vulnerability Disclosure Policy (RFC 9116)
+Contact: mailto:security@taleora.app
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://taleora-nine.vercel.app/.well-known/security.txt
+Policy: https://taleora-nine.vercel.app/README.md
+Acknowledgments: https://taleora-nine.vercel.app/SECURITY_AUDIT.md

@@ -89,10 +89,23 @@ export async function updateSession(request: NextRequest) {
       url.search = "";
       return NextResponse.redirect(url);
     }
+
+    // Require AAL2 MFA for Admin & Moderator workspace
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalData?.currentLevel !== "aal2") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/mfa-challenge";
+      url.searchParams.set("next", pathname);
+      // If admin hasn't enrolled yet, prompt setup mode rather than locking out
+      if (aalData?.nextLevel !== "aal2") {
+        url.searchParams.set("setup", "true");
+      }
+      return NextResponse.redirect(url);
+    }
   }
 
   // Protected paths that require authentication
-  const protectedRoutes = ["/library", "/bookmarks", "/settings", "/studio"];
+  const protectedRoutes = ["/library", "/bookmarks", "/settings", "/studio", "/auth/mfa-challenge"];
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );

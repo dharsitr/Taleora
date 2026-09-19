@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { createSecurityNotification } from "@/lib/security/notifications";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -42,6 +43,12 @@ export default function ResetPasswordPage() {
       if (error) {
         setErrorMessage(error.message);
         return;
+      }
+
+      // Send security notification for password update
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        await createSecurityNotification(supabase, userData.user.id, "password_changed");
       }
 
       setSuccess(true);

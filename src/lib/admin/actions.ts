@@ -61,17 +61,33 @@ export async function requireAdminOrModerator() {
     throw new Error("Rate limit exceeded: Please wait before performing additional administrative actions.");
   }
 
+  // Enforce AAL2 MFA if enrolled
+  if (supabase.auth.mfa?.getAuthenticatorAssuranceLevel) {
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
+      throw new Error("MFA verification required: Please complete Two-Factor Authentication (AAL2) to perform administrative actions.");
+    }
+  }
+
   return { supabase, user, profile };
 }
 
 /**
- * Server-side authorization check strictly requiring 'admin' privileges.
+ * Server-side authorization check strictly requiring 'admin' privileges and active AAL2 MFA.
  */
 export async function requireAdmin() {
   const context = await requireAdminOrModerator();
   if (context.profile.role !== "admin") {
     throw new Error("Forbidden: Super-Administrator role required for this action.");
   }
+
+  if (context.supabase.auth.mfa?.getAuthenticatorAssuranceLevel) {
+    const { data: aalData } = await context.supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalData?.currentLevel !== "aal2") {
+      throw new Error("MFA verification required: Super-Administrator actions require active Two-Factor Authentication (AAL2).");
+    }
+  }
+
   return context;
 }
 
