@@ -1527,6 +1527,10 @@ export async function createStory(
   userId: string,
   input: CreateBookInput
 ): Promise<BookWithAuthorAndGenres | null> {
+  if (!userId || typeof userId !== "string") {
+    throw new Error("Authentication required: You must be logged in to create a story.");
+  }
+
   const supabase = createBrowserClient();
 
   // 1. Ensure author profile exists
@@ -1596,6 +1600,10 @@ export async function updateStory(
   bookId: string,
   input: UpdateBookInput
 ): Promise<BookWithAuthorAndGenres | null> {
+  if (!userId || typeof userId !== "string") {
+    throw new Error("Authentication required: You must be logged in to update a story.");
+  }
+
   const supabase = createBrowserClient();
 
   const updateData: {
@@ -1749,6 +1757,10 @@ export async function createChapter(
   bookId: string,
   input: CreateChapterInput
 ): Promise<ChapterRow | null> {
+  if (!userId || typeof userId !== "string") {
+    throw new Error("Authentication required: You must be logged in to create a chapter.");
+  }
+
   const supabase = createBrowserClient();
 
   // 1. Determine chapter number if not provided
@@ -1963,6 +1975,11 @@ export async function uploadCoverImage(
   userId: string,
   file: File
 ): Promise<string | null> {
+  if (!userId || typeof userId !== "string") {
+    console.error("Authentication required: You must be logged in to upload a cover image.");
+    return null;
+  }
+
   const supabase = createBrowserClient();
 
   // 1. Strict image format and size validation

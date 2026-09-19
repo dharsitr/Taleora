@@ -14,7 +14,15 @@ import { Button } from "@/components/ui/Button";
 
 export default function AuthorProfilePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+
+  // Redirect to login if unauthenticated
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login?next=/studio/profile");
+    }
+  }, [authLoading, user, router]);
+
   const [author, setAuthor] = React.useState<AuthorRow | null>(null);
   const [name, setName] = React.useState("");
   const [bio, setBio] = React.useState("");
@@ -46,7 +54,11 @@ export default function AuthorProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      setErrorMessage("You must be logged in to update your author profile.");
+      router.push("/login?next=/studio/profile");
+      return;
+    }
     if (!name.trim()) {
       setErrorMessage("Pen Name cannot be empty.");
       return;
@@ -79,6 +91,15 @@ export default function AuthorProfilePage() {
       setIsSaving(false);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto pb-16">

@@ -51,7 +51,14 @@ const GRADIENT_PRESETS = [
 
 export default function CreateStoryPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+
+  // Redirect to login if user is not authenticated
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login?next=/studio/new");
+    }
+  }, [authLoading, user, router]);
 
   // Form states
   const [title, setTitle] = React.useState("");
@@ -79,10 +86,11 @@ export default function CreateStoryPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    if (!user) return;
     getGenres()
       .then((res) => setAllGenres(res))
       .catch((err) => console.error("Error loading genres:", err));
-  }, []);
+  }, [user]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -107,7 +115,12 @@ export default function CreateStoryPage() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!user) {
+      setErrorMessage("You must be logged in to upload a cover image.");
+      router.push("/login?next=/studio/new");
+      return;
+    }
+    if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
       setErrorMessage("Cover image must be smaller than 5MB.");
@@ -135,7 +148,11 @@ export default function CreateStoryPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      setErrorMessage("You must be logged in to upload or publish a story.");
+      router.push("/login?next=/studio/new");
+      return;
+    }
     if (!title.trim()) {
       setErrorMessage("Please provide a story title.");
       return;
@@ -173,6 +190,15 @@ export default function CreateStoryPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-20">

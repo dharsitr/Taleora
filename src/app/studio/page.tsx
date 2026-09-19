@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Feather,
   Plus,
@@ -37,7 +38,16 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 
 export default function AuthorStudioPage() {
+  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+
+  // Redirect to login if user is unauthenticated
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login?next=/studio");
+    }
+  }, [authLoading, user, router]);
+
   const cachedStudio = user ? getAuthorStudioCache(user.id) : null;
 
   const [author, setAuthor] = React.useState<AuthorRow | null>(
@@ -114,6 +124,15 @@ export default function AuthorStudioPage() {
   });
 
   const isLoading = authLoading || loading;
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Verifying Author Studio access...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 max-w-6xl mx-auto pb-16">

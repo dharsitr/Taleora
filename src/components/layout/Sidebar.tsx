@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDailyReadingProgress } from "@/lib/stats/use-daily-reading-progress";
+import { useAuth } from "@/lib/auth/use-auth";
 
 export interface NavItemDef {
   label: string;
@@ -25,8 +26,7 @@ export interface NavItemDef {
 }
 
 export const MAIN_NAV_ITEMS: NavItemDef[] = [
-  { label: "Home", href: "/", icon: BookOpen },
-  { label: "Discover", href: "/discover", icon: Compass },
+  { label: "Discover", href: "/", icon: Compass },
   { label: "My Library", href: "/library", icon: Library, badge: "3 active" },
   { label: "Saved Bookmarks", href: "/bookmarks", icon: BookMarked },
   { label: "Reading Goals", href: "/goals", icon: Target },
@@ -39,6 +39,7 @@ export const AUTHOR_NAV_ITEMS: NavItemDef[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const {
     minutesReadToday,
     dailyGoalMinutes,
@@ -94,42 +95,44 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Creator Studio Section */}
-      <div className="flex flex-col gap-1">
-        <span className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-          Creation Studio
-        </span>
-        <nav className="flex flex-col gap-1 mt-2">
-          {AUTHOR_NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname.startsWith(item.href);
+      {/* Creator Studio Section - only visible for logged in authors */}
+      {user && (
+        <div className="flex flex-col gap-1">
+          <span className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+            Creation Studio
+          </span>
+          <nav className="flex flex-col gap-1 mt-2">
+            {AUTHOR_NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname.startsWith(item.href);
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                className={cn(
-                  "flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary"
-                    : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon
-                    className={cn(
-                      "w-4 h-4 transition-colors",
-                      isActive ? "text-primary" : "text-muted-foreground"
-                    )}
-                  />
-                  <span>{item.label}</span>
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch={true}
+                  className={cn(
+                    "flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+                      : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className={cn(
+                        "w-4 h-4 transition-colors",
+                        isActive ? "text-primary" : "text-muted-foreground"
+                      )}
+                    />
+                    <span>{item.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      )}
 
       {/* Daily Reading Progress Card */}
       <Link

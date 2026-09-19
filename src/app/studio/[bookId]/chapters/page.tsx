@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Plus,
@@ -18,10 +18,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
-  deleteChapter,
   getAuthorStory,
   getStoryChaptersForAuthor,
   reorderChapters,
+  deleteChapter,
 } from "@/lib/books/queries";
 import { BookDetail, ChapterRow } from "@/types/books";
 import { Button } from "@/components/ui/Button";
@@ -30,8 +30,16 @@ import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal
 
 export default function ChaptersManagerPage() {
   const params = useParams();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const bookId = params?.bookId as string;
+
+  // Redirect to login if unauthenticated
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/login?next=/studio/${bookId}/chapters`);
+    }
+  }, [authLoading, user, bookId, router]);
 
   const [book, setBook] = React.useState<BookDetail | null>(null);
   const [chapters, setChapters] = React.useState<ChapterRow[]>([]);
@@ -121,6 +129,15 @@ export default function ChaptersManagerPage() {
       setDeletingId(null);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

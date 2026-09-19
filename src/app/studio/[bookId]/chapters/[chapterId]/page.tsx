@@ -29,9 +29,16 @@ import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal
 export default function EditChapterPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const bookId = params?.bookId as string;
   const chapterId = params?.chapterId as string;
+
+  // Redirect to login if unauthenticated
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/login?next=/studio/${bookId}/chapters/${chapterId}`);
+    }
+  }, [authLoading, user, bookId, chapterId, router]);
 
   const [book, setBook] = React.useState<BookDetail | null>(null);
   const [chapter, setChapter] = React.useState<ChapterRow | null>(null);
@@ -127,7 +134,11 @@ export default function EditChapterPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !chapterId) return;
+    if (!user || !chapterId) {
+      setErrorMessage("You must be logged in to modify a chapter.");
+      router.push(`/login?next=/studio/${bookId}/chapters/${chapterId}`);
+      return;
+    }
 
     if (!title.trim()) {
       setErrorMessage("Title cannot be empty.");
@@ -207,6 +218,15 @@ export default function EditChapterPage() {
       setIsDeleting(false);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

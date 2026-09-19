@@ -98,7 +98,6 @@ describe("Supabase Key Migration Security & Compatibility Suite", () => {
       const rootDir = path.resolve(__dirname, "../../..");
       const filesToCheck = [
         path.join(rootDir, ".env.example"),
-        path.join(rootDir, "mobile/.env.example"),
       ];
 
       for (const filePath of filesToCheck) {

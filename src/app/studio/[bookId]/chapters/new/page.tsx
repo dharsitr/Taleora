@@ -31,8 +31,15 @@ import { apiClient } from "@/lib/network/api-client";
 export default function NewChapterPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const bookId = params?.bookId as string;
+
+  // Redirect to login if unauthenticated
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/login?next=/studio/${bookId}/chapters/new`);
+    }
+  }, [authLoading, user, bookId, router]);
 
   const [book, setBook] = React.useState<BookDetail | null>(null);
   const [chapters, setChapters] = React.useState<ChapterRow[]>([]);
@@ -136,7 +143,11 @@ export default function NewChapterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !bookId) return;
+    if (!user || !bookId) {
+      setErrorMessage("You must be logged in to create or publish a chapter.");
+      router.push(`/login?next=/studio/${bookId}/chapters/new`);
+      return;
+    }
 
     if (!title.trim()) {
       setErrorMessage("Please specify a chapter title.");
@@ -195,6 +206,15 @@ export default function NewChapterPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

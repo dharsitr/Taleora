@@ -58,8 +58,15 @@ const GRADIENT_PRESETS = [
 export default function EditStoryDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const bookId = params?.bookId as string;
+
+  // Redirect to login if unauthenticated
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/login?next=/studio/${bookId}`);
+    }
+  }, [authLoading, user, bookId, router]);
 
   const [book, setBook] = React.useState<BookDetail | null>(null);
   const [allGenres, setAllGenres] = React.useState<GenreRow[]>([]);
@@ -135,7 +142,12 @@ export default function EditStoryDetailsPage() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!user) {
+      setErrorMessage("You must be logged in to upload a cover image.");
+      router.push(`/login?next=/studio/${bookId}`);
+      return;
+    }
+    if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
       setErrorMessage("Cover image must be smaller than 5MB.");
@@ -163,7 +175,11 @@ export default function EditStoryDetailsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !bookId) return;
+    if (!user || !bookId) {
+      setErrorMessage("You must be logged in to modify a story.");
+      router.push(`/login?next=/studio/${bookId}`);
+      return;
+    }
 
     if (!title.trim()) {
       setErrorMessage("Story Title is required.");
@@ -231,6 +247,15 @@ export default function EditStoryDetailsPage() {
       setIsDeleting(false);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

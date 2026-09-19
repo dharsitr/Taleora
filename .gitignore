@@ -49,3 +49,9 @@ next-env.d.ts
 .temp/
 .venv/
 
+# markdown files
+*.md
+!README.md
+!README*.md
+!readme.md
+!Readme.md
