@@ -54,7 +54,7 @@ export function GoalSettingModal({
     };
 
     try {
-      if (userId && userId !== "demo") {
+      if (userId) {
         await updateUserReadingGoal(userId, {
           dailyMinutes: updated.daily_minutes_goal,
           weeklyDays: updated.weekly_days_goal,

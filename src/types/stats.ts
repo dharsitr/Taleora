@@ -137,5 +137,4 @@ export interface UserStatsPayload {
   insights: ReadingInsight;
   achievements: AchievementWithProgress[];
   recentHistory: ReadingHistoryItem[];
-  isDemo?: boolean;
 }

@@ -2,7 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Sparkles, ArrowRight, BookOpen, Quote } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { LITERARY_QUOTES } from "@/lib/mock-data";
+import { LITERARY_QUOTES } from "@/lib/constants";
 
 export function HeroSection() {
   const quote = LITERARY_QUOTES[0];

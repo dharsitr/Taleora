@@ -212,25 +212,31 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
 
             {/* Mini Goal Footer */}
             <Link
-              href="/goals"
+              href={user ? "/goals" : `/login?next=/goals&notice=${encodeURIComponent("Sign in to view your reading goals")}`}
               prefetch={true}
               onClick={onClose}
-              className="pt-3 border-t border-border text-xs text-muted-foreground block hover:text-foreground transition-colors cursor-pointer"
+              className="pt-3 border-t border-border text-xs text-muted-foreground block hover:text-foreground transition-colors cursor-pointer group"
             >
               <div className="flex justify-between mb-1.5 font-medium text-foreground">
-                <span>Daily Reading</span>
-                <span>
-                  {minutesReadToday} / {dailyGoalMinutes}m
+                <span>Daily Reading Goal</span>
+                <span className={cn("text-xs", !user ? "text-primary font-semibold" : "")}>
+                  {user ? `${minutesReadToday} / ${dailyGoalMinutes}m` : "Sign in to view"}
                 </span>
               </div>
-              <div className="w-full bg-border h-1.5 rounded-full overflow-hidden">
-                <div
-                  className="bg-primary h-full transition-all duration-300"
-                  style={{
-                    width: `${Math.min(progressPercent, 100)}%`,
-                  }}
-                />
-              </div>
+              {user ? (
+                <div className="w-full bg-border h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className="bg-primary h-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min(progressPercent, 100)}%`,
+                    }}
+                  />
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground group-hover:text-primary transition-colors">
+                  Sign in to track reading goals &rarr;
+                </p>
+              )}
             </Link>
           </div>
         </div>
@@ -279,7 +285,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
         </Link>
 
         <Link
-          href="/goals"
+          href={user ? "/goals" : `/login?next=/goals&notice=${encodeURIComponent("Sign in to view your reading goals")}`}
           prefetch={true}
           className={cn(
             "flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs transition-colors",

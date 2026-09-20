@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowRight, Info } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -13,6 +13,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/library";
   const errorParam = searchParams.get("error");
+  const noticeParam = searchParams.get("notice");
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -73,6 +74,14 @@ function LoginForm() {
             Enter your credentials to access your personal library and reading streaks.
           </p>
         </div>
+
+        {/* Notice Notification */}
+        {noticeParam && !errorMessage && (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-lg bg-primary/10 border border-primary/20 text-foreground text-xs leading-relaxed animate-in fade-in duration-200">
+            <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <span className="font-medium">{decodeURIComponent(noticeParam)}</span>
+          </div>
+        )}
 
         {/* Error Notification */}
         {errorMessage && (

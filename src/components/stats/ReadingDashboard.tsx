@@ -2,18 +2,17 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Target,
   BarChart3,
   Award,
   History,
-  Sparkles,
   RefreshCw,
   LogIn,
-  UserPlus,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
-import { getUserReadingStats, getDemoReadingStats } from "@/lib/stats/queries";
+import { getUserReadingStats } from "@/lib/stats/queries";
 import { UserStatsPayload, ReadingGoalRow } from "@/types/stats";
 import { StatsSummaryGrid } from "./StatsSummaryGrid";
 import { DailyGoalCard } from "./DailyGoalCard";
@@ -30,26 +29,33 @@ import { cn } from "@/lib/utils";
 type DashboardTab = "overview" | "achievements" | "history";
 
 export function ReadingDashboard() {
+  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [statsData, setStatsData] = React.useState<UserStatsPayload | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<DashboardTab>("overview");
   const [goalModalOpen, setGoalModalOpen] = React.useState(false);
 
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace(`/login?next=/goals&notice=${encodeURIComponent("Sign in to view your reading goals")}`);
+    }
+  }, [authLoading, user, router]);
+
   const fetchStats = React.useCallback(async () => {
+    if (!user) {
+      setStatsData(null);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      if (user) {
-        const data = await getUserReadingStats(user.id);
-        setStatsData(data);
-      } else {
-        // Guest mode demo stats
-        setStatsData(getDemoReadingStats());
-      }
+      const data = await getUserReadingStats(user.id);
+      setStatsData(data);
     } catch (err) {
       console.error("Failed to load reading stats:", err);
-      // Graceful fallback
-      setStatsData(getDemoReadingStats());
+      setStatsData(null);
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +83,25 @@ export function ReadingDashboard() {
     });
   };
 
-  const isGuest = !user;
+  if (!authLoading && !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[55vh] text-center p-6 max-w-md mx-auto animate-in fade-in duration-200">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mb-4 shadow-sm">
+          <Target className="w-7 h-7" />
+        </div>
+        <h2 className="font-serif text-2xl font-bold text-foreground mb-2">Sign in to view</h2>
+        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+          Please sign in to view and track your daily reading goals, streaks, and reading analytics.
+        </p>
+        <Link href={`/login?next=/goals&notice=${encodeURIComponent("Sign in to view your reading goals")}`}>
+          <Button className="h-10 px-6 gap-2 text-xs font-semibold bg-primary text-primary-foreground shadow-xs">
+            <LogIn className="w-4 h-4" />
+            <span>Sign In to Taleora</span>
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 pb-12 max-w-6xl mx-auto w-full">
@@ -118,45 +142,6 @@ export function ReadingDashboard() {
           </Button>
         </div>
       </div>
-
-      {/* Guest Preview Banner (Shown when not logged in) */}
-      {isGuest && (
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-card to-card p-5 sm:p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-serif font-bold text-base text-foreground flex items-center gap-2">
-                  <span>Guest Preview Mode</span>
-                  <span className="text-[10px] font-sans font-semibold uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                    Sample Data
-                  </span>
-                </h3>
-                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-                  You are exploring a sample overview of Taleora&apos;s reading statistics engine. Create a free account or sign in to permanently track your actual reading sessions, daily streaks, and literary achievement badges.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Link href="/login">
-                <Button variant="outline" size="sm" className="h-9 text-xs font-semibold gap-1.5">
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>Log In</span>
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button size="sm" className="h-9 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground">
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>Create Account</span>
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-border/70 pb-2">
