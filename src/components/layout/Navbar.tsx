@@ -22,8 +22,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth/use-auth";
-import { NotificationsDrawer } from "@/components/social";
-import { getUnreadNotificationCount } from "@/lib/social/queries";
+import { NotificationBell } from "@/components/social";
 import { PwaInstallButton } from "@/components/pwa/PwaInstallButton";
 
 interface NavbarProps {
@@ -37,23 +36,6 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const { user, profile, signOut, isLoading } = useAuth();
-  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
-  const [unreadCount, setUnreadCount] = React.useState(0);
-
-  // Load unread notification count
-  React.useEffect(() => {
-    if (!user) return;
-    let isMounted = true;
-    getUnreadNotificationCount(user.id)
-      .then((count) => {
-        if (isMounted) setUnreadCount(count);
-      })
-      .catch((err) => console.error("Failed to load unread count:", err));
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,24 +154,8 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                 <span className="sm:hidden">{streakDays}d</span>
               </div>
 
-              {/* Notification Bell */}
-              <button
-                type="button"
-                onClick={() => setIsNotificationsOpen(true)}
-                aria-label={
-                  unreadCount > 0
-                    ? `Activity notifications (${unreadCount} unread)`
-                    : "Activity notifications"
-                }
-                className="relative flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-card hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-xs">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </button>
+              {/* Standalone Notification Component */}
+              <NotificationBell />
 
               {/* User Avatar & Dropdown */}
               <div className="relative" ref={dropdownRef}>
@@ -286,24 +252,16 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                         <span>Offline Stories</span>
                       </Link>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          setIsNotificationsOpen(true);
-                        }}
-                        className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors w-full text-left cursor-pointer"
+                      <Link
+                        href="/notifications"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors w-full text-left"
                       >
                         <div className="flex items-center gap-2.5">
                           <Bell className="w-4 h-4 text-muted-foreground" />
-                          <span>Notifications</span>
+                          <span>All Notifications</span>
                         </div>
-                        {unreadCount > 0 && (
-                          <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
-                            {unreadCount}
-                          </span>
-                        )}
-                      </button>
+                      </Link>
 
                       <div className="border-t border-border/70 my-1" />
 
@@ -340,13 +298,6 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
           )}
         </div>
       </div>
-
-      {/* Notifications Drawer */}
-      <NotificationsDrawer
-        isOpen={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
-        onCountChange={setUnreadCount}
-      />
     </header>
   );
 }

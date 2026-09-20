@@ -105,7 +105,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Protected paths that require authentication
-  const protectedRoutes = ["/library", "/bookmarks", "/settings", "/studio", "/auth/mfa-challenge"];
+  const protectedRoutes = ["/library", "/bookmarks", "/settings", "/studio", "/auth/mfa-challenge", "/notifications"];
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );

@@ -6,3 +6,4 @@ export * from "./ReviewCard";
 export * from "./BookReviewsSection";
 export * from "./AuthorFollowButton";
 export * from "./NotificationsDrawer";
+export * from "./NotificationBell";
