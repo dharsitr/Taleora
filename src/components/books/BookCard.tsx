@@ -7,6 +7,7 @@ import { Star, Clock, BookOpen, Layers } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/lib/auth/use-auth";
 import { LibraryActionButton } from "./LibraryActionButton";
 
 interface BookCardProps {
@@ -14,8 +15,13 @@ interface BookCardProps {
 }
 
 export function BookCard({ book }: BookCardProps) {
+  const { user } = useAuth();
   const primaryGenre = book.genres?.[0]?.name || "Story";
   const authorName = book.author?.name || "Unknown Author";
+
+  const bookHref = user
+    ? `/books/${book.slug}`
+    : `/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`;
 
   const coverGradient =
     book.cover_gradient || "from-stone-800 via-zinc-900 to-black";
@@ -59,7 +65,7 @@ export function BookCard({ book }: BookCardProps) {
 
         {/* Cover Title & Author */}
         <div className="relative z-10">
-          <Link href={`/books/${book.slug}`} className="block focus:outline-hidden">
+          <Link href={bookHref} className="block focus:outline-hidden">
             <h3 className="font-serif text-lg font-bold leading-snug line-clamp-2 text-white drop-shadow-xs group-hover:text-amber-200 transition-colors">
               {book.title}
             </h3>
@@ -124,7 +130,7 @@ export function BookCard({ book }: BookCardProps) {
             )}
           </span>
 
-          <Link href={`/books/${book.slug}`}>
+          <Link href={bookHref}>
             <Button
               variant="ghost"
               size="sm"

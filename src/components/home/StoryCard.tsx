@@ -3,9 +3,11 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Star, Clock, BookOpen, Bookmark } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/lib/auth/use-auth";
 import type { BookWithAuthorAndGenres } from "@/types/books";
 
 interface StoryCardProps {
@@ -13,10 +15,16 @@ interface StoryCardProps {
 }
 
 export function StoryCard({ book }: StoryCardProps) {
+  const router = useRouter();
+  const { user } = useAuth();
   const [isSaved, setIsSaved] = React.useState(false);
   const gradient = book.cover_gradient || "from-amber-700 via-stone-800 to-zinc-950";
   const genre = book.genres[0]?.name ?? "Story";
   const authorName = book.author?.name ?? "Unknown Author";
+
+  const bookHref = user
+    ? `/books/${book.slug}`
+    : `/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`;
 
   return (
     <div className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
@@ -48,6 +56,10 @@ export function StoryCard({ book }: StoryCardProps) {
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              if (!user) {
+                router.push(`/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to bookmark stories")}`);
+                return;
+              }
               setIsSaved(!isSaved);
             }}
             aria-label={isSaved ? "Remove from bookmarks" : "Save bookmark"}
@@ -60,7 +72,7 @@ export function StoryCard({ book }: StoryCardProps) {
         </div>
 
         <div className="relative z-10">
-          <Link href={`/books/${book.slug}`}>
+          <Link href={bookHref}>
             <h4 className="font-serif text-lg font-bold leading-snug line-clamp-2 text-white drop-shadow-xs hover:text-amber-200 transition-colors">
               {book.title}
             </h4>
@@ -106,7 +118,7 @@ export function StoryCard({ book }: StoryCardProps) {
           <span className="text-xs text-muted-foreground">
             {book.total_chapters} Chapters
           </span>
-          <Link href={`/books/${book.slug}`}>
+          <Link href={bookHref}>
             <Button variant="ghost" size="sm" className="text-xs gap-1.5 hover:text-primary cursor-pointer">
               <BookOpen className="w-3.5 h-3.5" />
               <span>Explore Book</span>

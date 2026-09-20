@@ -7,6 +7,7 @@ import { Sparkles, BookOpen, Star, ArrowRight } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useAuth } from "@/lib/auth/use-auth";
 
 interface FeaturedSectionProps {
   books: BookWithAuthorAndGenres[];
@@ -14,6 +15,7 @@ interface FeaturedSectionProps {
 }
 
 export function FeaturedSection({ books, loading }: FeaturedSectionProps) {
+  const { user } = useAuth();
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
@@ -115,7 +117,7 @@ export function FeaturedSection({ books, loading }: FeaturedSectionProps) {
                   </div>
 
                   <h3 className="font-serif text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                    <Link href={`/books/${book.slug}`}>
+                    <Link href={user ? `/books/${book.slug}` : `/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`}>
                       {book.title}
                     </Link>
                   </h3>
@@ -134,7 +136,7 @@ export function FeaturedSection({ books, loading }: FeaturedSectionProps) {
                     {book.total_chapters} chapters · {book.estimated_read_time_minutes}m read
                   </span>
 
-                  <Link href={`/books/${book.slug}`}>
+                  <Link href={user ? `/books/${book.slug}` : `/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`}>
                     <Button size="sm" variant="outline" className="gap-1.5 text-xs h-8">
                       <span>Read Story</span>
                       <ArrowRight className="w-3.5 h-3.5" />

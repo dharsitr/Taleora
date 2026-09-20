@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Flame, Star, BookOpen, Clock } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
+import { useAuth } from "@/lib/auth/use-auth";
 
 interface TrendingStoriesProps {
   books: BookWithAuthorAndGenres[];
@@ -12,6 +13,7 @@ interface TrendingStoriesProps {
 }
 
 export function TrendingStories({ books, loading }: TrendingStoriesProps) {
+  const { user } = useAuth();
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
@@ -75,7 +77,7 @@ export function TrendingStories({ books, loading }: TrendingStoriesProps) {
           return (
             <Link
               key={book.id}
-              href={`/books/${book.slug}`}
+              href={user ? `/books/${book.slug}` : `/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`}
               className="group relative flex gap-4 p-3.5 rounded-2xl border border-border/80 bg-card hover:bg-secondary/30 hover:border-border hover:shadow-md transition-all duration-300"
             >
               {/* Rank Badge */}

@@ -105,7 +105,17 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Protected paths that require authentication
-  const protectedRoutes = ["/library", "/bookmarks", "/settings", "/studio", "/auth/mfa-challenge", "/notifications", "/goals"];
+  const protectedRoutes = [
+    "/library",
+    "/bookmarks",
+    "/settings",
+    "/studio",
+    "/auth/mfa-challenge",
+    "/notifications",
+    "/goals",
+    "/books",
+    "/read",
+  ];
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
@@ -115,7 +125,9 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
-    if (pathname === "/goals" || pathname.startsWith("/goals/")) {
+    if (pathname.startsWith("/books") || pathname.startsWith("/read")) {
+      url.searchParams.set("notice", "Please sign in to explore books");
+    } else if (pathname === "/goals" || pathname.startsWith("/goals/")) {
       url.searchParams.set("notice", "Sign in to view your reading goals");
     }
     return NextResponse.redirect(url);

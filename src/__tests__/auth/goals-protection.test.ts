@@ -15,7 +15,7 @@ vi.mock("@supabase/ssr", () => ({
 import { createServerClient } from "@supabase/ssr";
 import { updateSession } from "@/lib/supabase/middleware";
 
-describe("Goals Route Protection & Auth Suite", () => {
+describe("Goals & Books Route Protection & Auth Suite", () => {
   const mockCreateServerClient = vi.mocked(createServerClient);
 
   beforeEach(() => {
@@ -42,7 +42,27 @@ describe("Goals Route Protection & Auth Suite", () => {
     expect(location).toContain("notice=Sign+in+to+view+your+reading+goals");
   });
 
-  it("permits authenticated users to access /goals without redirect", async () => {
+  it("redirects unauthenticated users from /books/[slug] to /login with notice", async () => {
+    mockCreateServerClient.mockReturnValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: null },
+          error: new Error("No session"),
+        }),
+      },
+    } as any);
+
+    const req = new NextRequest("http://localhost:3000/books/the-black-orchid-promise");
+    const response = await updateSession(req);
+
+    expect(response.status).toBe(307);
+    const location = response.headers.get("location");
+    expect(location).toContain("/login");
+    expect(location).toContain("next=%2Fbooks%2Fthe-black-orchid-promise");
+    expect(location).toContain("notice=Please+sign+in+to+explore+books");
+  });
+
+  it("permits authenticated users to access /goals and /books without redirect", async () => {
     mockCreateServerClient.mockReturnValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
@@ -52,10 +72,14 @@ describe("Goals Route Protection & Auth Suite", () => {
       },
     } as any);
 
-    const req = new NextRequest("http://localhost:3000/goals");
-    const response = await updateSession(req);
+    const reqGoals = new NextRequest("http://localhost:3000/goals");
+    const resGoals = await updateSession(reqGoals);
+    expect(resGoals.status).toBe(200);
+    expect(resGoals.headers.get("location")).toBeNull();
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("location")).toBeNull();
+    const reqBooks = new NextRequest("http://localhost:3000/books/the-black-orchid-promise");
+    const resBooks = await updateSession(reqBooks);
+    expect(resBooks.status).toBe(200);
+    expect(resBooks.headers.get("location")).toBeNull();
   });
 });
