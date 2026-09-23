@@ -71,6 +71,19 @@ export function usePagePaginator({
     fraction: 0,
   });
 
+  // Reset anchor and page to 1 when navigating to a new chapter's content
+  const prevContentRef = React.useRef(content);
+  React.useEffect(() => {
+    if (prevContentRef.current !== content) {
+      prevContentRef.current = content;
+      activeAnchorRef.current = {
+        paragraphIndex: initialParagraphIndex ?? 0,
+        fraction: 0,
+      };
+      setCurrentPage(initialPageIndex ?? 1);
+    }
+  }, [content, initialParagraphIndex, initialPageIndex]);
+
   const paragraphs = React.useMemo(() => {
     return splitContentIntoParagraphs(content);
   }, [content]);
@@ -106,13 +119,17 @@ export function usePagePaginator({
     // Detect if reading in two-page spread mode
     const isTwoPage = (settings.pageLayout === "spread" || !settings.pageLayout) && clientWidth >= 768;
 
-    // Available width for prose content on an individual book page
-    const availableWidth = isTwoPage
-      ? Math.max(240, Math.floor((clientWidth - 110) / 2) - 36)
-      : Math.max(280, clientWidth - 72);
+    // Available width for prose content on an individual book page (accommodates larger padding)
+    const horizontalPadding = isTwoPage
+      ? (clientWidth >= 1280 ? 104 : clientWidth >= 1024 ? 92 : 76)
+      : (clientWidth >= 640 ? 76 : 48);
 
-    // Reserve vertical space for running page header (~44px) and running page footer (~44px) + breathing room
-    const availableHeight = Math.max(280, clientHeight - 100);
+    const availableWidth = isTwoPage
+      ? Math.max(260, Math.floor((clientWidth - 40) / 2) - horizontalPadding)
+      : Math.max(280, clientWidth - horizontalPadding);
+
+    // Reserve vertical space for running page header (~44px), running page footer (~44px), and page padding (~48px)
+    const availableHeight = Math.max(280, clientHeight - 110);
 
     // Font classes & styles matching Reader settings
     const fontClass =

@@ -89,7 +89,7 @@ function SingleBookPageContent({
       )}
 
       {/* Running Top Page Header */}
-      <header className="px-6 sm:px-9 pt-4 pb-2 flex items-center justify-between border-b border-current/10 text-[11px] font-medium tracking-wide uppercase opacity-70 select-none z-10">
+      <header className="px-6 sm:px-9 lg:px-11 pt-4 pb-2 flex items-center justify-between border-b border-current/10 text-[11px] font-medium tracking-wide uppercase opacity-70 select-none z-10">
         {side === "left" ? (
           <>
             <span className="truncate max-w-[65%] font-serif italic normal-case tracking-normal">
@@ -112,7 +112,7 @@ function SingleBookPageContent({
       </header>
 
       {/* Prose Text Content */}
-      <div className="flex-1 px-6 sm:px-9 py-5 overflow-hidden flex flex-col justify-start z-10 relative select-text pointer-events-auto">
+      <div className="flex-1 px-6 sm:px-9 lg:px-11 xl:px-12 py-5 sm:py-6 overflow-hidden flex flex-col justify-start z-10 relative select-text pointer-events-auto">
         {/* Chapter Opening Header Banner (Page 1 only) */}
         {isFirstPageOfChapter && displayPageNum === 1 && (
           <div className="text-center pb-5 mb-4 border-b border-current/10">
@@ -261,7 +261,7 @@ function SingleBookPageContent({
       </div>
 
       {/* Running Bottom Page Footer */}
-      <footer className="px-6 sm:px-9 py-2.5 border-t border-current/10 flex items-center justify-between text-[11px] font-mono opacity-65 select-none z-10">
+      <footer className="px-6 sm:px-9 lg:px-11 py-2.5 sm:py-3 border-t border-current/10 flex items-center justify-between text-[11px] font-mono opacity-65 select-none z-10">
         {side === "left" ? (
           <>
             <span className="font-semibold text-foreground">{displayPageNum}</span>
@@ -348,10 +348,10 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
 
     const widthClass =
       settings.width === "narrow"
-        ? "max-w-4xl"
+        ? "max-w-4xl xl:max-w-5xl"
         : settings.width === "wide"
-        ? "max-w-6xl"
-        : "max-w-5xl";
+        ? "max-w-7xl xl:max-w-[1520px] 2xl:max-w-[1680px]"
+        : "max-w-6xl xl:max-w-7xl";
 
     // Spreads calculation
     // Left page is always odd (1, 3, 5...), Right page is always even (2, 4, 6...)
@@ -457,7 +457,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
     }
 
     return (
-      <div className="relative w-full flex-1 flex items-center justify-center p-2 sm:p-4 md:p-6 select-text book-perspective overflow-hidden">
+      <div className="relative w-full flex-1 flex items-center justify-center p-1 sm:p-2.5 md:p-3.5 lg:p-4 select-text book-perspective overflow-hidden">
         {/* Floating Prev Page Chevron (Left Margin) */}
         <button
           type="button"
@@ -466,7 +466,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
           aria-label="Previous Page"
           title="Previous Page (← or Left Click)"
           className={cn(
-            "hidden md:flex absolute left-3 lg:left-6 z-40 w-11 h-11 rounded-full items-center justify-center border transition-all duration-200 cursor-pointer shadow-lg",
+            "hidden md:flex absolute left-2 lg:left-4 xl:left-6 z-40 w-11 h-11 rounded-full items-center justify-center border transition-all duration-200 cursor-pointer shadow-lg",
             "border-border/80 bg-background/90 hover:bg-background hover:scale-105 active:scale-95 text-foreground/80 hover:text-foreground backdrop-blur-xs",
             (!hasPrev || isTurning) && "opacity-25 pointer-events-none"
           )}
@@ -482,7 +482,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
           aria-label="Next Page"
           title="Next Page (→, Space, or Right Click)"
           className={cn(
-            "hidden md:flex absolute right-3 lg:right-6 z-40 w-11 h-11 rounded-full items-center justify-center border transition-all duration-200 cursor-pointer shadow-lg",
+            "hidden md:flex absolute right-2 lg:right-4 xl:right-6 z-40 w-11 h-11 rounded-full items-center justify-center border transition-all duration-200 cursor-pointer shadow-lg",
             "border-border/80 bg-background/90 hover:bg-background hover:scale-105 active:scale-95 text-foreground/80 hover:text-foreground backdrop-blur-xs",
             (!hasNext || isTurning) && "opacity-25 pointer-events-none"
           )}
@@ -494,7 +494,10 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
         <div
           ref={ref}
           className={cn(
-            "relative w-full h-[calc(100vh-130px)] sm:h-[calc(100vh-145px)] min-h-[480px] max-h-[820px] rounded-2xl p-1.5 sm:p-2.5 transition-all duration-300 flex items-center justify-center book-cover-casing border",
+            "relative w-full rounded-2xl p-1.5 sm:p-2.5 lg:p-3 transition-all duration-300 flex items-center justify-center book-cover-casing border",
+            settings.zenMode
+              ? "h-[calc(100vh-28px)] max-h-[96vh]"
+              : "h-[calc(100vh-76px)] sm:h-[calc(100vh-80px)] min-h-[520px] max-h-[960px] 2xl:max-h-[1100px]",
             coverRimClasses,
             widthClass
           )}
@@ -789,8 +792,20 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                   <div className="absolute inset-y-0 left-0 w-8 z-20 book-spine-crease pointer-events-none" />
 
                   <SingleBookPageContent
-                    pageData={page}
-                    displayPageNum={pageNumber}
+                    pageData={
+                      isTurning && turnDirection === "next"
+                        ? pages[pageNumber] || null
+                        : isTurning && turnDirection === "prev"
+                        ? pages[pageNumber - 2] || null
+                        : page
+                    }
+                    displayPageNum={
+                      isTurning && turnDirection === "next"
+                        ? pageNumber + 1
+                        : isTurning && turnDirection === "prev"
+                        ? Math.max(1, pageNumber - 1)
+                        : pageNumber
+                    }
                     totalPages={totalPages}
                     bookTitle={bookTitle}
                     chapterTitle={chapterTitle}
@@ -801,16 +816,23 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                     bookSlug={bookSlug}
                     nextChapter={nextChapter}
                     side="single"
-                    isFirstPageOfChapter={pageNumber === 1}
+                    isFirstPageOfChapter={
+                      pageNumber === 1 && (!isTurning || turnDirection !== "next")
+                    }
                   />
+                  {/* Underlying page reveal shadow that lifts off */}
+                  {isTurning && (
+                    <div className="absolute inset-0 bg-black/10 animate-under-shadow pointer-events-none z-25" />
+                  )}
                 </div>
 
-                {/* 3D Page Curl for Single Page Mode */}
+                {/* 3D Page Curl for Single Page Mode (Next) */}
                 {isTurning && turnDirection === "next" && (
                   <div
                     className="absolute inset-0 z-35 book-preserve-3d animate-flip-leaf-next pointer-events-none"
                     style={{ transformOrigin: "0% 50%" }}
                   >
+                    {/* Front Face: Current Page turning away */}
                     <div
                       className={cn(
                         "absolute inset-0 w-full h-full book-backface-hidden overflow-hidden shadow-2xl",
@@ -830,6 +852,80 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                         bookSlug={bookSlug}
                         nextChapter={nextChapter}
                         side="single"
+                        isFirstPageOfChapter={pageNumber === 1}
+                      />
+                      <div className="absolute inset-0 bg-black/15 animate-turning-shadow pointer-events-none" />
+                    </div>
+
+                    {/* Back Face: Clean parchment verso backing (Never mirrored text) */}
+                    <div
+                      className={cn(
+                        "absolute inset-0 w-full h-full book-backface-hidden overflow-hidden shadow-2xl flex flex-col justify-between p-8 text-center",
+                        paperClasses
+                      )}
+                      style={{ transform: "rotateY(180deg)" }}
+                    >
+                      <div className="text-[10px] uppercase tracking-widest font-mono opacity-50">
+                        {bookTitle}
+                      </div>
+                      <div className="font-serif italic text-xs opacity-40">
+                        ❦ · ❦ · ❦
+                      </div>
+                      <div className="text-[10px] font-mono opacity-50">
+                        Chapter {chapterNumber}
+                      </div>
+                      <div className="absolute inset-0 bg-black/15 animate-turning-shadow pointer-events-none" />
+                    </div>
+                  </div>
+                )}
+
+                {/* 3D Page Curl for Single Page Mode (Prev) */}
+                {isTurning && turnDirection === "prev" && (
+                  <div
+                    className="absolute inset-0 z-35 book-preserve-3d animate-flip-leaf-prev pointer-events-none"
+                    style={{ transformOrigin: "100% 50%" }}
+                  >
+                    {/* Front Face: Clean parchment backing */}
+                    <div
+                      className={cn(
+                        "absolute inset-0 w-full h-full book-backface-hidden overflow-hidden shadow-2xl flex flex-col justify-between p-8 text-center",
+                        paperClasses
+                      )}
+                    >
+                      <div className="text-[10px] uppercase tracking-widest font-mono opacity-50">
+                        {bookTitle}
+                      </div>
+                      <div className="font-serif italic text-xs opacity-40">
+                        ❦ · ❦ · ❦
+                      </div>
+                      <div className="text-[10px] font-mono opacity-50">
+                        Chapter {chapterNumber}
+                      </div>
+                      <div className="absolute inset-0 bg-black/15 animate-turning-shadow pointer-events-none" />
+                    </div>
+
+                    {/* Back Face: Previous Page landing right-side up */}
+                    <div
+                      className={cn(
+                        "absolute inset-0 w-full h-full book-backface-hidden overflow-hidden shadow-2xl",
+                        paperClasses
+                      )}
+                      style={{ transform: "rotateY(180deg)" }}
+                    >
+                      <SingleBookPageContent
+                        pageData={pages[pageNumber - 2] || null}
+                        displayPageNum={Math.max(1, pageNumber - 1)}
+                        totalPages={totalPages}
+                        bookTitle={bookTitle}
+                        chapterTitle={chapterTitle}
+                        chapterNumber={chapterNumber}
+                        settings={settings}
+                        highlights={highlights}
+                        onSelectHighlight={onSelectHighlight}
+                        bookSlug={bookSlug}
+                        nextChapter={nextChapter}
+                        side="single"
+                        isFirstPageOfChapter={pageNumber - 1 === 1}
                       />
                       <div className="absolute inset-0 bg-black/15 animate-turning-shadow pointer-events-none" />
                     </div>

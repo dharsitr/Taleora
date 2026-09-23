@@ -153,17 +153,38 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
 
   const navigateToChapter = React.useCallback(
     (targetChapter: typeof currentChapter) => {
-      if (isOffline || (typeof navigator !== "undefined" && !navigator.onLine)) {
-        setActiveChapterId(targetChapter.id);
-        if (typeof window !== "undefined") {
-          window.history.pushState(null, "", `/read/${book.slug}/${targetChapter.slug}`);
-        }
-      } else {
-        router.push(`/read/${book.slug}/${targetChapter.slug}`);
+      setActiveChapterId(targetChapter.id);
+      setBookCoverState("open");
+      if (typeof window !== "undefined") {
+        window.history.pushState(null, "", `/read/${book.slug}/${targetChapter.slug}`);
+      }
+      if (targetChapter.content && targetChapter.content.trim() !== "") {
+        setChapterContent(targetChapter.content);
+        setIsFetchingContent(false);
       }
     },
-    [isOffline, book.slug, router]
+    [book.slug]
   );
+
+  // Sync browser back/forward history navigation within chapters of the story
+  React.useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window === "undefined") return;
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      // Format: /read/[bookSlug]/[chapterSlug]
+      if (parts.length >= 3 && parts[0] === "read") {
+        const pathChapterSlug = parts[2];
+        const matched = allChapters.find((c) => c.slug === pathChapterSlug);
+        if (matched && matched.id !== activeChapterId) {
+          setActiveChapterId(matched.id);
+          setBookCoverState("open");
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [allChapters, activeChapterId]);
 
   const [settings, handleUpdateSettings] = useReaderSettings();
   const [chapterDrawerOpen, setChapterDrawerOpen] = React.useState(false);
@@ -203,7 +224,11 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   >(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("p") || (params.get("page") && Number(params.get("page")) > 1)) {
+      if (
+        params.get("p") ||
+        (params.get("page") && Number(params.get("page")) > 1) ||
+        data.currentChapter.chapter_number > 1
+      ) {
         return "open";
       }
     }
@@ -384,7 +409,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   const isTwoPage =
     (settings.pageLayout === "spread" || !settings.pageLayout) && isDesktopScreen;
 
-  // Page Turn Actions with 3D Flip
+  // Page Turn Actions with 3D Flip & Sequential Chapter Progression
   const handleNextPage = React.useCallback(() => {
     if (isTurning) return;
 
@@ -397,15 +422,26 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     const step = isTwoPage ? 2 : 1;
     const targetPage = effectivePage + step;
 
-    if (effectivePage < totalPages && (isTwoPage ? effectivePage + 1 <= totalPages : true)) {
+    // In two-page spread, if effectivePage + 1 >= totalPages, reader is already at the end of the chapter
+    const isAtEndOfChapter = isTwoPage
+      ? effectivePage + 1 >= totalPages
+      : currentPage >= totalPages;
+
+    if (!isAtEndOfChapter) {
       setTurnDirection("next");
       setIsTurning(true);
       setTimeout(() => {
         goToPage(Math.min(totalPages, targetPage));
         setIsTurning(false);
-      }, 580);
+      }, 540);
     } else if (nextChapter) {
-      navigateToChapter(nextChapter);
+      setTurnDirection("next");
+      setIsTurning(true);
+      setTimeout(() => {
+        navigateToChapter(nextChapter);
+        goToPage(1);
+        setIsTurning(false);
+      }, 540);
     }
   }, [
     isTurning,
@@ -429,15 +465,25 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     const step = isTwoPage ? 2 : 1;
     const targetPage = effectivePage - step;
 
-    if (effectivePage > 1) {
+    const isAtStartOfChapter = isTwoPage
+      ? effectivePage <= 1
+      : currentPage <= 1;
+
+    if (!isAtStartOfChapter) {
       setTurnDirection("prev");
       setIsTurning(true);
       setTimeout(() => {
         goToPage(Math.max(1, targetPage));
         setIsTurning(false);
-      }, 580);
+      }, 540);
     } else if (prevChapter) {
-      navigateToChapter(prevChapter);
+      setTurnDirection("prev");
+      setIsTurning(true);
+      setTimeout(() => {
+        navigateToChapter(prevChapter);
+        goToPage(9999);
+        setIsTurning(false);
+      }, 540);
     }
   }, [
     isTurning,
@@ -1079,11 +1125,15 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
           onSelectHighlight={handleHighlightClick}
           onNextPage={handleNextPage}
           onPrevPage={handlePrevPage}
-          hasPrev={currentPage > 1 || Boolean(prevChapter)}
+          hasPrev={
+            isTwoPage
+              ? (currentPage % 2 === 0 ? currentPage - 1 : currentPage) > 1 || Boolean(prevChapter)
+              : currentPage > 1 || Boolean(prevChapter)
+          }
           hasNext={
-            (isTwoPage
-              ? currentPage + 1 < totalPages
-              : currentPage < totalPages) || Boolean(nextChapter)
+            isTwoPage
+              ? (currentPage % 2 === 0 ? currentPage - 1 : currentPage) + 1 < totalPages || Boolean(nextChapter)
+              : currentPage < totalPages || Boolean(nextChapter)
           }
           isTurning={isTurning}
           turnDirection={turnDirection}
