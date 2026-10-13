@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS: ReaderSettings = {
   fontFamily: "serif",
   zenMode: false,
   pageLayout: "spread",
+  readerMode: "3d",
 };
 
 const STORAGE_KEY = "taleora-reader-settings";

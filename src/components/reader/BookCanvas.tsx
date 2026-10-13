@@ -3,11 +3,26 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ChevronLeft, ChevronRight, CheckCircle2, BookOpen } from "lucide-react";
 import { ChapterRow, HighlightColor, HighlightRow, ReaderSettings } from "@/types/books";
 import { HIGHLIGHT_COLORS, parseParagraphHighlights } from "@/lib/books/highlights";
 import { BookPage } from "./usePagePaginator";
 import { cn } from "@/lib/utils";
+import { useWebGLSupport } from "./3d/useWebGLSupport";
+
+const BookCanvas3D = dynamic(
+  () => import("./3d/BookCanvas3D").then((m) => m.BookCanvas3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-muted-foreground animate-pulse font-serif">
+        <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+        <span className="text-sm">Preparing 3D Book...</span>
+      </div>
+    ),
+  }
+);
 
 interface BookCanvasProps {
   pages: BookPage[];
@@ -54,7 +69,7 @@ interface SinglePageRenderProps {
 /**
  * Renders a single book page surface (used for base left/right and turning leaf faces)
  */
-function SingleBookPageContent({
+export function SingleBookPageContent({
   pageData,
   displayPageNum,
   totalPages,
@@ -315,6 +330,9 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
     },
     ref
   ) {
+    const { isSupported: isWebGLSupported, prefersReducedMotion } = useWebGLSupport();
+    const is3DActive = isWebGLSupported && settings.readerMode !== "2d";
+
     // Detect viewport width for two-page spread support
     const [isDesktopScreen, setIsDesktopScreen] = React.useState(true);
 
@@ -329,6 +347,42 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
 
     const isTwoPageMode =
       (settings.pageLayout === "spread" || !settings.pageLayout) && isDesktopScreen;
+
+    if (is3DActive) {
+      return (
+        <div
+          ref={ref}
+          className="relative w-full h-full flex-1 flex flex-col items-center justify-center overflow-hidden"
+        >
+          <BookCanvas3D
+            pages={pages}
+            page={page}
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            bookTitle={bookTitle}
+            chapterTitle={chapterTitle}
+            chapterNumber={chapterNumber}
+            settings={settings}
+            highlights={highlights}
+            onSelectHighlight={onSelectHighlight}
+            onNextPage={onNextPage}
+            onPrevPage={onPrevPage}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            isTurning={isTurning}
+            turnDirection={turnDirection}
+            bookSlug={bookSlug}
+            prevChapter={_prevChapter}
+            nextChapter={nextChapter}
+            coverState={coverState}
+            onOpenBook={onOpenBook}
+            authorName={authorName}
+            coverImageUrl={coverImageUrl}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+        </div>
+      );
+    }
 
     // Theme Classes for Pages
     const paperClasses =

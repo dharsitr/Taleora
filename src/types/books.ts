@@ -71,6 +71,7 @@ export interface ReaderSettings {
   fontFamily: ReaderFontFamily;
   zenMode: boolean;
   pageLayout: ReaderPageLayout;
+  readerMode?: "3d" | "2d";
 }
 
 export interface ChapterReaderData {

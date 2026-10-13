@@ -13,6 +13,8 @@ import {
   Columns,
   BookOpen,
   FileText,
+  Box,
+  Sparkles,
 } from "lucide-react";
 import { ReaderSettings, ReaderFontFamily, ReaderWidth } from "@/types/books";
 import { cn } from "@/lib/utils";
@@ -291,7 +293,44 @@ export function ReaderSettingsDrawer({
           </div>
         </div>
 
-        {/* 5. Zen Mode Toggle */}
+        {/* 6. Reading Experience Mode (3D Immersive vs Classic 2D) */}
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Reading Experience</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onUpdateSettings({ readerMode: "3d" })}
+              className={cn(
+                "py-2 px-3 rounded-lg border text-xs flex items-center justify-center gap-2 transition-all cursor-pointer",
+                settings.readerMode === "3d" || !settings.readerMode
+                  ? "bg-primary text-primary-foreground border-primary font-bold shadow-xs"
+                  : "bg-secondary/60 text-foreground border-border/80 hover:bg-secondary"
+              )}
+            >
+              <Box className="w-4 h-4" />
+              <span>3D Realistic Book</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onUpdateSettings({ readerMode: "2d" })}
+              className={cn(
+                "py-2 px-3 rounded-lg border text-xs flex items-center justify-center gap-2 transition-all cursor-pointer",
+                settings.readerMode === "2d"
+                  ? "bg-primary text-primary-foreground border-primary font-bold shadow-xs"
+                  : "bg-secondary/60 text-foreground border-border/80 hover:bg-secondary"
+              )}
+            >
+              <Columns className="w-4 h-4" />
+              <span>Classic 2D Spread</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 7. Zen Mode Toggle */}
         <div className="pt-2 border-t border-border/70 flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-foreground">
