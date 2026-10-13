@@ -42,7 +42,7 @@ export function BookCard({ book }: BookCardProps) {
             className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/35 group-hover:from-black/75 transition-colors" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/15 group-hover:from-black/80 transition-colors" />
 
         {/* Decorative spine crease effect */}
         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/25 z-10" />

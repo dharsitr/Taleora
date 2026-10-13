@@ -469,10 +469,11 @@ export default function EditStoryDetailsPage() {
             >
               {coverType === "upload" && coverImageUrl && (
                 <div
-                  className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay"
+                  className="absolute inset-0 bg-cover bg-center opacity-85"
                   style={{ backgroundImage: `url(${coverImageUrl})` }}
                 />
               )}
+              <div className="absolute inset-0 bg-black/40 pointer-events-none" />
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/20" />
               <span className="text-[10px] uppercase font-bold tracking-wider opacity-80 relative z-10">
                 Taleora

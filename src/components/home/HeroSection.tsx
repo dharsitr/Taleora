@@ -92,54 +92,70 @@ export function HeroSection({ featuredBook }: HeroSectionProps) {
                 }`}
               >
                 {/* Book Cover Image if available */}
-                {featuredBook?.cover_image_url && (
-                  <Image
-                    src={featuredBook.cover_image_url}
-                    alt={bookTitle}
-                    fill
-                    sizes="300px"
-                    unoptimized={!featuredBook.cover_image_url.includes(".supabase.co") && !featuredBook.cover_image_url.startsWith("/")}
-                    className="absolute inset-0 w-full h-full object-cover object-center opacity-40 mix-blend-overlay"
-                  />
+                {featuredBook?.cover_image_url ? (
+                  <>
+                    <Image
+                      src={featuredBook.cover_image_url}
+                      alt={bookTitle}
+                      fill
+                      sizes="300px"
+                      priority
+                      unoptimized={!featuredBook.cover_image_url.includes(".supabase.co") && !featuredBook.cover_image_url.startsWith("/")}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
+
+                    {/* Hardcover Ambient Lighting & Sheen (Enhances visibility with depth, avoids excessive brightness) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15 pointer-events-none z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black/25 via-transparent to-white/[0.08] pointer-events-none z-10" />
+
+                    {/* Delicate Gold Foil Edging Frame */}
+                    <div className="absolute inset-2.5 border border-amber-400/30 rounded-lg pointer-events-none z-10" />
+                    <div className="absolute top-3 left-3 w-2 h-2 border-t border-l border-amber-400/50 pointer-events-none z-10" />
+                    <div className="absolute top-3 right-3 w-2 h-2 border-t border-r border-amber-400/50 pointer-events-none z-10" />
+                    <div className="absolute bottom-3 left-3 w-2 h-2 border-b border-l border-amber-400/50 pointer-events-none z-10" />
+                    <div className="absolute bottom-3 right-3 w-2 h-2 border-b border-r border-amber-400/50 pointer-events-none z-10" />
+                  </>
+                ) : (
+                  <>
+                    {/* Ornate Gold Foil Filigree Borders */}
+                    <div className="absolute inset-3 border border-amber-400/40 rounded-lg pointer-events-none" />
+                    <div className="absolute inset-4 border border-amber-500/20 rounded-md pointer-events-none" />
+
+                    {/* Corner Ornaments */}
+                    <div className="absolute top-4 left-4 w-3 h-3 border-t-2 border-l-2 border-amber-400/60" />
+                    <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-amber-400/60" />
+                    <div className="absolute bottom-4 left-4 w-3 h-4 border-b-2 border-l-2 border-amber-400/60" />
+                    <div className="absolute bottom-4 right-4 w-3 h-4 border-b-2 border-r-2 border-amber-400/60" />
+
+                    {/* Book Header / Emblem */}
+                    <div className="relative z-10 flex flex-col items-center pt-3 text-center">
+                      <div className="w-8 h-8 rounded-full border border-amber-400/40 flex items-center justify-center text-amber-400/90 mb-1">
+                        <BookOpen className="w-4 h-4" />
+                      </div>
+                      <span className="text-[10px] tracking-[0.2em] uppercase text-amber-300/80 font-serif">
+                        Taleora Classics
+                      </span>
+                    </div>
+
+                    {/* Book Title & Author in Gold Foil Look */}
+                    <div className="relative z-10 text-center my-auto px-2">
+                      <h3 className="font-serif text-lg sm:text-xl font-bold tracking-normal text-amber-100 drop-shadow-md leading-tight line-clamp-3">
+                        {bookTitle}
+                      </h3>
+                      <div className="w-12 h-[1px] bg-amber-400/50 mx-auto my-2" />
+                      <p className="text-[11px] text-amber-200/80 font-serif italic tracking-wide">
+                        {authorName}
+                      </p>
+                    </div>
+
+                    {/* Book Bottom Seal */}
+                    <div className="relative z-10 text-center pb-1">
+                      <span className="text-[9px] text-amber-400/60 uppercase tracking-widest font-mono">
+                        Special Novella Edition
+                      </span>
+                    </div>
+                  </>
                 )}
-
-                {/* Ornate Gold Foil Filigree Borders */}
-                <div className="absolute inset-3 border border-amber-400/40 rounded-lg pointer-events-none" />
-                <div className="absolute inset-4 border border-amber-500/20 rounded-md pointer-events-none" />
-
-                {/* Corner Ornaments */}
-                <div className="absolute top-4 left-4 w-3 h-3 border-t-2 border-l-2 border-amber-400/60" />
-                <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-amber-400/60" />
-                <div className="absolute bottom-4 left-4 w-3 h-4 border-b-2 border-l-2 border-amber-400/60" />
-                <div className="absolute bottom-4 right-4 w-3 h-4 border-b-2 border-r-2 border-amber-400/60" />
-
-                {/* Book Header / Emblem */}
-                <div className="relative z-10 flex flex-col items-center pt-3 text-center">
-                  <div className="w-8 h-8 rounded-full border border-amber-400/40 flex items-center justify-center text-amber-400/90 mb-1">
-                    <BookOpen className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] tracking-[0.2em] uppercase text-amber-300/80 font-serif">
-                    Taleora Classics
-                  </span>
-                </div>
-
-                {/* Book Title & Author in Gold Foil Look */}
-                <div className="relative z-10 text-center my-auto px-2">
-                  <h3 className="font-serif text-lg sm:text-xl font-bold tracking-normal text-amber-100 drop-shadow-md leading-tight line-clamp-3">
-                    {bookTitle}
-                  </h3>
-                  <div className="w-12 h-[1px] bg-amber-400/50 mx-auto my-2" />
-                  <p className="text-[11px] text-amber-200/80 font-serif italic tracking-wide">
-                    {authorName}
-                  </p>
-                </div>
-
-                {/* Book Bottom Seal */}
-                <div className="relative z-10 text-center pb-1">
-                  <span className="text-[9px] text-amber-400/60 uppercase tracking-widest font-mono">
-                    Special Novella Edition
-                  </span>
-                </div>
               </div>
 
               {/* Book Pages Edge (Depth illusion) */}

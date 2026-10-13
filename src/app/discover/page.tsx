@@ -24,7 +24,6 @@ import { DiscoverHero } from "@/components/discover/DiscoverHero";
 import { TrendingStories } from "@/components/discover/TrendingStories";
 import { FeaturedSection } from "@/components/discover/FeaturedSection";
 import { PersonalizedRecommendations } from "@/components/discover/PersonalizedRecommendations";
-import { GenreBrowser } from "@/components/discover/GenreBrowser";
 import { DiscoverCatalog } from "@/components/discover/DiscoverCatalog";
 
 function DiscoverContent() {
@@ -262,26 +261,29 @@ function DiscoverContent() {
 
   return (
     <div className="flex flex-col gap-12 max-w-7xl mx-auto pb-20">
-      {/* 1. Discover Hero & Tag Exploration */}
+      {/* 1. Discover Hero & Tag Exploration with Integrated Genre Filter Pills */}
       <DiscoverHero
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         selectedTag={selectedTag}
         onTagSelect={handleTagSelect}
+        genres={genres}
+        selectedGenre={selectedGenre}
+        onGenreChange={handleGenreChange}
       />
 
-      {/* 2. Trending Stories Carousel/Grid */}
+      {/* 2. Featured Editorial Spotlight ("Story of the Week") */}
       {!isSearchActive && (
-        <TrendingStories
-          books={trendingBooks}
+        <FeaturedSection
+          books={featuredBooks}
           loading={loadingSections}
         />
       )}
 
-      {/* 3. Featured Editorial Spotlights */}
+      {/* 3. Trending Stories Carousel */}
       {!isSearchActive && (
-        <FeaturedSection
-          books={featuredBooks}
+        <TrendingStories
+          books={trendingBooks}
           loading={loadingSections}
         />
       )}
@@ -295,15 +297,7 @@ function DiscoverContent() {
         />
       )}
 
-      {/* 5. Browse by Genre & Worlds */}
-      <GenreBrowser
-        genres={genres}
-        selectedGenre={selectedGenre}
-        onSelectGenre={handleGenreChange}
-        loading={loadingSections}
-      />
-
-      {/* 6. Filterable & Sortable Stories Catalog */}
+      {/* 5. Complete Stories Bento Catalog */}
       <DiscoverCatalog
         books={catalogBooks}
         genres={genres}

@@ -144,10 +144,10 @@ export function DiscoverCatalog({
           <button
             type="button"
             onClick={() => onGenreChange("all")}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer ${
               selectedGenre === "all"
-                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/60"
+                ? "font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-xs shadow-amber-500/15"
+                : "font-medium bg-secondary/50 hover:bg-secondary/80 text-muted-foreground hover:text-foreground border border-border/60"
             }`}
           >
             All Genres
@@ -160,10 +160,10 @@ export function DiscoverCatalog({
                 key={genre.id}
                 type="button"
                 onClick={() => onGenreChange(genre.slug)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/60"
+                    ? "font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-xs shadow-amber-500/15"
+                    : "font-medium bg-secondary/50 hover:bg-secondary/80 text-muted-foreground hover:text-foreground border border-border/60"
                 }`}
               >
                 {genre.name}

@@ -393,11 +393,11 @@ export default function AuthorStudioPage() {
                   >
                     {story.cover_image_url && (
                       <div
-                        className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay"
+                        className="absolute inset-0 bg-cover bg-center opacity-80"
                         style={{ backgroundImage: `url(${story.cover_image_url})` }}
                       />
                     )}
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                    <div className="absolute inset-0 bg-black/45 group-hover:bg-black/30 transition-colors" />
 
                     <div className="relative z-10 flex items-center gap-2">
                       <Badge

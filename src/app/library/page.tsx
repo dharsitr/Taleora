@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Library,
   BookMarked,
@@ -14,6 +15,10 @@ import {
   Compass,
   HardDrive,
   ArrowRight,
+  Flame,
+  Clock,
+  Play,
+  RotateCcw,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { getUserLibrary, removeFromLibrary } from "@/lib/books/queries";
@@ -26,9 +31,10 @@ import { OfflineDownloadButton } from "@/components/offline/OfflineDownloadButto
 import { OfflineStorageManager } from "@/components/offline/OfflineStorageManager";
 import { getAllOfflineBooks } from "@/lib/offline/db";
 import { OfflineBook } from "@/types/offline";
+import { useDailyReadingProgress } from "@/lib/stats/use-daily-reading-progress";
 
 export default function LibraryPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const cachedInitial = user ? getUserLibraryCache(user.id) : null;
   const [libraryItems, setLibraryItems] = React.useState<LibraryItem[]>(cachedInitial || []);
   const [offlineBooks, setOfflineBooks] = React.useState<OfflineBook[]>([]);
@@ -38,6 +44,9 @@ export default function LibraryPage() {
   >("all");
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [storageManagerOpen, setStorageManagerOpen] = React.useState(false);
+
+  // Live daily progress stats
+  const { minutesReadToday, dailyGoalMinutes, progressPercent } = useDailyReadingProgress();
 
   const loadOffline = React.useCallback(async () => {
     try {
@@ -58,7 +67,6 @@ export default function LibraryPage() {
   React.useEffect(() => {
     if (!user) return;
 
-    // If cache available, seed immediately
     const cached = getUserLibraryCache(user.id);
     if (cached) {
       setLibraryItems(cached);
@@ -119,55 +127,218 @@ export default function LibraryPage() {
       ? completedItems
       : libraryItems;
 
+  const displayName =
+    profile?.full_name || user?.user_metadata?.full_name || "Reader";
+  const streakDays = profile?.streak_days ?? 14;
+
+  // The active story for the Continue Reading Hero
+  const activeContinueItem = readingItems[0] || (libraryItems.length > 0 ? libraryItems[0] : null);
+
   return (
-    <div className="flex flex-col gap-8 max-w-6xl mx-auto">
-      {/* Page Header */}
-      <div className="flex flex-col gap-2 border-b border-border/70 pb-5">
-        <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
-          <Library className="w-4 h-4" />
-          <span>Personal Shelf</span>
+    <div className="flex flex-col gap-8 w-full max-w-6xl mx-auto">
+      {/* Top Header: Greeting & Gamified Reading Streaks */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+        <div className="flex flex-col gap-1.5">
+          <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
+            <Library className="w-4 h-4" />
+            <span>My Personal Library</span>
+          </div>
+          <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            Welcome back, {displayName}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Your personalized sanctuary of saved novellas, reading streaks, and offline books.
+          </p>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              My Literary Library
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Your personalized collection of stories, bookmarks, and offline reading storage.
-            </p>
+
+        {/* Stats Row: Streak Medal & Daily Reading Goal Ring */}
+        <div className="flex items-center gap-3 self-start md:self-auto">
+          {/* Reading Streak Medal */}
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-amber-500/20 bg-card/80 backdrop-blur-md shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/30 border border-amber-500/40 flex items-center justify-center text-amber-500 shrink-0">
+              <Flame className="w-5 h-5 fill-amber-500" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                Reading Streak
+              </span>
+              <span className="text-sm font-bold text-amber-500 font-mono">
+                {streakDays}-Day Streak
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setStorageManagerOpen(true)}
-              className="gap-2 cursor-pointer text-xs border-primary/30 text-foreground hover:bg-secondary"
-            >
-              <HardDrive className="w-4 h-4 text-primary" />
-              <span>Storage Manager ({offlineBooks.length})</span>
-            </Button>
-
-            <Link href="/discover" prefetch={true}>
-              <Button variant="outline" size="sm" className="gap-2 cursor-pointer text-xs">
-                <Compass className="w-4 h-4 text-primary" />
-                <span>Explore More Books</span>
-              </Button>
-            </Link>
+          {/* Daily Goal Ring Widget */}
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-border/80 bg-card/80 backdrop-blur-md shadow-sm">
+            <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
+              <svg className="w-10 h-10 transform -rotate-90">
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  className="text-secondary"
+                  fill="transparent"
+                />
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  className="text-amber-500 transition-all duration-500"
+                  strokeDasharray={100}
+                  strokeDashoffset={100 - Math.min(progressPercent, 100)}
+                  strokeLinecap="round"
+                  fill="transparent"
+                />
+              </svg>
+              <span className="absolute text-[11px] font-bold font-mono text-foreground">
+                {minutesReadToday}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                Daily Goal
+              </span>
+              <span className="text-xs font-semibold text-foreground">
+                {minutesReadToday} / {dailyGoalMinutes} mins
+              </span>
+            </div>
           </div>
+
+          {/* Manage Storage Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setStorageManagerOpen(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 h-10 px-3 text-xs border-border/80 text-foreground/80 hover:bg-secondary cursor-pointer"
+          >
+            <HardDrive className="w-3.5 h-3.5" />
+            <span>Storage</span>
+          </Button>
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Continue Reading 3D Hero Card (if user has active reads) */}
+      {activeContinueItem && (
+        <section className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-card/90 via-card/70 to-card/40 p-5 sm:p-7 shadow-xl backdrop-blur-xl">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5 w-full sm:w-auto">
+              {/* Mini 3D Tilted Novella Preview */}
+              <div
+                className="relative shrink-0 w-20 sm:w-24 h-28 sm:h-32 rounded-r-md rounded-l-xs shadow-xl transition-transform duration-500 hover:scale-105"
+                style={{
+                  perspective: "600px",
+                }}
+              >
+                <div
+                  className="w-full h-full rounded-r-md rounded-l-xs p-2.5 flex flex-col justify-between border border-amber-400/30 shadow-md relative overflow-hidden"
+                  style={{
+                    transform: "rotateY(-12deg) rotateX(4deg)",
+                    background: activeContinueItem.book.cover_gradient
+                      ? undefined
+                      : "linear-gradient(135deg, #1f1d1b 0%, #121110 100%)",
+                  }}
+                >
+                  {/* Subtle Spine shadow */}
+                  <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-r from-black/60 to-transparent z-10" />
+
+                  {activeContinueItem.book.cover_image_url ? (
+                    <>
+                      <Image
+                        src={activeContinueItem.book.cover_image_url}
+                        alt={activeContinueItem.book.title}
+                        fill
+                        sizes="120px"
+                        unoptimized={
+                          !activeContinueItem.book.cover_image_url.includes(".supabase.co") &&
+                          !activeContinueItem.book.cover_image_url.startsWith("/")
+                        }
+                        className="absolute inset-0 object-cover object-center"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none z-10" />
+                      <div className="border border-amber-400/20 rounded-xs h-full relative z-10 pointer-events-none" />
+                    </>
+                  ) : (
+                    <div className="border border-amber-400/30 rounded p-1 h-full flex flex-col justify-between text-center relative z-10">
+                      <span className="text-[7px] text-amber-300 font-serif tracking-widest uppercase truncate">
+                        Taleora
+                      </span>
+                      <h4 className="font-serif text-[10px] font-bold text-amber-100 line-clamp-2 leading-tight">
+                        {activeContinueItem.book.title}
+                      </h4>
+                      <span className="text-[7px] text-amber-400/80 italic truncate">
+                        {activeContinueItem.book.author?.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress and Book Meta */}
+              <div className="flex flex-col gap-2 min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                    Continue Reading
+                  </span>
+                  <span className="text-xs text-muted-foreground">·</span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {activeContinueItem.book.author?.name}
+                  </span>
+                </div>
+
+                <h3 className="font-serif text-lg sm:text-xl font-bold text-foreground truncate">
+                  {activeContinueItem.book.title}
+                </h3>
+
+                {/* Progress Bar & Percentage */}
+                <div className="flex items-center gap-3 w-full max-w-md pt-1">
+                  <div className="h-2 flex-1 rounded-full bg-secondary overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-300"
+                      style={{
+                        width: `${Math.max(activeContinueItem.progress_percentage, 5)}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-mono font-bold text-amber-500 shrink-0">
+                    {Math.round(activeContinueItem.progress_percentage)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Resume Reading CTA */}
+            <Link
+              href={`/read/${activeContinueItem.book.slug}`}
+              className="w-full sm:w-auto shrink-0"
+            >
+              <Button
+                size="lg"
+                className="w-full sm:w-auto h-12 px-6 rounded-xl font-semibold bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 border border-amber-400/30 gap-2 cursor-pointer transition-all"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                <span>Resume Reading</span>
+              </Button>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Filter Tabs matching the modern mockup */}
       <div className="flex items-center gap-2 border-b border-border/60 pb-3 overflow-x-auto scrollbar-none">
         <button
           type="button"
           onClick={() => setActiveTab("all")}
           className={cn(
-            "px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0",
+            "px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0",
             activeTab === "all"
               ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+              : "bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50"
           )}
         >
           All Stories ({libraryItems.length})
@@ -177,10 +348,10 @@ export default function LibraryPage() {
           type="button"
           onClick={() => setActiveTab("reading")}
           className={cn(
-            "px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0",
+            "px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0",
             activeTab === "reading"
               ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+              : "bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50"
           )}
         >
           Currently Reading ({readingItems.length})
@@ -190,23 +361,23 @@ export default function LibraryPage() {
           type="button"
           onClick={() => setActiveTab("saved")}
           className={cn(
-            "px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0",
+            "px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0",
             activeTab === "saved"
               ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+              : "bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50"
           )}
         >
-          Saved / Unread ({savedItems.length})
+          Saved Bookmarks ({savedItems.length})
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("completed")}
           className={cn(
-            "px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0",
+            "px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer shrink-0",
             activeTab === "completed"
               ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+              : "bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50"
           )}
         >
           Completed ({completedItems.length})
@@ -216,14 +387,14 @@ export default function LibraryPage() {
           type="button"
           onClick={() => setActiveTab("downloaded")}
           className={cn(
-            "px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 shrink-0",
+            "px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
             activeTab === "downloaded"
               ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+              : "bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50"
           )}
         >
           <HardDrive className="w-3.5 h-3.5" />
-          <span>Downloaded ({offlineBooks.length})</span>
+          <span>Downloaded Offline ({offlineBooks.length})</span>
         </button>
       </div>
 
@@ -233,7 +404,7 @@ export default function LibraryPage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-64 rounded-xl border border-border/60 bg-muted/40 animate-pulse"
+              className="h-64 rounded-2xl border border-border/60 bg-muted/40 animate-pulse"
             />
           ))}
         </div>
@@ -245,21 +416,20 @@ export default function LibraryPage() {
           {offlineBooks.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {offlineBooks.map((book) => {
-                const primaryGenre = book.genres?.[0]?.name || "Story";
+                const primaryGenre = book.genres?.[0]?.name || "Novella";
                 const coverGradient = book.cover_gradient || "from-stone-800 via-zinc-900 to-black";
                 const sizeKb = (book.size_bytes / 1024).toFixed(0);
 
                 return (
                   <div
                     key={book.id}
-                    className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden shadow-xs hover:border-primary/40 transition-all duration-300"
+                    className="group flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xs hover:border-primary/40 transition-all duration-300"
                   >
-                    {/* Book Mini Banner */}
                     <div
-                      className={`h-36 w-full bg-gradient-to-br ${coverGradient} p-4 flex flex-col justify-between text-white relative overflow-hidden`}
+                      className={`h-40 w-full bg-gradient-to-br ${coverGradient} p-4 flex flex-col justify-between text-white relative overflow-hidden`}
                     >
-                      <div className="absolute inset-0 bg-black/25" />
-                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/20 z-10" />
+                      <div className="absolute inset-0 bg-black/35" />
+                      <div className="absolute left-0 top-0 bottom-0 w-2 bg-white/20 z-10" />
 
                       <div className="relative z-10 flex items-start justify-between">
                         <Badge
@@ -286,19 +456,15 @@ export default function LibraryPage() {
                       </div>
                     </div>
 
-                    {/* Card Body */}
                     <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-4">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Saved on Device ({sizeKb} KB)</span>
                         </span>
-                        <span className="text-[11px] font-mono">
-                          Offline Ready
-                        </span>
+                        <span className="text-[11px] font-mono">Offline Ready</span>
                       </div>
 
-                      {/* Footer Actions */}
                       <div className="pt-3 border-t border-border/60 flex items-center justify-between">
                         <OfflineDownloadButton
                           bookId={book.id}
@@ -373,9 +539,9 @@ export default function LibraryPage() {
         </div>
       )}
 
-      {/* Empty State: Tab empty */}
+      {/* Empty State: Current tab has 0 items */}
       {!loading && activeTab !== "downloaded" && libraryItems.length > 0 && displayedItems.length === 0 && (
-        <div className="text-center py-16 px-4 rounded-xl border border-dashed border-border bg-card/30 flex flex-col items-center gap-3">
+        <div className="text-center py-16 px-4 rounded-2xl border border-dashed border-border bg-card/30 flex flex-col items-center gap-3">
           <BookOpen className="w-8 h-8 text-muted-foreground/60" />
           <h4 className="font-serif text-base font-semibold text-foreground">
             No Stories in &ldquo;{activeTab}&rdquo;
@@ -394,13 +560,13 @@ export default function LibraryPage() {
         </div>
       )}
 
-      {/* Standard Library Grid */}
+      {/* Standard Library Bento Shelf Grid */}
       {!loading && activeTab !== "downloaded" && displayedItems.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedItems.map((item) => {
             const { book } = item;
             const isDeleting = deletingId === book.id;
-            const primaryGenre = book.genres?.[0]?.name || "Story";
+            const primaryGenre = book.genres?.[0]?.name || "Novella";
             const coverGradient =
               book.cover_gradient || "from-stone-800 via-zinc-900 to-black";
 
@@ -408,16 +574,29 @@ export default function LibraryPage() {
               <div
                 key={item.id}
                 className={cn(
-                  "group flex flex-col rounded-xl border border-border bg-card overflow-hidden shadow-xs hover:border-primary/40 transition-all duration-300",
+                  "group flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xs hover:border-primary/40 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
                   isDeleting && "opacity-50 pointer-events-none"
                 )}
               >
                 {/* Book Mini Banner */}
                 <div
-                  className={`h-36 w-full bg-gradient-to-br ${coverGradient} p-4 flex flex-col justify-between text-white relative overflow-hidden`}
+                  className={`h-40 w-full bg-gradient-to-br ${coverGradient} p-4 flex flex-col justify-between text-white relative overflow-hidden`}
                 >
-                  <div className="absolute inset-0 bg-black/25" />
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/20 z-10" />
+                  {book.cover_image_url && (
+                    <Image
+                      src={book.cover_image_url}
+                      alt={book.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                      unoptimized={
+                        !book.cover_image_url.includes(".supabase.co") &&
+                        !book.cover_image_url.startsWith("/")
+                      }
+                      className="absolute inset-0 object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/25" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-400/40 z-10" />
 
                   <div className="relative z-10 flex items-start justify-between">
                     <Badge
@@ -431,7 +610,7 @@ export default function LibraryPage() {
                       type="button"
                       onClick={() => handleRemove(book.id)}
                       title="Remove from my library"
-                      className="w-8 h-8 rounded-full bg-black/40 hover:bg-destructive/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
+                      className="w-7 h-7 rounded-full bg-black/40 hover:bg-destructive/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -453,26 +632,26 @@ export default function LibraryPage() {
                 <div className="p-4 sm:p-5 flex-1 flex flex-col gap-3">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1 text-amber-500 font-semibold">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      <span>{book.average_rating ? book.average_rating.toFixed(1) : "5.0"}</span>
+                      <Star className="w-3.5 h-3.5 fill-amber-500" />
+                      <span>{book.average_rating ? Number(book.average_rating).toFixed(1) : "5.0"}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Layers className="w-3.5 h-3.5" />
-                      <span>{book.total_chapters} ch</span>
+                      <Layers className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>{book.total_chapters} chapters</span>
                     </div>
                   </div>
 
                   {/* Reading Progress Indicator */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1.5 pt-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground text-[11px]">
                         {item.is_completed
                           ? "Completed"
                           : item.progress_percentage > 0
                           ? "Reading Progress"
                           : "Not Started"}
                       </span>
-                      <span className="font-mono text-foreground font-semibold">
+                      <span className="font-mono text-foreground font-semibold text-[11px]">
                         {Math.round(item.progress_percentage)}%
                       </span>
                     </div>
@@ -480,9 +659,11 @@ export default function LibraryPage() {
                       <div
                         className={cn(
                           "h-full rounded-full transition-all duration-300",
-                          item.is_completed ? "bg-emerald-500" : "bg-primary"
+                          item.is_completed
+                            ? "bg-emerald-500"
+                            : "bg-gradient-to-r from-amber-500 to-amber-600"
                         )}
-                        style={{ width: `${item.progress_percentage}%` }}
+                        style={{ width: `${Math.max(item.progress_percentage, 0)}%` }}
                       />
                     </div>
                   </div>
@@ -522,7 +703,7 @@ export default function LibraryPage() {
                         <Button
                           variant="default"
                           size="sm"
-                          className="text-xs gap-1 cursor-pointer"
+                          className="text-xs gap-1 cursor-pointer font-semibold bg-primary text-primary-foreground"
                         >
                           <BookOpen className="w-3.5 h-3.5" />
                           <span>
