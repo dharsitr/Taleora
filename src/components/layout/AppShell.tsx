@@ -3,7 +3,6 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Navbar } from "./Navbar";
-import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { Footer } from "./Footer";
 import { PwaRegistration } from "@/components/pwa/PwaRegistration";
@@ -29,12 +28,7 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
-  const isFullWidthPage =
-    pathname === "/" ||
-    pathname.startsWith("/books/") ||
-    pathname === "/discover" ||
-    pathname === "/library" ||
-    pathname.startsWith("/studio") ||
+  const isAuthPage =
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/forgot-password") ||
@@ -52,23 +46,17 @@ export function AppShell({ children }: AppShellProps) {
         Skip to main story content
       </a>
 
-      {/* Top Navbar */}
+      {/* Top Floating Glassmorphism Navbar */}
       <Navbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
 
-      {/* Main Layout Area */}
-      <div className={`flex-1 flex w-full ${isFullWidthPage ? "" : "max-w-7xl mx-auto"}`}>
-        {/* Desktop Sidebar (hidden on full-width catalog, reading, library and auth pages) */}
-        {!isFullWidthPage && <Sidebar />}
-
-        {/* Content Container */}
+      {/* Main Layout Area - Clean Full Width Centered Workspace */}
+      <div className="flex-1 flex w-full">
         <main
           id="main-content"
-          className={`flex-1 min-w-0 flex flex-col ${
-            isFullWidthPage
-              ? pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password")
-                ? "w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
-                : "w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 gap-10 sm:gap-14"
-              : "p-4 sm:p-6 lg:p-8 gap-8"
+          className={`flex-1 min-w-0 flex flex-col w-full ${
+            isAuthPage
+              ? "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
+              : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 gap-10 sm:gap-14"
           }`}
         >
           {children}
