@@ -205,12 +205,17 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
   }
 
   // Scaled Font Metrics for Content
-  const baseFontSize = Math.round(settings.fontSize * 1.45); // refined scale
-  const lineHeight = Math.round(baseFontSize * settings.lineHeight);
-  const paragraphSpacing = Math.round(baseFontSize * 0.85);
+  const baseFontSize = Math.round(settings.fontSize * 1.34); // balanced scale
+  const lineHeight = Math.round(baseFontSize * settings.lineHeight * 0.94);
+  const paragraphSpacing = Math.round(baseFontSize * 0.7);
+
+  const footerSeparatorY = height - paddingBottom - 26;
+  const maxContentY = footerSeparatorY - 20; // safety ceiling to keep text cleanly above footer
 
   if (pageData && pageData.chunks.length > 0) {
     for (const chunk of pageData.chunks) {
+      if (cursorY + lineHeight > maxContentY) break;
+
       const pHighlights = highlights.filter((h) => h.paragraph_index === chunk.paragraphIndex);
 
       g.save();
@@ -227,11 +232,11 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
         text = text.slice(1);
 
         // Draw decorative drop-cap
-        g.font = `bold ${baseFontSize * 3.0}px ${fontFamily}`;
+        g.font = `bold ${baseFontSize * 2.8}px ${fontFamily}`;
         g.fillStyle = accentColor;
         const dropMetrics = g.measureText(dropLetter);
-        const dropWidth = dropMetrics.width + 14;
-        g.fillText(dropLetter, marginLeft, cursorY - 4);
+        const dropWidth = dropMetrics.width + 12;
+        g.fillText(dropLetter, marginLeft, cursorY - 2);
 
         startX = marginLeft + dropWidth;
       }
@@ -250,6 +255,11 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
         const testWidth = g.measureText(testLine).width;
 
         if (lineX + testWidth > width - marginRight && currentLine.length > 0) {
+          if (lineY + lineHeight > maxContentY) {
+            currentLine = "";
+            break;
+          }
+
           // Check if current line contains highlights
           if (pHighlights.length > 0) {
             for (const h of pHighlights) {
@@ -270,7 +280,7 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
         }
       }
 
-      if (currentLine.length > 0) {
+      if (currentLine.length > 0 && lineY + lineHeight <= maxContentY) {
         if (pHighlights.length > 0) {
           for (const h of pHighlights) {
             if (h.selected_text && currentLine.includes(h.selected_text.slice(0, 15))) {

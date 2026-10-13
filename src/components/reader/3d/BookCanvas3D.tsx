@@ -91,7 +91,7 @@ export function BookCanvas3D({
     setMouseOffset({ x: 0, y: 0 });
   }, []);
 
-  const cameraZ = isMobile ? 6.8 : 5.1;
+  const cameraZ = isMobile ? 7.6 : 5.85;
 
   return (
     <div
@@ -140,7 +140,7 @@ export function BookCanvas3D({
         <Canvas
           shadows
           camera={{
-            position: [mouseOffset.x, mouseOffset.y, cameraZ],
+            position: [mouseOffset.x, mouseOffset.y + 0.1, cameraZ],
             fov: 34,
             near: 0.1,
             far: 50,
