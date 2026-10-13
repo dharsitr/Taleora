@@ -5,7 +5,6 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { HardcoverCasing } from "./HardcoverCasing";
 import { PaperBlock } from "./PaperBlock";
-import { RibbonBookmark3D } from "./RibbonBookmark3D";
 import { CurlingPageLeaf } from "./CurlingPageLeaf";
 import {
   createPageCanvasTexture,
@@ -70,8 +69,8 @@ export function BookScene3D({
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const normalizedU = (x + pageWidth / 2) / pageWidth; // 0 at outer, 1 at spine
-      // Curve down into gutter
-      const gutterDip = -Math.pow(normalizedU, 3) * 0.025;
+      // Gentle curve down into gutter
+      const gutterDip = -Math.pow(normalizedU, 3) * 0.005;
       pos.setZ(i, gutterDip);
     }
     pos.needsUpdate = true;
@@ -85,7 +84,7 @@ export function BookScene3D({
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const normalizedU = 1 - (x + pageWidth / 2) / pageWidth; // 1 at spine, 0 at outer
-      const gutterDip = -Math.pow(normalizedU, 3) * 0.025;
+      const gutterDip = -Math.pow(normalizedU, 3) * 0.005;
       pos.setZ(i, gutterDip);
     }
     pos.needsUpdate = true;
@@ -305,14 +304,9 @@ export function BookScene3D({
         theme={settings.theme}
       />
 
-      {/* 5. SILK RIBBON BOOKMARK */}
+      {/* 5. STATIC OPEN SPREAD (Visible when book is open) */}
       {coverState === "open" && (
-        <RibbonBookmark3D pageWidth={pageWidth} pageHeight={pageHeight} />
-      )}
-
-      {/* 6. STATIC OPEN SPREAD (Visible when book is open) */}
-      {coverState === "open" && (
-        <group position={[0, 0, 0.005]}>
+        <group position={[0, 0, 0.015]}>
           {/* Base Left Page */}
           <mesh
             position={[-pageWidth / 2, 0, 0]}

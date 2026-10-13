@@ -52,7 +52,6 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
 
   const width = 1024;
   const height = 1440;
-  const paddingX = 96;
   const paddingTop = 90;
   const paddingBottom = 80;
 
@@ -136,6 +135,9 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
       ? "'JetBrains Mono', 'Fira Code', monospace"
       : "'Cinzel Decorative', 'Baskerville', 'Georgia', serif";
 
+  const marginLeft = side === "right" ? 108 : 84;
+  const marginRight = side === "left" ? 108 : 84;
+
   // 2. Running Header
   g.save();
   g.fillStyle = mutedColor;
@@ -145,28 +147,28 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
   if (side === "left") {
     g.textAlign = "left";
     const titleText = bookTitle.length > 36 ? bookTitle.slice(0, 34) + "…" : bookTitle;
-    g.fillText(titleText, paddingX, paddingTop);
+    g.fillText(titleText, marginLeft, paddingTop);
 
     g.textAlign = "right";
     g.font = `600 20px ${fontFamily}`;
-    g.fillText(`CH. ${chapterNumber}`, width - paddingX, paddingTop);
+    g.fillText(`CH. ${chapterNumber}`, width - marginRight, paddingTop);
   } else {
     g.textAlign = "left";
     g.font = `600 20px ${fontFamily}`;
-    g.fillText(`CHAPTER ${chapterNumber}`, paddingX, paddingTop);
+    g.fillText(`CHAPTER ${chapterNumber}`, marginLeft, paddingTop);
 
     g.textAlign = "right";
     g.font = `italic 22px ${fontFamily}`;
     const chTitleText = chapterTitle.length > 34 ? chapterTitle.slice(0, 32) + "…" : chapterTitle;
-    g.fillText(chTitleText, width - paddingX, paddingTop);
+    g.fillText(chTitleText, width - marginRight, paddingTop);
   }
 
   // Header separator rule
   g.strokeStyle = borderColor;
   g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(paddingX, paddingTop + 26);
-  g.lineTo(width - paddingX, paddingTop + 26);
+  g.moveTo(marginLeft, paddingTop + 26);
+  g.lineTo(width - marginRight, paddingTop + 26);
   g.stroke();
   g.restore();
 
@@ -203,9 +205,9 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
   }
 
   // Scaled Font Metrics for Content
-  const baseFontSize = Math.round(settings.fontSize * 1.55); // scale 18px -> ~28px on high-res canvas
+  const baseFontSize = Math.round(settings.fontSize * 1.45); // refined scale
   const lineHeight = Math.round(baseFontSize * settings.lineHeight);
-  const paragraphSpacing = Math.round(baseFontSize * 0.9);
+  const paragraphSpacing = Math.round(baseFontSize * 0.85);
 
   if (pageData && pageData.chunks.length > 0) {
     for (const chunk of pageData.chunks) {
@@ -218,20 +220,20 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
 
       const showDropCap = Boolean(chunk.isDropCap && chunk.text.length > 0);
       let text = chunk.text;
-      let startX = paddingX + (chunk.isContinuedFromPrev || showDropCap ? 0 : 44);
+      let startX = marginLeft + (chunk.isContinuedFromPrev || showDropCap ? 0 : 36);
 
       if (showDropCap) {
         const dropLetter = text.charAt(0);
         text = text.slice(1);
 
         // Draw decorative drop-cap
-        g.font = `bold ${baseFontSize * 3.2}px ${fontFamily}`;
+        g.font = `bold ${baseFontSize * 3.0}px ${fontFamily}`;
         g.fillStyle = accentColor;
         const dropMetrics = g.measureText(dropLetter);
-        const dropWidth = dropMetrics.width + 16;
-        g.fillText(dropLetter, paddingX, cursorY - 4);
+        const dropWidth = dropMetrics.width + 14;
+        g.fillText(dropLetter, marginLeft, cursorY - 4);
 
-        startX = paddingX + dropWidth;
+        startX = marginLeft + dropWidth;
       }
 
       // Word wrapping engine with highlight rects
@@ -247,7 +249,7 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
         const testLine = currentLine.length > 0 ? `${currentLine} ${words[wIdx]}` : words[wIdx];
         const testWidth = g.measureText(testLine).width;
 
-        if (lineX + testWidth > width - paddingX && currentLine.length > 0) {
+        if (lineX + testWidth > width - marginRight && currentLine.length > 0) {
           // Check if current line contains highlights
           if (pHighlights.length > 0) {
             for (const h of pHighlights) {
@@ -262,7 +264,7 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
           g.fillText(currentLine, lineX, lineY);
           currentLine = words[wIdx];
           lineY += lineHeight;
-          lineX = paddingX; // subsequent lines align to normal margin
+          lineX = marginLeft; // subsequent lines align to normal margin
         } else {
           currentLine = testLine;
         }
@@ -304,8 +306,8 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
   g.strokeStyle = borderColor;
   g.lineWidth = 1.5;
   g.beginPath();
-  g.moveTo(paddingX, footerY - 26);
-  g.lineTo(width - paddingX, footerY - 26);
+  g.moveTo(marginLeft, footerY - 26);
+  g.lineTo(width - marginRight, footerY - 26);
   g.stroke();
 
   g.fillStyle = mutedColor;
@@ -316,16 +318,16 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
 
   if (side === "left") {
     g.textAlign = "left";
-    g.fillText(`${displayPageNum}`, paddingX, footerY);
+    g.fillText(`${displayPageNum}`, marginLeft, footerY);
 
     g.textAlign = "right";
-    g.fillText(`${percent}%`, width - paddingX, footerY);
+    g.fillText(`${percent}%`, width - marginRight, footerY);
   } else {
     g.textAlign = "left";
-    g.fillText(`${percent}%`, paddingX, footerY);
+    g.fillText(`${percent}%`, marginLeft, footerY);
 
     g.textAlign = "right";
-    g.fillText(`${displayPageNum} / ${totalPages}`, width - paddingX, footerY);
+    g.fillText(`${displayPageNum} / ${totalPages}`, width - marginRight, footerY);
   }
   g.restore();
 

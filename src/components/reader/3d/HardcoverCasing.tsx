@@ -42,33 +42,38 @@ export function HardcoverCasing({
 
   const spineRadius = (bookThickness + boardThickness * 2) / 2;
 
-  useFrame((_, delta) => {
-    let target = 1; // open
-    if (coverState === "closed") {
-      target = 0;
-    } else if (coverState === "closing") {
-      target = 0;
-    } else if (coverState === "opening") {
-      target = 1;
-    } else if (coverState === "open") {
-      target = 1;
-    }
+    const boardZOffset = bookThickness / 2 + boardThickness / 2;
 
-    // Smooth spring-damped interpolation for authentic heavy hardcover swing
-    const speed = 4.2;
-    openProgressRef.current = THREE.MathUtils.damp(
-      openProgressRef.current,
-      target,
-      speed,
-      delta
-    );
+    useFrame((_, delta) => {
+      let target = 1; // open
+      if (coverState === "closed") {
+        target = 0;
+      } else if (coverState === "closing") {
+        target = 0;
+      } else if (coverState === "opening") {
+        target = 1;
+      } else if (coverState === "open") {
+        target = 1;
+      }
 
-    if (frontCoverGroupRef.current) {
-      // Rotate around spine hinge from 0 (closed over right) to -PI (open to left)
-      const currentAngle = -(openProgressRef.current * Math.PI);
-      frontCoverGroupRef.current.rotation.y = currentAngle;
-    }
-  });
+      // Smooth spring-damped interpolation for authentic heavy hardcover swing
+      const speed = 4.2;
+      openProgressRef.current = THREE.MathUtils.damp(
+        openProgressRef.current,
+        target,
+        speed,
+        delta
+      );
+
+      if (frontCoverGroupRef.current) {
+        // Rotate around spine hinge from 0 (closed over right) to -PI (open to left)
+        const currentAngle = -(openProgressRef.current * Math.PI);
+        // Move Z from +boardZOffset (closed, on top) down to -boardZOffset (open, under paper stack)
+        const currentZ = boardZOffset * Math.cos(openProgressRef.current * Math.PI);
+        frontCoverGroupRef.current.position.z = currentZ;
+        frontCoverGroupRef.current.rotation.y = currentAngle;
+      }
+    });
 
   return (
     <group position={[0, 0, 0]}>
@@ -164,7 +169,8 @@ export function HardcoverCasing({
       {/* 3. FRONT COVER BOARD (Swings open/shut around x = 0) */}
       <group
         ref={frontCoverGroupRef}
-        position={[0, 0, bookThickness / 2 + boardThickness / 2]}
+        position={[0, 0, coverState === "closed" ? boardZOffset : -boardZOffset]}
+        rotation={[0, coverState === "closed" ? 0 : -Math.PI, 0]}
       >
         {/* Outer Front Cover Artwork Face */}
         <mesh

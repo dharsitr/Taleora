@@ -46,7 +46,7 @@ export function PaperBlock({
   return (
     <group position={[0, 0, 0]}>
       {/* LEFT PAPER STACK */}
-      <group position={[-pageWidth / 2, 0, -leftThickness / 2]}>
+      <group position={[-pageWidth / 2, 0, -leftThickness / 2 - 0.005]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[pageWidth, pageHeight, leftThickness]} />
           <meshStandardMaterial
@@ -59,7 +59,7 @@ export function PaperBlock({
       </group>
 
       {/* RIGHT PAPER STACK */}
-      <group position={[pageWidth / 2, 0, -rightThickness / 2]}>
+      <group position={[pageWidth / 2, 0, -rightThickness / 2 - 0.005]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[pageWidth, pageHeight, rightThickness]} />
           <meshStandardMaterial
