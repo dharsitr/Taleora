@@ -1,4 +1,4 @@
-import { createBrowserClient } from "@/lib/books/queries";
+import { createClient } from "@/lib/supabase/client";
 import { validateImageUpload, sanitizeText } from "@/lib/security/validation";
 
 /**
@@ -14,7 +14,7 @@ export async function uploadUserAvatar(
     throw new Error("Authentication required to upload an avatar.");
   }
 
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   // 1. Strict image format and size validation (max 5MB, JPEG/PNG/WebP/GIF)
   const { safeExtension, mimeType } = validateImageUpload(file);
@@ -69,7 +69,7 @@ export async function updateUserProfile(
     return { success: false, error: "Name must be at least 2 characters long." };
   }
 
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   try {
     const updates: {
@@ -109,7 +109,11 @@ export async function updateUserProfile(
     });
 
     // 3. Keep author row in sync if user is an author
-    const authorUpdates: Record<string, unknown> = {
+    const authorUpdates: {
+      name: string;
+      updated_at: string;
+      avatar_url?: string | null;
+    } = {
       name: sanitizedName,
       updated_at: new Date().toISOString(),
     };
