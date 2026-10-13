@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Clock, Award, BookOpen, Flame } from "lucide-react";
+import { Clock, Award, BookOpen, Flame, Compass } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { ReadingSummaryStats } from "@/types/stats";
 import { cn } from "@/lib/utils";
@@ -22,14 +22,14 @@ export function StatsSummaryGrid({ summary }: StatsSummaryGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* 1. Active Reading Streak */}
-      <Card className="relative overflow-hidden border-border/80 bg-gradient-to-br from-amber-500/5 via-card to-card hover:border-amber-500/30 transition-all duration-300">
+      <Card className="relative overflow-hidden border border-amber-500/25 bg-card/85 shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-amber-500/40 transition-all duration-300">
         <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Active Streak
+            <span className="text-[10px] font-mono font-semibold text-amber-400 uppercase tracking-wider">
+              Active Orbit
             </span>
-            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
               <Flame
                 className={cn(
                   "w-4 h-4 text-amber-500 fill-amber-500 transition-transform",
@@ -38,15 +38,15 @@ export function StatsSummaryGrid({ summary }: StatsSummaryGridProps) {
               />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight flex items-baseline gap-2">
+          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight flex items-baseline gap-2 mt-1">
             <span>{summary.currentStreakDays}</span>
-            <span className="text-sm font-sans font-medium text-muted-foreground">
-              {summary.currentStreakDays === 1 ? "day" : "days"}
+            <span className="text-xs font-sans font-medium text-muted-foreground">
+              {summary.currentStreakDays === 1 ? "day streak" : "days streak"}
             </span>
           </CardTitle>
-          <CardDescription className="text-xs">
-            Best streak:{" "}
-            <span className="font-semibold text-foreground">
+          <CardDescription className="text-xs text-muted-foreground mt-1">
+            Historic zenith:{" "}
+            <span className="font-semibold text-amber-300">
               {summary.longestStreakDays} days
             </span>
           </CardDescription>
@@ -54,79 +54,79 @@ export function StatsSummaryGrid({ summary }: StatsSummaryGridProps) {
       </Card>
 
       {/* 2. Total Reading Time */}
-      <Card className="relative overflow-hidden border-border/80 bg-gradient-to-br from-primary/5 via-card to-card hover:border-primary/30 transition-all duration-300">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
+      <Card className="relative overflow-hidden border border-amber-500/20 bg-card/85 shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-amber-500/40 transition-all duration-300">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Reading Time
+            <span className="text-[10px] font-mono font-semibold text-amber-400 uppercase tracking-wider">
+              Time In Sanctum
             </span>
-            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-primary" />
+            <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-amber-400" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight">
+          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight mt-1">
             {formattedTotalTime}
           </CardTitle>
-          <CardDescription className="text-xs">
+          <CardDescription className="text-xs text-muted-foreground mt-1">
             Today:{" "}
             <span className="font-semibold text-foreground">
               {summary.todayMinutesRead}m
             </span>{" "}
-            / {summary.dailyGoalMinutes}m target
+            / {summary.dailyGoalMinutes}m goal
           </CardDescription>
         </CardHeader>
       </Card>
 
       {/* 3. Books Completed */}
-      <Card className="relative overflow-hidden border-border/80 bg-gradient-to-br from-emerald-500/5 via-card to-card hover:border-emerald-500/30 transition-all duration-300">
+      <Card className="relative overflow-hidden border border-amber-500/20 bg-card/85 shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-amber-500/40 transition-all duration-300">
         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Books Completed
+            <span className="text-[10px] font-mono font-semibold text-emerald-400 uppercase tracking-wider">
+              Archived Works
             </span>
-            <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center">
-              <Award className="w-4 h-4 text-emerald-500" />
+            <div className="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+              <Award className="w-4 h-4 text-emerald-400" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight flex items-baseline gap-2">
+          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight flex items-baseline gap-2 mt-1">
             <span>{summary.totalBooksCompleted}</span>
-            <span className="text-sm font-sans font-medium text-muted-foreground">
-              {summary.totalBooksCompleted === 1 ? "story" : "stories"}
+            <span className="text-xs font-sans font-medium text-muted-foreground">
+              {summary.totalBooksCompleted === 1 ? "novella finished" : "novellas finished"}
             </span>
           </CardTitle>
-          <CardDescription className="text-xs">
-            Yearly goal:{" "}
+          <CardDescription className="text-xs text-muted-foreground mt-1">
+            Annual quest:{" "}
             <span className="font-semibold text-foreground">
-              {summary.annualBooksGoal} books
+              {summary.totalBooksCompleted} / {summary.annualBooksGoal}
             </span>
           </CardDescription>
         </CardHeader>
       </Card>
 
-      {/* 4. Pages & Chapters Read */}
-      <Card className="relative overflow-hidden border-border/80 bg-gradient-to-br from-sky-500/5 via-card to-card hover:border-sky-500/30 transition-all duration-300">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
+      {/* 4. Chapters & Pages Read */}
+      <Card className="relative overflow-hidden border border-amber-500/20 bg-card/85 shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-amber-500/40 transition-all duration-300">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Pages Read
+            <span className="text-[10px] font-mono font-semibold text-amber-400 uppercase tracking-wider">
+              Episodic Scrolls
             </span>
-            <div className="w-8 h-8 rounded-full bg-sky-500/15 flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-sky-500" />
+            <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-amber-400" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight flex items-baseline gap-2">
-            <span>{summary.totalPagesRead.toLocaleString()}</span>
-            <span className="text-sm font-sans font-medium text-muted-foreground">
-              pages
+          <CardTitle className="text-3xl font-bold font-serif text-foreground tracking-tight flex items-baseline gap-2 mt-1">
+            <span>{summary.totalChaptersRead}</span>
+            <span className="text-xs font-sans font-medium text-muted-foreground">
+              chapters read
             </span>
           </CardTitle>
-          <CardDescription className="text-xs">
-            Across{" "}
+          <CardDescription className="text-xs text-muted-foreground mt-1">
+            Total pages:{" "}
             <span className="font-semibold text-foreground">
-              {summary.totalChaptersRead} chapters
+              {summary.totalPagesRead}
             </span>
           </CardDescription>
         </CardHeader>

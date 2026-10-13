@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { BarChart2, TrendingUp } from "lucide-react";
+import { BarChart2, TrendingUp, Sparkles } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { DailyActivityStat } from "@/types/stats";
 import { cn } from "@/lib/utils";
@@ -26,37 +26,36 @@ export function WeeklyActivityChart({
   const todayStr = new Date().toISOString().split("T")[0];
 
   return (
-    <Card className="relative overflow-hidden border-border/80 bg-card">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <Card className="relative overflow-hidden border border-amber-500/25 bg-card/90 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+      <CardHeader className="pb-4 border-b border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <BarChart2 className="w-4 h-4" />
-              <span>Weekly Reading Activity</span>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-500">
+              <BarChart2 className="w-4 h-4 text-amber-400" />
+              <span>Weekly Cadence</span>
             </div>
             <CardTitle className="text-xl font-bold font-serif text-foreground mt-1">
-              Past 7 Days Breakdown
+              7-Day Reading Trajectory
             </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Hover over each pillar to inspect daily reading duration and logged pages.
+            </CardDescription>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary">
+          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs font-semibold text-amber-400">
               <TrendingUp className="w-3.5 h-3.5" />
               <span>{avgDailyMinutes} min / day avg</span>
             </div>
-            <span className="text-xs text-muted-foreground">
-              Total: <strong className="text-foreground">{totalWeeklyMinutes}m</strong>
+            <span className="text-xs text-muted-foreground font-mono">
+              Total: <strong className="text-amber-300 font-serif">{totalWeeklyMinutes}m</strong>
             </span>
           </div>
         </div>
-
-        <CardDescription className="text-xs">
-          Hover over each day to inspect reading duration and pages logged.
-        </CardDescription>
       </CardHeader>
 
-      <CardContent className="pt-2">
-        <div className="h-44 flex items-end justify-between gap-2 sm:gap-4 px-2 pt-6 pb-2 border-b border-border/60">
+      <CardContent className="pt-6 pb-4">
+        <div className="h-44 flex items-end justify-between gap-2 sm:gap-4 px-2 pt-6 pb-2 border-b border-border/40">
           {dailyActivity.map((day, idx) => {
             const heightPercent = Math.max(8, Math.min(100, Math.round((day.minutes / maxDayMinutes) * 100)));
             const isToday = day.date === todayStr;
@@ -73,14 +72,14 @@ export function WeeklyActivityChart({
                 {/* Floating Tooltip */}
                 <div
                   className={cn(
-                    "absolute -top-12 z-20 px-2.5 py-1 rounded-md text-[11px] font-medium shadow-md transition-all duration-200 pointer-events-none whitespace-nowrap border",
-                    "bg-popover text-popover-foreground border-border",
+                    "absolute -top-12 z-20 px-2.5 py-1 rounded-md text-[11px] font-medium shadow-xl transition-all duration-200 pointer-events-none whitespace-nowrap border",
+                    "bg-stone-950 text-amber-100 border-amber-500/40 backdrop-blur-md",
                     isHovered
                       ? "opacity-100 scale-100 translate-y-0"
                       : "opacity-0 scale-95 translate-y-1 pointer-events-none"
                   )}
                 >
-                  <span className="font-semibold">{day.minutes} min</span> · {day.pages} pages
+                  <span className="font-semibold text-amber-400">{day.minutes} min</span> · {day.pages} pages
                 </div>
 
                 {/* The Bar */}
@@ -89,41 +88,33 @@ export function WeeklyActivityChart({
                     "w-full max-w-[42px] rounded-t-lg transition-all duration-300 relative overflow-hidden",
                     isToday
                       ? metGoal
-                        ? "bg-gradient-to-t from-emerald-600 to-teal-400"
-                        : "bg-gradient-to-t from-primary to-amber-400"
+                        ? "bg-gradient-to-t from-emerald-600 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                        : "bg-gradient-to-t from-amber-600 to-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
                       : day.minutes > 0
                       ? metGoal
-                        ? "bg-emerald-500/70 hover:bg-emerald-500"
-                        : "bg-primary/70 hover:bg-primary"
-                      : "bg-muted hover:bg-muted-foreground/30",
-                    isHovered && "brightness-110 scale-y-[1.02]"
+                        ? "bg-emerald-500/60 hover:bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+                        : "bg-amber-500/60 hover:bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.2)]"
+                      : "bg-stone-800/60 hover:bg-stone-700/60",
+                    isHovered && "brightness-125 scale-y-[1.03]"
                   )}
                   style={{ height: `${heightPercent}%` }}
                 >
-                  {/* Subtle shine on top */}
-                  <div className="absolute top-0 inset-x-0 h-1 bg-white/25 rounded-t-lg" />
+                  {/* Subtle Top Cap Sheen */}
+                  <div className="absolute top-0 inset-x-0 h-1 bg-white/40" />
                 </div>
-              </div>
-            );
-          })}
-        </div>
 
-        {/* Day Labels Row */}
-        <div className="flex items-center justify-between gap-2 sm:gap-4 px-2 pt-2">
-          {dailyActivity.map((day) => {
-            const isToday = day.date === todayStr;
-            return (
-              <div key={`label-${day.date}`} className="flex-1 text-center">
+                {/* Day of Week Label */}
                 <span
                   className={cn(
-                    "text-xs block font-medium",
-                    isToday ? "text-primary font-bold" : "text-muted-foreground"
+                    "mt-2.5 text-[11px] font-medium transition-colors",
+                    isToday
+                      ? "font-bold text-amber-400"
+                      : isHovered
+                      ? "text-foreground"
+                      : "text-muted-foreground"
                   )}
                 >
                   {day.dayName}
-                </span>
-                <span className="text-[10px] text-muted-foreground/70 block">
-                  {day.minutes > 0 ? `${day.minutes}m` : "–"}
                 </span>
               </div>
             );

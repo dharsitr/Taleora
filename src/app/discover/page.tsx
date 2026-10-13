@@ -260,7 +260,10 @@ function DiscoverContent() {
   const isSearchActive = Boolean(searchQuery.trim() || selectedTag || selectedGenre !== "all");
 
   return (
-    <div className="flex flex-col gap-12 max-w-7xl mx-auto pb-20">
+    <div className="relative flex flex-col gap-12 max-w-7xl mx-auto pb-20">
+      {/* Background Ambient Warm Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
+
       {/* 1. Discover Hero & Tag Exploration with Integrated Genre Filter Pills */}
       <DiscoverHero
         searchQuery={searchQuery}

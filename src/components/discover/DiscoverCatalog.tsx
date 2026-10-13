@@ -10,6 +10,7 @@ import {
   AlertCircle,
   X,
   Filter,
+  BookOpen,
 } from "lucide-react";
 import {
   BookWithAuthorAndGenres,
@@ -82,20 +83,20 @@ export function DiscoverCatalog({
             </p>
           </div>
 
-          <span className="text-xs font-mono text-muted-foreground bg-secondary px-3 py-1.5 rounded-xl border border-border shrink-0 self-start sm:self-auto">
-            {loading ? "Searching..." : `${books.length} stories available`}
+          <span className="text-xs font-mono text-amber-400 bg-stone-900/80 px-3.5 py-1.5 rounded-xl border border-amber-500/25 shrink-0 self-start sm:self-auto shadow-sm">
+            {loading ? "Searching archives..." : `${books.length} stories available`}
           </span>
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-2xl border border-border/80 bg-card/60">
+        <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-2xl border border-amber-500/20 bg-card/85 backdrop-blur-xl shadow-md">
           {/* Minimum Rating Filter */}
           <div className="flex items-center gap-1.5 text-xs">
-            <Star className="w-3.5 h-3.5 text-amber-500" />
+            <Star className="w-3.5 h-3.5 text-amber-400" />
             <select
               value={minRating}
               onChange={(e) => onMinRatingChange(parseFloat(e.target.value) || 0)}
-              className="h-9 px-2.5 text-xs rounded-lg border border-border bg-background text-foreground focus:ring-1 focus:ring-primary focus:outline-none cursor-pointer"
+              className="h-9 px-3 text-xs rounded-xl border border-amber-500/25 bg-stone-900/80 text-foreground focus:ring-1 focus:ring-amber-400 focus:outline-none cursor-pointer"
             >
               <option value={0}>Any Rating</option>
               <option value={4.5}>4.5+ ★ Stars</option>
@@ -112,7 +113,7 @@ export function DiscoverCatalog({
               onChange={(e) =>
                 onDateRangeChange(e.target.value as "all" | "month" | "year")
               }
-              className="h-9 px-2.5 text-xs rounded-lg border border-border bg-background text-foreground focus:ring-1 focus:ring-primary focus:outline-none cursor-pointer"
+              className="h-9 px-3 text-xs rounded-xl border border-amber-500/25 bg-stone-900/80 text-foreground focus:ring-1 focus:ring-amber-400 focus:outline-none cursor-pointer"
             >
               <option value="all">All Time</option>
               <option value="month">Past 30 Days</option>
@@ -122,12 +123,12 @@ export function DiscoverCatalog({
 
           {/* Sort By Dropdown */}
           <div className="flex items-center gap-1.5 text-xs ml-auto">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-muted-foreground hidden md:inline">Sort:</span>
+            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-muted-foreground hidden md:inline font-mono">Sort:</span>
             <select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value as BookSortOption)}
-              className="h-9 px-3 text-xs rounded-lg border border-border bg-background text-foreground focus:ring-1 focus:ring-primary focus:outline-none cursor-pointer font-medium"
+              className="h-9 px-3 text-xs rounded-xl border border-amber-500/25 bg-stone-900/80 text-foreground focus:ring-1 focus:ring-amber-400 focus:outline-none cursor-pointer font-medium"
             >
               <option value="featured">Curated & Featured</option>
               <option value="popularity">Most Popular</option>
@@ -144,10 +145,10 @@ export function DiscoverCatalog({
           <button
             type="button"
             onClick={() => onGenreChange("all")}
-            className={`px-3.5 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs transition-all duration-200 cursor-pointer ${
               selectedGenre === "all"
-                ? "font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-xs shadow-amber-500/15"
-                : "font-medium bg-secondary/50 hover:bg-secondary/80 text-muted-foreground hover:text-foreground border border-border/60"
+                ? "font-bold bg-amber-500 text-stone-950 border border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]"
+                : "font-medium bg-stone-900/60 hover:bg-stone-800 text-muted-foreground hover:text-amber-300 border border-stone-800"
             }`}
           >
             All Genres
@@ -160,10 +161,10 @@ export function DiscoverCatalog({
                 key={genre.id}
                 type="button"
                 onClick={() => onGenreChange(genre.slug)}
-                className={`px-3.5 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? "font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-xs shadow-amber-500/15"
-                    : "font-medium bg-secondary/50 hover:bg-secondary/80 text-muted-foreground hover:text-foreground border border-border/60"
+                    ? "font-bold bg-amber-500 text-stone-950 border border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]"
+                    : "font-medium bg-stone-900/60 hover:bg-stone-800 text-muted-foreground hover:text-amber-300 border border-stone-800"
                 }`}
               >
                 {genre.name}
@@ -174,19 +175,19 @@ export function DiscoverCatalog({
 
         {/* Active Filter Chips Ribbon */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-secondary/50 border border-border/60 text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground/80 flex items-center gap-1">
-              <Filter className="w-3 h-3" />
+          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-2xl bg-stone-900/70 border border-amber-500/20 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground/90 flex items-center gap-1 font-mono text-[11px]">
+              <Filter className="w-3 h-3 text-amber-400" />
               Active Filters:
             </span>
 
             {searchQuery && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-background border border-border text-foreground font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-stone-950 border border-amber-500/30 text-amber-300 font-medium">
                 Search: &quot;{searchQuery}&quot;
                 <button
                   type="button"
                   onClick={() => onSearchChange("")}
-                  className="hover:text-red-500 cursor-pointer"
+                  className="hover:text-red-400 cursor-pointer ml-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -194,12 +195,12 @@ export function DiscoverCatalog({
             )}
 
             {selectedGenre !== "all" && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-background border border-border text-foreground font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-stone-950 border border-amber-500/30 text-amber-300 font-medium">
                 Genre: {genres.find((g) => g.slug === selectedGenre)?.name || selectedGenre}
                 <button
                   type="button"
                   onClick={() => onGenreChange("all")}
-                  className="hover:text-red-500 cursor-pointer"
+                  className="hover:text-red-400 cursor-pointer ml-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -207,12 +208,12 @@ export function DiscoverCatalog({
             )}
 
             {minRating > 0 && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-background border border-border text-foreground font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-stone-950 border border-amber-500/30 text-amber-300 font-medium">
                 Min: {minRating}★
                 <button
                   type="button"
                   onClick={() => onMinRatingChange(0)}
-                  className="hover:text-red-500 cursor-pointer"
+                  className="hover:text-red-400 cursor-pointer ml-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -220,12 +221,12 @@ export function DiscoverCatalog({
             )}
 
             {dateRange !== "all" && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-background border border-border text-foreground font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-stone-950 border border-amber-500/30 text-amber-300 font-medium">
                 Date: {dateRange === "month" ? "Past 30 Days" : "Past Year"}
                 <button
                   type="button"
                   onClick={() => onDateRangeChange("all")}
-                  className="hover:text-red-500 cursor-pointer"
+                  className="hover:text-red-400 cursor-pointer ml-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -233,12 +234,12 @@ export function DiscoverCatalog({
             )}
 
             {selectedTag && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-background border border-border text-foreground font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-stone-950 border border-amber-500/30 text-amber-300 font-medium">
                 Tag: #{selectedTag}
                 <button
                   type="button"
                   onClick={() => onTagChange(null)}
-                  className="hover:text-red-500 cursor-pointer"
+                  className="hover:text-red-400 cursor-pointer ml-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -248,7 +249,7 @@ export function DiscoverCatalog({
             <button
               type="button"
               onClick={onResetFilters}
-              className="text-xs font-semibold text-primary hover:underline ml-auto cursor-pointer"
+              className="text-xs font-semibold text-amber-400 hover:underline ml-auto cursor-pointer font-mono"
             >
               Reset All
             </button>
@@ -279,17 +280,17 @@ export function DiscoverCatalog({
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col animate-pulse"
+              className="rounded-2xl border border-amber-500/20 bg-card overflow-hidden flex flex-col animate-pulse"
             >
-              <div className="h-48 w-full bg-secondary/70" />
+              <div className="h-48 w-full bg-stone-800/60" />
               <div className="p-5 flex flex-col gap-3 flex-1">
-                <div className="h-4 w-1/3 bg-secondary rounded" />
-                <div className="h-5 w-4/5 bg-secondary rounded" />
-                <div className="h-3 w-full bg-secondary/60 rounded" />
-                <div className="h-3 w-2/3 bg-secondary/60 rounded" />
+                <div className="h-4 w-1/3 bg-stone-800/60 rounded" />
+                <div className="h-5 w-4/5 bg-stone-800/60 rounded" />
+                <div className="h-3 w-full bg-stone-800/40 rounded" />
+                <div className="h-3 w-2/3 bg-stone-800/40 rounded" />
                 <div className="pt-4 mt-auto border-t border-border/40 flex justify-between">
-                  <div className="h-4 w-16 bg-secondary rounded" />
-                  <div className="h-4 w-20 bg-secondary rounded" />
+                  <div className="h-4 w-16 bg-stone-800/60 rounded" />
+                  <div className="h-4 w-20 bg-stone-800/60 rounded" />
                 </div>
               </div>
             </div>
@@ -308,9 +309,9 @@ export function DiscoverCatalog({
 
       {/* No Results Empty State */}
       {!loading && !error && books.length === 0 && (
-        <div className="text-center py-20 px-4 rounded-3xl border border-dashed border-border bg-card/40 flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
-            <Sparkles className="w-7 h-7" />
+        <div className="text-center py-20 px-4 rounded-3xl border border-dashed border-amber-500/30 bg-card/40 flex flex-col items-center gap-3">
+          <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+            <BookOpen className="w-7 h-7" />
           </div>
           <h3 className="font-serif text-xl font-bold text-foreground">
             No Stories Matched Your Search
@@ -322,7 +323,7 @@ export function DiscoverCatalog({
             variant="outline"
             size="sm"
             onClick={onResetFilters}
-            className="mt-3"
+            className="mt-3 border-amber-500/30 hover:border-amber-400 text-amber-400"
           >
             Clear All Filters
           </Button>

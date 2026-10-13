@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Heart, LogIn } from "lucide-react";
+import { Sparkles, Heart, LogIn } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
 import { BookCard } from "@/components/books/BookCard";
 import { useAuth } from "@/lib/auth/use-auth";
@@ -28,7 +28,7 @@ export function PersonalizedRecommendations({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-64 rounded-xl border border-border bg-card/60 animate-pulse"
+              className="h-64 rounded-2xl border border-amber-500/20 bg-card/60 animate-pulse"
             />
           ))}
         </div>
@@ -39,19 +39,22 @@ export function PersonalizedRecommendations({
   if (!books || books.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-5 p-6 rounded-3xl border border-primary/20 bg-gradient-to-b from-primary/5 via-card/50 to-card">
+    <section className="relative overflow-hidden flex flex-col gap-6 p-6 sm:p-8 rounded-3xl border border-amber-500/25 bg-card/85 shadow-[0_8px_30px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+      {/* Ambient Halo */}
+      <div className="absolute top-0 right-1/3 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shrink-0">
-            <Heart className="w-4 h-4 fill-primary/20 text-primary" />
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)] shrink-0">
+            <Heart className="w-4 h-4 fill-amber-500/20 text-amber-400" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-foreground">
                 Recommended For You
               </h2>
-              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+              <span className="text-[10px] font-mono uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
                 {reason}
               </span>
             </div>
@@ -64,7 +67,7 @@ export function PersonalizedRecommendations({
         {!user && (
           <Link
             href="/login?next=/discover"
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+            className="flex items-center gap-1.5 text-xs text-amber-400 hover:underline font-mono font-medium self-start sm:self-auto"
           >
             <LogIn className="w-3.5 h-3.5" />
             <span>Sign in to personalize</span>
@@ -73,7 +76,7 @@ export function PersonalizedRecommendations({
       </div>
 
       {/* Grid of Recommended Books */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {books.map((book) => (
           <BookCard key={book.id} book={book} />
         ))}
