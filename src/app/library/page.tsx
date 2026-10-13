@@ -130,7 +130,7 @@ export default function LibraryPage() {
 
   const displayName =
     profile?.full_name || user?.user_metadata?.full_name || "Reader";
-  const streakDays = profile?.streak_days ?? 14;
+  const streakDays = profile?.streak_days ?? 0;
 
   // Active novella for the Currently Reading Spotlight Hero
   const activeContinueItem = readingItems[0] || (libraryItems.length > 0 ? libraryItems[0] : null);

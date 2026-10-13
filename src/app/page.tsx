@@ -5,6 +5,7 @@ import { CuratedShelves } from "@/components/home/CuratedShelves";
 import { BentoShowcase } from "@/components/home/BentoShowcase";
 import { createClient } from "@/lib/supabase/server";
 import { getBooks } from "@/lib/books/queries";
+import { getUserHomeStats } from "@/lib/stats/home";
 
 export const metadata = {
   title: "Taleora · Modern Story & Book Reader",
@@ -48,20 +49,24 @@ async function UserContinueReading() {
 }
 
 export default async function Home() {
-  const books = await getBooks({ sort: "newest" });
+  const [books, userStats] = await Promise.all([
+    getBooks({ sort: "newest" }),
+    getUserHomeStats(),
+  ]);
   const featuredBook = books.length > 0 ? books[0] : null;
 
   return (
     <div className="flex flex-col gap-12 sm:gap-16">
-      <HeroSection featuredBook={featuredBook} />
+      <HeroSection featuredBook={featuredBook} userStats={userStats} />
 
       <React.Suspense fallback={null}>
         <UserContinueReading />
       </React.Suspense>
 
-      <BentoShowcase books={books} />
+      <BentoShowcase books={books} userStats={userStats} />
 
       <CuratedShelves books={books} />
     </div>
   );
 }
+

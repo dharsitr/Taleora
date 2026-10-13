@@ -138,3 +138,19 @@ export interface UserStatsPayload {
   achievements: AchievementWithProgress[];
   recentHistory: ReadingHistoryItem[];
 }
+
+export interface UserHomeStats {
+  isLoggedIn: boolean;
+  streakDays: number;
+  todayMinutes: number;
+  dailyGoalMinutes: number;
+  activeDates: string[];
+  currentRead?: {
+    bookId?: string;
+    bookTitle?: string;
+    bookSlug?: string;
+    progressPercentage?: number;
+    chapterNumber?: number;
+    chapterTitle?: string;
+  } | null;
+}

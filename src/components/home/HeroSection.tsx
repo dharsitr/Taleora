@@ -1,18 +1,46 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, ArrowRight, BookOpen, Flame, Compass } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/components/auth/AuthProvider";
 import type { BookWithAuthorAndGenres } from "@/types/books";
+import type { UserHomeStats } from "@/types/stats";
 
 interface HeroSectionProps {
   featuredBook?: BookWithAuthorAndGenres | null;
+  userStats?: UserHomeStats | null;
 }
 
-export function HeroSection({ featuredBook }: HeroSectionProps) {
+export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
+  const { user, profile } = useAuth();
   const bookTitle = featuredBook?.title || "The Art of Reading";
   const authorName = featuredBook?.author?.name || "Taleora Edition";
   const bookSlug = featuredBook?.slug;
+
+  const isLoggedIn = Boolean(userStats?.isLoggedIn || user);
+  const streakDays = userStats?.streakDays ?? profile?.streak_days ?? 0;
+  const currentRead = userStats?.currentRead;
+
+  // Before login: show rich preview mockup (68%, Chapter 1 · The Beginning, 14 days)
+  // After login: show user's real streak and progress
+  const displayPercentage = isLoggedIn
+    ? (currentRead ? currentRead.progressPercentage : 0)
+    : 68;
+
+  const displayTitle = isLoggedIn
+    ? (currentRead
+        ? (currentRead.chapterTitle
+            ? `Chapter ${currentRead.chapterNumber || 1} · ${currentRead.chapterTitle}`
+            : currentRead.bookTitle)
+        : "Ready to start reading")
+    : (featuredBook ? "Chapter 1 · The Beginning" : "Chapter The Title");
+
+  const displayStreak = isLoggedIn
+    ? `${streakDays} ${streakDays === 1 ? "day" : "days"}`
+    : "14 days";
 
   return (
     <section className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card/80 via-card/40 to-background/90 p-6 sm:p-10 lg:p-14 shadow-2xl backdrop-blur-xl">
@@ -169,22 +197,22 @@ export function HeroSection({ featuredBook }: HeroSectionProps) {
             </div>
           </div>
 
-          {/* Floating Glassmorphic "Currently Reading" Preview Card */}
+          {/* Floating Glassmorphic "Currently Reading" Card */}
           <div className="absolute -bottom-4 right-2 sm:right-4 z-20 w-60 sm:w-68 rounded-2xl border border-white/10 dark:border-white/10 bg-card/85 dark:bg-card/75 backdrop-blur-xl p-4 shadow-2xl shadow-black/40 flex flex-col gap-2.5 animate-in fade-in duration-300">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-foreground/80">
                 Currently Reading
               </span>
               <span className="text-[11px] font-bold text-amber-500 font-mono">
-                68%
+                {displayPercentage}%
               </span>
             </div>
 
             {/* Reading Progress Bar */}
             <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600"
-                style={{ width: "68%" }}
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-500"
+                style={{ width: `${displayPercentage}%` }}
               />
             </div>
 
@@ -192,8 +220,8 @@ export function HeroSection({ featuredBook }: HeroSectionProps) {
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">
                 Reading Progress
               </span>
-              <p className="font-serif text-xs font-semibold text-foreground truncate mt-0.5">
-                {featuredBook ? `Chapter 1 · The Beginning` : "Chapter The Title"}
+              <p className="font-serif text-xs font-semibold text-foreground truncate mt-0.5" title={displayTitle}>
+                {displayTitle}
               </p>
             </div>
 
@@ -202,7 +230,9 @@ export function HeroSection({ featuredBook }: HeroSectionProps) {
                 <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                 <span>Daily reading streak</span>
               </div>
-              <span className="text-[10px] text-muted-foreground">14 days</span>
+              <span className="text-[10px] text-muted-foreground font-medium">
+                {displayStreak}
+              </span>
             </div>
           </div>
         </div>

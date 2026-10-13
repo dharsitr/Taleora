@@ -135,7 +135,7 @@ export async function updateUserReadingGoal(
 /**
  * Helper to compute consecutive day streaks from a list of date strings (YYYY-MM-DD).
  */
-function calculateStreaks(dates: string[]): { currentStreak: number; longestStreak: number } {
+export function calculateStreaks(dates: string[]): { currentStreak: number; longestStreak: number } {
   if (!dates || dates.length === 0) return { currentStreak: 0, longestStreak: 0 };
 
   const uniqueSortedDates = Array.from(new Set(dates)).sort().reverse();

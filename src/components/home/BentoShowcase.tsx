@@ -11,17 +11,90 @@ import {
   Star,
   Clock,
   Sparkles,
-  Type,
-  Palette,
   Check,
 } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { getUserReadingStats } from "@/lib/stats/queries";
+import { getCurrentWeekDays } from "@/lib/stats/home";
 import type { BookWithAuthorAndGenres } from "@/types/books";
+import type { UserHomeStats, UserStatsPayload } from "@/types/stats";
 
 interface BentoShowcaseProps {
   books: BookWithAuthorAndGenres[];
+  userStats?: UserHomeStats | null;
 }
 
-export function BentoShowcase({ books }: BentoShowcaseProps) {
+const MOCK_STREAK_DAYS = [
+  { day: "Mon", active: true },
+  { day: "Tue", active: true },
+  { day: "Wed", active: true },
+  { day: "Thu", active: true },
+  { day: "Fri", active: true },
+  { day: "Sat", active: true },
+  { day: "Sun", active: false },
+];
+
+export function BentoShowcase({ books, userStats }: BentoShowcaseProps) {
+  const { user, profile } = useAuth();
+  const [clientStats, setClientStats] = React.useState<UserStatsPayload | null>(null);
+
+  React.useEffect(() => {
+    if (user && !userStats) {
+      getUserReadingStats(user.id)
+        .then((data) => setClientStats(data))
+        .catch((err) => console.warn("Could not load client reading stats:", err));
+    }
+  }, [user, userStats]);
+
+  const isLoggedIn = Boolean(userStats?.isLoggedIn || user);
+
+  // Streaks calculation:
+  // Before login: Mock preview (14 Days, Mon-Sat active)
+  // After login: Real user streak and active calendar week days
+  const streakDays = isLoggedIn
+    ? (userStats?.streakDays ?? clientStats?.summary.currentStreakDays ?? profile?.streak_days ?? 0)
+    : 14;
+
+  const streakDaysLabel = isLoggedIn
+    ? `${streakDays} ${streakDays === 1 ? "Day" : "Days"}`
+    : "14 Days";
+
+  const streakSubtitle = isLoggedIn
+    ? (streakDays > 0
+        ? "Daily habit building without stressful gamification."
+        : "Read a chapter today to start your reading streak!")
+    : "Daily habit building without stressful gamification.";
+
+  const activeDates = userStats?.activeDates ?? (
+    clientStats
+      ? clientStats.dailyActivity.filter((d) => d.minutes > 0).map((d) => d.date)
+      : (profile?.last_read_date ? [profile.last_read_date] : [])
+  );
+
+  const displayWeekDays = isLoggedIn
+    ? getCurrentWeekDays(activeDates)
+    : MOCK_STREAK_DAYS.map((d) => ({ ...d, isToday: false, date: "" }));
+
+  // Daily goal calculation:
+  // Before login: Mock preview (100%, 30/30 mins, achieved)
+  // After login: Real today minutes vs daily goal minutes
+  const dailyGoalMinutes = isLoggedIn
+    ? (userStats?.dailyGoalMinutes ??
+        (clientStats?.summary.dailyGoalMinutes && clientStats.summary.dailyGoalMinutes > 0
+          ? clientStats.summary.dailyGoalMinutes
+          : profile?.daily_reading_goal_minutes || 30))
+    : 30;
+
+  const todayMinutes = isLoggedIn
+    ? (userStats?.todayMinutes ?? clientStats?.summary.todayMinutesRead ?? 0)
+    : 30;
+
+  const goalPercent = Math.min(
+    100,
+    Math.round((todayMinutes / (dailyGoalMinutes || 30)) * 100)
+  );
+  const isGoalCompleted = todayMinutes >= dailyGoalMinutes && dailyGoalMinutes > 0;
+  const remainingMinutes = Math.max(0, dailyGoalMinutes - todayMinutes);
   // Interactive Reader Preview state (demonstrating the reader features live)
   const [paperTheme, setPaperTheme] = React.useState<"cream" | "sepia" | "midnight">("cream");
   const [fontSize, setFontSize] = React.useState<"sm" | "base" | "lg">("base");
@@ -170,39 +243,37 @@ export function BentoShowcase({ books }: BentoShowcaseProps) {
         {/* Card 2 & 3 Column: Reading Habits & Daily Goal Trackers */}
         <div className="md:col-span-5 flex flex-col gap-5">
           {/* Reading Streaks Card */}
-          <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:border-primary/40 transition-all">
+          <Link
+            href="/goals"
+            className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:border-primary/40 transition-all group block"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <h3 className="font-serif text-base font-semibold text-foreground">
+                <h3 className="font-serif text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                   Reading Streaks
                 </h3>
               </div>
-              <span className="text-xs font-bold text-amber-500 font-mono">14 Days</span>
+              <span className="text-xs font-bold text-amber-500 font-mono">
+                {streakDaysLabel}
+              </span>
             </div>
 
             <p className="text-xs text-muted-foreground mb-4">
-              Daily habit building without stressful gamification.
+              {streakSubtitle}
             </p>
 
             {/* Streak Week Days */}
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
-              {[
-                { day: "Mon", active: true },
-                { day: "Tue", active: true },
-                { day: "Wed", active: true },
-                { day: "Thu", active: true },
-                { day: "Fri", active: true },
-                { day: "Sat", active: true },
-                { day: "Sun", active: false },
-              ].map((item, idx) => (
+              {displayWeekDays.map((item, idx) => (
                 <div
                   key={idx}
                   className={`flex flex-col items-center justify-center p-2 rounded-xl border text-xs transition-colors ${
                     item.active
-                      ? "bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400"
+                      ? "bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400 font-semibold"
                       : "bg-secondary/40 border-border/60 text-muted-foreground"
-                  }`}
+                  } ${item.isToday ? "ring-1 ring-amber-500/50" : ""}`}
+                  title={item.isToday ? "Today" : item.day}
                 >
                   <Flame
                     className={`w-3.5 h-3.5 mb-1 ${
@@ -213,37 +284,57 @@ export function BentoShowcase({ books }: BentoShowcaseProps) {
                 </div>
               ))}
             </div>
-          </div>
+          </Link>
 
           {/* Daily Goal Tracker Card */}
-          <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:border-primary/40 transition-all">
+          <Link
+            href="/goals"
+            className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:border-primary/40 transition-all group block"
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-primary" />
-                <h3 className="font-serif text-base font-semibold text-foreground">
+                <h3 className="font-serif text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                   Daily Goal Tracker
                 </h3>
               </div>
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                100%
+                {goalPercent}%
               </span>
             </div>
 
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
               <span>Today&apos;s Reading</span>
-              <span className="font-medium text-foreground">30 / 30 mins</span>
+              <span className="font-medium text-foreground">
+                {todayMinutes} / {dailyGoalMinutes} mins
+              </span>
             </div>
 
             {/* Goal Progress Bar */}
             <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600 w-full" />
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-500"
+                style={{ width: `${goalPercent}%` }}
+              />
             </div>
 
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 mt-3">
-              <Check className="w-3.5 h-3.5" />
-              <span>Daily chapter milestone achieved</span>
-            </div>
-          </div>
+            {isGoalCompleted ? (
+              <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 mt-3">
+                <Check className="w-3.5 h-3.5" />
+                <span>Daily chapter milestone achieved</span>
+              </div>
+            ) : todayMinutes > 0 ? (
+              <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 mt-3">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{remainingMinutes} mins remaining today</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-3">
+                <Clock className="w-3.5 h-3.5" />
+                <span>0 of {dailyGoalMinutes} mins read today · Pick up where you left off</span>
+              </div>
+            )}
+          </Link>
         </div>
 
         {/* Card 4: Curated Trending Novellas Shelf (Full Width in Grid) */}

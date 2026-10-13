@@ -87,7 +87,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 <div className="flex items-center gap-2">
                   <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
                   <span className="text-xs font-semibold">
-                    {profile?.streak_days ?? 14} Day Streak
+                    {user ? (profile?.streak_days ?? 0) : 14} Day Streak
                   </span>
                 </div>
                 <ThemeToggle />
