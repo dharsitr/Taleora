@@ -27,6 +27,7 @@ interface BookScene3DProps {
   turnDirection: "next" | "prev" | null;
   coverState: "closed" | "opening" | "open" | "closing";
   authorName?: string;
+  coverImageUrl?: string | null;
   prefersReducedMotion?: boolean;
   onPageTurnComplete?: () => void;
   onOpenBook?: () => void;
@@ -45,6 +46,7 @@ export function BookScene3D({
   turnDirection,
   coverState,
   authorName,
+  coverImageUrl,
   prefersReducedMotion = false,
   onPageTurnComplete,
   onOpenBook,
@@ -219,8 +221,9 @@ export function BookScene3D({
       chapterNumber,
       theme: settings.theme,
       isBack: false,
+      coverImageUrl,
     });
-  }, [bookTitle, authorName, chapterNumber, settings.theme]);
+  }, [bookTitle, authorName, chapterNumber, settings.theme, coverImageUrl]);
 
   const backCoverTexture = React.useMemo(() => {
     return createHardcoverTexture({

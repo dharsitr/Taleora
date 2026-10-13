@@ -361,12 +361,14 @@ export function createHardcoverTexture({
   chapterNumber,
   theme,
   isBack = false,
+  coverImageUrl,
 }: {
   title: string;
   author?: string;
   chapterNumber: number;
   theme: string;
   isBack?: boolean;
+  coverImageUrl?: string | null;
 }): THREE.CanvasTexture {
   const width = 1024;
   const height = 1440;
@@ -432,55 +434,150 @@ export function createHardcoverTexture({
     g.fill();
   }
 
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+
   if (!isBack) {
-    // Title & Embellishments on Front Cover
-    g.textAlign = "center";
-    g.textBaseline = "middle";
+    // If user attached a cover image, load and render it with realistic book finish
+    if (coverImageUrl && coverImageUrl.trim().length > 0) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
 
-    // Top Emblem
-    g.font = "bold 22px 'Cinzel Decorative', serif";
-    g.fillStyle = foilGold;
-    g.fillText("T A L E O R A   E D I T I O N", width / 2, 220);
+      const renderCoverImage = (imageEl: HTMLImageElement) => {
+        g.clearRect(0, 0, width, height);
+        g.fillStyle = baseColor;
+        g.fillRect(0, 0, width, height);
 
-    // Decorative fleurons
-    g.font = "36px serif";
-    g.fillText("❦ · ❦ · ❦", width / 2, 380);
+        // Aspect-ratio cover calculation
+        const canvasAspect = width / height;
+        const imgAspect = imageEl.naturalWidth / imageEl.naturalHeight;
+        let sx = 0;
+        let sy = 0;
+        let sWidth = imageEl.naturalWidth;
+        let sHeight = imageEl.naturalHeight;
 
-    // Title (wrapped if needed)
-    g.font = "bold 56px 'Cinzel Decorative', 'Georgia', serif";
-    g.fillStyle = foilGoldGlow;
-    g.shadowColor = "rgba(0, 0, 0, 0.7)";
-    g.shadowBlur = 8;
-    g.shadowOffsetY = 4;
+        if (imgAspect > canvasAspect) {
+          sWidth = imageEl.naturalHeight * canvasAspect;
+          sx = (imageEl.naturalWidth - sWidth) / 2;
+        } else {
+          sHeight = imageEl.naturalWidth / canvasAspect;
+          sy = (imageEl.naturalHeight - sHeight) / 2;
+        }
 
-    const words = title.split(" ");
-    let line1 = "";
-    let line2 = "";
-    if (words.length > 3) {
-      const mid = Math.ceil(words.length / 2);
-      line1 = words.slice(0, mid).join(" ");
-      line2 = words.slice(mid).join(" ");
-      g.fillText(line1, width / 2, 540);
-      g.fillText(line2, width / 2, 610);
+        // Draw author's cover artwork
+        g.drawImage(imageEl, sx, sy, sWidth, sHeight, 0, 0, width, height);
+
+        // 1. Spine hinge groove shadow on left (gives realistic depth where cover joins the spine)
+        const spineShadow = g.createLinearGradient(0, 0, 60, 0);
+        spineShadow.addColorStop(0, "rgba(0, 0, 0, 0.6)");
+        spineShadow.addColorStop(0.25, "rgba(0, 0, 0, 0.25)");
+        spineShadow.addColorStop(0.7, "rgba(0, 0, 0, 0.08)");
+        spineShadow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        g.fillStyle = spineShadow;
+        g.fillRect(0, 0, 60, height);
+
+        // 2. Right edge rim shadow & highlight
+        const rightShadow = g.createLinearGradient(width - 32, 0, width, 0);
+        rightShadow.addColorStop(0, "rgba(0, 0, 0, 0)");
+        rightShadow.addColorStop(1, "rgba(0, 0, 0, 0.35)");
+        g.fillStyle = rightShadow;
+        g.fillRect(width - 32, 0, 32, height);
+
+        // 3. Ambient top and bottom edge shadows
+        const topShadow = g.createLinearGradient(0, 0, 0, 24);
+        topShadow.addColorStop(0, "rgba(0, 0, 0, 0.3)");
+        topShadow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        g.fillStyle = topShadow;
+        g.fillRect(0, 0, width, 24);
+
+        const bottomShadow = g.createLinearGradient(0, height - 24, 0, height);
+        bottomShadow.addColorStop(0, "rgba(0, 0, 0, 0)");
+        bottomShadow.addColorStop(1, "rgba(0, 0, 0, 0.35)");
+        g.fillStyle = bottomShadow;
+        g.fillRect(0, height - 24, width, 24);
+
+        // 4. Subtle gilded foil border framing the artwork
+        g.strokeStyle = "rgba(212, 175, 55, 0.35)";
+        g.lineWidth = 3;
+        g.strokeRect(36, 36, width - 72, height - 72);
+
+        texture.needsUpdate = true;
+      };
+
+      img.onload = () => {
+        renderCoverImage(img);
+      };
+
+      img.onerror = () => {
+        // Fallback to Next.js image proxy if direct external fetch hit CORS
+        if (coverImageUrl.startsWith("http") && !coverImageUrl.includes("/_next/image")) {
+          const proxyImg = new Image();
+          proxyImg.crossOrigin = "anonymous";
+          proxyImg.onload = () => {
+            renderCoverImage(proxyImg);
+          };
+          proxyImg.src = `/_next/image?url=${encodeURIComponent(coverImageUrl)}&w=1200&q=90`;
+        }
+      };
+
+      img.src = coverImageUrl;
+      if (img.complete && img.naturalWidth > 0) {
+        renderCoverImage(img);
+      }
     } else {
-      g.fillText(title, width / 2, 560);
+      // Default procedural title & foil embellishments when no cover image is provided
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+
+      // Top Emblem
+      g.font = "bold 22px 'Cinzel Decorative', serif";
+      g.fillStyle = foilGold;
+      g.fillText("T A L E O R A   E D I T I O N", width / 2, 220);
+
+      // Decorative fleurons
+      g.font = "36px serif";
+      g.fillText("❦ · ❦ · ❦", width / 2, 380);
+
+      // Title (wrapped if needed)
+      g.font = "bold 56px 'Cinzel Decorative', 'Georgia', serif";
+      g.fillStyle = foilGoldGlow;
+      g.shadowColor = "rgba(0, 0, 0, 0.7)";
+      g.shadowBlur = 8;
+      g.shadowOffsetY = 4;
+
+      const words = title.split(" ");
+      let line1 = "";
+      let line2 = "";
+      if (words.length > 3) {
+        const mid = Math.ceil(words.length / 2);
+        line1 = words.slice(0, mid).join(" ");
+        line2 = words.slice(mid).join(" ");
+        g.fillText(line1, width / 2, 540);
+        g.fillText(line2, width / 2, 610);
+      } else {
+        g.fillText(title, width / 2, 560);
+      }
+
+      g.shadowColor = "transparent";
+
+      // Author
+      g.font = "italic 32px 'Georgia', serif";
+      g.fillStyle = foilGold;
+      g.fillText(`By ${author || "Author"}`, width / 2, 740);
+
+      // Chapter Indicator
+      g.font = "600 24px monospace";
+      g.fillStyle = foilGold;
+      g.fillText(`CHAPTER ${chapterNumber}`, width / 2, 860);
+
+      // Bottom Filigree
+      g.font = "28px serif";
+      g.fillText("✦ · · · · ✦", width / 2, 1180);
     }
-
-    g.shadowColor = "transparent";
-
-    // Author
-    g.font = "italic 32px 'Georgia', serif";
-    g.fillStyle = foilGold;
-    g.fillText(`By ${author || "Author"}`, width / 2, 740);
-
-    // Chapter Indicator
-    g.font = "600 24px monospace";
-    g.fillStyle = foilGold;
-    g.fillText(`CHAPTER ${chapterNumber}`, width / 2, 860);
-
-    // Bottom Filigree
-    g.font = "28px serif";
-    g.fillText("✦ · · · · ✦", width / 2, 1180);
   } else {
     // Back Cover: Taleora Emblem
     g.textAlign = "center";

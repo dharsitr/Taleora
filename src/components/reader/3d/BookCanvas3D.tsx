@@ -90,7 +90,7 @@ export function BookCanvas3D({
   coverState = "open",
   onOpenBook,
   authorName,
-  coverImageUrl: _coverImageUrl,
+  coverImageUrl,
   prefersReducedMotion = false,
 }: BookCanvas3DProps) {
   // Viewport tracking for fluid responsive framing on mobile & laptop
@@ -263,6 +263,7 @@ export function BookCanvas3D({
             turnDirection={turnDirection}
             coverState={coverState}
             authorName={authorName}
+            coverImageUrl={coverImageUrl}
             prefersReducedMotion={prefersReducedMotion}
             onOpenBook={onOpenBook}
           />

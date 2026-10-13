@@ -163,8 +163,8 @@ export function HardcoverCasing({
           <planeGeometry args={[coverWidth, coverHeight]} />
           <meshStandardMaterial
             map={coverTexture}
-            roughness={0.6}
-            metalness={0.2}
+            roughness={0.45}
+            metalness={0.08}
           />
         </mesh>
 
