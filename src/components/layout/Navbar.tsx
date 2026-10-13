@@ -79,38 +79,37 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 transition-all shadow-xs">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto gap-4">
-        {/* Left: Mobile Menu Trigger & Taleora Logo */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+    <header className="sticky top-3 sm:top-4 z-50 w-full px-3 sm:px-6 pointer-events-none">
+      <div className="max-w-5xl mx-auto h-14 sm:h-16 px-4 sm:px-6 rounded-full border border-amber-500/25 bg-background/85 dark:bg-[#0B0D11]/90 backdrop-blur-2xl shadow-2xl shadow-black/50 flex items-center justify-between gap-3 sm:gap-4 pointer-events-auto transition-all">
+        {/* Left: Mobile Menu Trigger & Taleora Wireframe Logo */}
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
           <button
             type="button"
             onClick={onOpenMobileMenu}
             aria-label="Open navigation menu"
-            className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-border/80 text-foreground/80 hover:bg-secondary hover:text-foreground cursor-pointer"
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded-full border border-border/80 text-foreground/80 hover:bg-secondary hover:text-foreground cursor-pointer"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </button>
 
           <Link
             href="/"
-            className="group flex items-center gap-2.5 transition-transform active:scale-98"
+            className="group flex items-center gap-2.5 transition-transform active:scale-98 focus:outline-none"
           >
-            <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-amber-500 via-primary to-amber-700 text-white shadow-sm shadow-amber-500/25 border border-amber-400/30 group-hover:shadow-md group-hover:shadow-amber-500/40 transition-all">
-              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+            {/* Elegant Gold Wireframe Book Emblem */}
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/10 border border-amber-400/40 text-amber-400 shadow-xs shadow-amber-500/20 group-hover:bg-amber-500/20 group-hover:border-amber-400 transition-all">
+              <BookOpen className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-serif text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
-                Taleora
-              </span>
-              <span className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-mono font-semibold tracking-wider uppercase rounded bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/30">
-                Reader
-              </span>
-            </div>
+            <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-foreground group-hover:text-amber-400 transition-colors">
+              Taleora
+            </span>
           </Link>
+        </div>
 
-          {/* Desktop Navigation Links with Glowing Active Pill */}
-          <nav className="hidden md:flex items-center gap-1.5 ml-2 lg:ml-4">
+        {/* Center: Segmented Navigation Dock & Command Search */}
+        <div className="flex items-center gap-2.5">
+          {/* Segmented Nav Capsule */}
+          <nav className="hidden md:flex items-center bg-secondary/50 dark:bg-stone-900/60 p-1 rounded-full border border-border/60">
             {navItems.map((item) => {
               const isActive =
                 pathname === item.href ||
@@ -120,9 +119,9 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs transition-all duration-200 ${
                     isActive
-                      ? "font-semibold bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30 shadow-xs shadow-amber-500/10"
+                      ? "font-semibold bg-amber-500/20 text-amber-400 dark:text-amber-300 border border-amber-500/35 shadow-xs shadow-amber-500/10"
                       : "font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/70"
                   }`}
                 >
@@ -131,29 +130,27 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
               );
             })}
           </nav>
-        </div>
 
-        {/* Center: Sleek Quick Story Search */}
-        <form
-          onSubmit={handleSearch}
-          className="hidden sm:flex flex-1 max-w-md mx-2 lg:mx-6"
-        >
-          <div className="relative w-full flex items-center bg-secondary/50 hover:bg-secondary/75 focus-within:bg-card border border-border/70 focus-within:border-amber-500/50 focus-within:ring-2 focus-within:ring-amber-500/20 rounded-full h-9 px-3.5 transition-all">
-            <Search className="w-3.5 h-3.5 text-muted-foreground mr-2 shrink-0" />
+          {/* Compact Command-Bar Search Trigger */}
+          <form
+            onSubmit={handleSearch}
+            className="hidden lg:flex items-center bg-secondary/40 hover:bg-secondary/65 focus-within:bg-card border border-border/70 focus-within:border-amber-500/50 focus-within:ring-2 focus-within:ring-amber-500/20 rounded-full h-8 px-3 transition-all w-40 xl:w-48"
+          >
+            <Search className="w-3.5 h-3.5 text-muted-foreground mr-1.5 shrink-0" />
             <input
               type="text"
-              placeholder="Search stories, authors, or genres..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="text-xs bg-transparent border-none focus:outline-none text-foreground placeholder:text-muted-foreground/80 w-full"
+              className="text-xs bg-transparent border-none focus:outline-none text-foreground placeholder:text-muted-foreground/75 w-full font-sans"
             />
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground/70 bg-background/50 border border-border/60 rounded-md shrink-0">
+            <kbd className="inline-flex items-center gap-0.5 px-1 py-0.2 text-[9px] font-mono text-muted-foreground/70 bg-background/60 border border-border/60 rounded shrink-0">
               ⌘K
             </kbd>
-          </div>
-        </form>
+          </form>
+        </div>
 
-        {/* Right: Actions, Theme & Profile */}
+        {/* Right: Unified Action Dock */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Theme Toggle */}
           <ThemeToggle />
@@ -162,32 +159,16 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
             <div className="w-8 h-8 rounded-full bg-secondary animate-pulse" />
           ) : user ? (
             <>
-              {/* PWA Install Action */}
-              <PwaInstallButton className="hidden md:inline-flex" />
-
-              {/* Author Studio CTA */}
-              <Link href="/studio" prefetch={true}>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="hidden sm:flex items-center gap-1.5 h-8 px-3 text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 dark:text-amber-400 border-amber-500/30 rounded-full font-medium transition-colors cursor-pointer"
-                >
-                  <Feather className="w-3.5 h-3.5" />
-                  <span>Studio</span>
-                </Button>
-              </Link>
-
-              {/* Reading Streak Pill */}
+              {/* Reading Streak Capsule */}
               <div
                 title={`${streakDays} Day Reading Streak`}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-semibold cursor-default"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-semibold shadow-xs shadow-amber-500/10 cursor-default"
               >
+                <span className="font-mono">{streakDays}</span>
                 <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500 animate-pulse" />
-                <span className="hidden sm:inline">{streakDays}d Streak</span>
-                <span className="sm:hidden">{streakDays}d</span>
               </div>
 
-              {/* Standalone Notification Component */}
+              {/* Notification Bell */}
               <NotificationBell />
 
               {/* User Avatar & Dropdown */}
@@ -195,11 +176,11 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-amber-500/30 transition-all cursor-pointer focus:outline-none"
+                  className="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-amber-500/40 transition-all cursor-pointer focus:outline-none"
                   aria-expanded={dropdownOpen}
                   aria-haspopup="true"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-950 via-stone-900 to-zinc-900 border border-amber-400/40 flex items-center justify-center text-xs font-bold text-amber-200 shadow-xs">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-950 via-stone-900 to-zinc-900 border border-amber-400/50 flex items-center justify-center text-xs font-bold text-amber-200 shadow-sm">
                     {initials}
                   </div>
                   <ChevronDown className="w-3 h-3 text-muted-foreground hidden sm:inline" />
@@ -207,7 +188,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
                 {/* Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-card p-2 shadow-xl backdrop-blur-md z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-border/80 bg-card/95 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150">
                     <div className="px-3 py-2 border-b border-border/70 mb-1">
                       <p className="text-xs font-semibold text-foreground truncate">
                         {displayName}
@@ -216,7 +197,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                         {user.email}
                       </p>
                       {profile?.username && (
-                        <span className="inline-block text-[10px] text-primary mt-0.5">
+                        <span className="inline-block text-[10px] text-amber-400 mt-0.5 font-mono">
                           @{profile.username}
                         </span>
                       )}
@@ -228,7 +209,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                           href="/admin"
                           prefetch={true}
                           onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 transition-colors mb-1"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-500 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 transition-colors mb-1"
                         >
                           <ShieldAlert className="w-4 h-4" />
                           <span>Admin Workspace</span>
@@ -239,7 +220,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                         href="/studio"
                         prefetch={true}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-amber-400 hover:bg-amber-500/10 transition-colors"
                       >
                         <Feather className="w-4 h-4" />
                         <span>Author Studio</span>
@@ -249,7 +230,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                         href="/library"
                         prefetch={true}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         <Library className="w-4 h-4 text-muted-foreground" />
                         <span>My Library</span>
@@ -259,7 +240,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                         href="/goals"
                         prefetch={true}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         <Target className="w-4 h-4 text-muted-foreground" />
                         <span>Reading Goals</span>
@@ -269,7 +250,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                         href="/settings"
                         prefetch={true}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         <Settings className="w-4 h-4 text-muted-foreground" />
                         <span>Preferences</span>
@@ -279,7 +260,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                         href="/offline"
                         prefetch={true}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         <HardDrive className="w-4 h-4 text-muted-foreground" />
                         <span>Offline Stories</span>
@@ -288,12 +269,10 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                       <Link
                         href="/notifications"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors w-full text-left"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
                       >
-                        <div className="flex items-center gap-2.5">
-                          <Bell className="w-4 h-4 text-muted-foreground" />
-                          <span>All Notifications</span>
-                        </div>
+                        <Bell className="w-4 h-4 text-muted-foreground" />
+                        <span>All Notifications</span>
                       </Link>
 
                       <div className="border-t border-border/70 my-1" />
@@ -304,7 +283,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                           setDropdownOpen(false);
                           signOut();
                         }}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors w-full text-left cursor-pointer"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-red-500 hover:bg-red-500/10 transition-colors w-full text-left cursor-pointer font-medium"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
@@ -317,17 +296,12 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
           ) : (
             <div className="flex items-center gap-2">
               <PwaInstallButton size="sm" className="hidden sm:inline-flex" />
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="text-xs hover:text-foreground">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/signup">
+              <Link href="/login" prefetch={true}>
                 <Button
                   size="sm"
-                  className="text-xs font-semibold bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white shadow-md shadow-amber-600/25 border border-amber-500/30"
+                  className="rounded-full px-4 h-8 text-xs font-semibold bg-amber-500 text-stone-950 hover:bg-amber-400 border-none shadow-sm cursor-pointer"
                 >
-                  Start Reading
+                  Sign In
                 </Button>
               </Link>
             </div>

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Feather,
@@ -16,6 +17,10 @@ import {
   UserCheck,
   Globe,
   Settings as SettingsIcon,
+  Search,
+  Clock,
+  ArrowUpRight,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
@@ -66,6 +71,7 @@ export default function AuthorStudioPage() {
     cachedStudio?.stories || []
   );
   const [filterStatus, setFilterStatus] = React.useState<"all" | BookStatus>("all");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [loading, setLoading] = React.useState(!cachedStudio);
 
   React.useEffect(() => {
@@ -118,321 +124,428 @@ export default function AuthorStudioPage() {
     };
   }, [user]);
 
-  const filteredStories = stories.filter((story) => {
-    if (filterStatus === "all") return true;
-    return story.status === filterStatus;
-  });
+  const filteredStories = React.useMemo(() => {
+    return stories.filter((story) => {
+      const matchesFilter = filterStatus === "all" || story.status === filterStatus;
+      const matchesSearch =
+        searchQuery.trim() === "" ||
+        story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        story.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        story.genres?.some((g) => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesFilter && matchesSearch;
+    });
+  }, [stories, filterStatus, searchQuery]);
+
+  const countByStatus = React.useMemo(() => {
+    return {
+      all: stories.length,
+      published: stories.filter((s) => s.status === "published").length,
+      draft: stories.filter((s) => s.status === "draft").length,
+      archived: stories.filter((s) => s.status === "archived").length,
+    };
+  }, [stories]);
 
   const isLoading = authLoading || loading;
 
   if (authLoading || !user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        <p className="text-sm text-muted-foreground">Verifying Author Studio access...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-10 h-10 rounded-full border-2 border-amber-500/80 border-t-transparent animate-spin" />
+        <p className="text-sm font-medium text-muted-foreground tracking-wide">
+          Verifying Author Studio credentials...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-6xl mx-auto pb-16">
-      {/* Studio Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-6">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
-            <Feather className="w-4 h-4" />
-            <span>Author Studio & Publishing</span>
+    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex flex-col gap-8 sm:gap-10">
+      {/* Background Ambient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
+
+      {/* Studio Header (Creative Sanctum) */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border/60 pb-8">
+        <div className="flex flex-col gap-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 w-fit text-amber-500 text-[11px] font-semibold uppercase tracking-widest">
+            <Feather className="w-3.5 h-3.5 text-amber-500" />
+            <span>Creative Sanctum • Author Studio</span>
           </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Creation Workspace
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+            {author ? `Welcome back, ${author.name}` : "Creation Workspace"}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Craft your novellas, manage chapters, and schedule releases for readers.
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+            Craft your novellas, manage serialized chapters, and schedule releases for your readers.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Primary Action Buttons */}
+        <div className="flex items-center gap-3 shrink-0">
           <Link href="/studio/profile">
-            <Button variant="outline" size="sm" className="gap-2 cursor-pointer">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 px-4 rounded-full border-border/80 bg-background/50 hover:bg-secondary/80 backdrop-blur-md gap-2 cursor-pointer transition-all"
+            >
               <SettingsIcon className="w-4 h-4 text-muted-foreground" />
-              <span>Author Profile</span>
+              <span className="text-xs font-semibold">Author Profile</span>
             </Button>
           </Link>
           <Link href="/studio/new">
-            <Button size="sm" className="gap-2 shadow-sm cursor-pointer">
-              <Plus className="w-4 h-4" />
-              <span>New Story</span>
+            <Button
+              size="sm"
+              className="h-10 px-5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] gap-2 cursor-pointer transition-all"
+            >
+              <Plus className="w-4 h-4 text-stone-950 stroke-[2.5]" />
+              <span className="text-xs font-bold tracking-wide">Write New Novella</span>
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Author Profile Quick Banner */}
+      {/* Author Profile Quick Capsule Banner */}
       {author && (
-        <div className="p-4 rounded-2xl border border-border bg-card/60 backdrop-blur-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 border border-border flex items-center justify-center text-lg font-serif font-bold text-primary">
+        <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-card/60 backdrop-blur-xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div className="absolute top-0 right-0 w-64 h-full bg-radial from-amber-500/10 to-transparent pointer-events-none" />
+
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 via-primary/10 to-transparent border border-amber-500/30 flex items-center justify-center text-xl font-serif font-bold text-amber-500 shadow-inner">
               {author.name.charAt(0).toUpperCase()}
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-base text-foreground">
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-serif font-bold text-lg text-foreground">
                   {author.name}
                 </span>
-                <span className="text-xs text-muted-foreground font-mono">
+                <span className="text-xs text-amber-500/90 font-mono font-medium px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20">
                   @{author.slug}
                 </span>
+                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
+                  <TrendingUp className="w-3 h-3 text-emerald-500" />
+                  Active Author
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground line-clamp-1 max-w-md">
-                {author.bio || "No bio set yet. Click Edit Profile to add your literary synopsis."}
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 max-w-xl">
+                {author.bio || "No synopsis provided. Personalize your author profile to tell readers about yourself."}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2.5 relative z-10">
             {author.website && (
               <a
                 href={author.website}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-border/80 bg-background/50 hover:bg-secondary text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
               >
                 <Globe className="w-3.5 h-3.5" />
                 <span>Website</span>
+                <ArrowUpRight className="w-3 h-3 text-muted-foreground" />
               </a>
             )}
             <Link
               href="/studio/profile"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-secondary/80 hover:bg-secondary text-foreground text-xs font-semibold border border-border/70 transition-all cursor-pointer shadow-2xs"
             >
-              <UserCheck className="w-3.5 h-3.5 text-primary" />
-              <span>Edit Profile</span>
+              <UserCheck className="w-3.5 h-3.5 text-amber-500" />
+              <span>Edit Bio & Links</span>
             </Link>
           </div>
         </div>
       )}
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-border bg-card flex flex-col gap-1">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Total Stories
-          </span>
-          <span className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
-            {stats.totalStories}
-          </span>
-          <span className="text-[11px] text-primary flex items-center gap-1 mt-0.5">
-            <BookOpen className="w-3 h-3" />
-            <span>Active novellas</span>
-          </span>
+      {/* 4 Metrics Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card/70 backdrop-blur-md p-5 flex flex-col justify-between hover:border-amber-500/40 hover:shadow-md transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+              Total Novellas
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+              <BookOpen className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <span className="font-serif text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+              {stats.totalStories}
+            </span>
+            <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+              <span>Literary works created</span>
+            </p>
+          </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border bg-card flex flex-col gap-1">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Published Chapters
-          </span>
-          <span className="font-serif text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-            {stats.publishedChapters}
-          </span>
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-            <Sparkles className="w-3 h-3 text-emerald-500" />
-            <span>Live to readers</span>
-          </span>
+        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card/70 backdrop-blur-md p-5 flex flex-col justify-between hover:border-emerald-500/40 hover:shadow-md transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+              Live Chapters
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+              <Sparkles className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <span className="font-serif text-3xl sm:text-4xl font-bold text-emerald-500 tracking-tight">
+              {stats.publishedChapters}
+            </span>
+            <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+              <span className="text-emerald-500 font-semibold">Live</span>
+              <span>to all active readers</span>
+            </p>
+          </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border bg-card flex flex-col gap-1">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Scheduled Releases
-          </span>
-          <span className="font-serif text-2xl sm:text-3xl font-bold text-sky-600 dark:text-sky-400">
-            {stats.scheduledChapters}
-          </span>
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-            <Calendar className="w-3 h-3 text-sky-500" />
-            <span>Auto-publishing queue</span>
-          </span>
+        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card/70 backdrop-blur-md p-5 flex flex-col justify-between hover:border-sky-500/40 hover:shadow-md transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+              Scheduled Releases
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-500 group-hover:scale-110 transition-transform">
+              <Calendar className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <span className="font-serif text-3xl sm:text-4xl font-bold text-sky-500 tracking-tight">
+              {stats.scheduledChapters}
+            </span>
+            <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+              <span>In automated publishing queue</span>
+            </p>
+          </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-border bg-card flex flex-col gap-1">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Total Words
-          </span>
-          <span className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
-            {stats.totalWords.toLocaleString()}
-          </span>
-          <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-            <FileText className="w-3 h-3 text-primary" />
-            <span>{stats.draftChapters} draft chapters</span>
-          </span>
+        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card/70 backdrop-blur-md p-5 flex flex-col justify-between hover:border-amber-500/40 hover:shadow-md transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+              Total Words Penned
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+              <FileText className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <span className="font-serif text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+              {stats.totalWords.toLocaleString()}
+            </span>
+            <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+              <span className="text-amber-500 font-semibold">{stats.draftChapters} drafts</span>
+              <span>under composition</span>
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Stories Management Header & Filter Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-        <div className="flex items-center gap-2">
-          <h2 className="font-serif text-xl font-bold text-foreground">
-            Your Stories
-          </h2>
-          <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-secondary text-foreground">
-            {stories.length}
-          </span>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/40 border border-border/80 w-fit text-xs font-semibold">
+      {/* Stories Controls: Filter Tabs & Search Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+        {/* Status Pill Tabs */}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-secondary/50 border border-border/80 backdrop-blur-md w-fit text-xs font-semibold overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => setFilterStatus("all")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-all cursor-pointer",
+              "px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap",
               filterStatus === "all"
-                ? "bg-card text-foreground shadow-xs font-bold"
+                ? "bg-card text-foreground shadow-xs font-bold border border-border/80"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            All Stories ({stories.length})
+            All Novellas ({countByStatus.all})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus("published")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-all cursor-pointer",
+              "px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap",
               filterStatus === "published"
-                ? "bg-card text-emerald-600 dark:text-emerald-400 shadow-xs font-bold"
+                ? "bg-emerald-500/15 text-emerald-400 shadow-xs font-bold border border-emerald-500/30"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Published
+            Published ({countByStatus.published})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus("draft")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-all cursor-pointer",
+              "px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap",
               filterStatus === "draft"
-                ? "bg-card text-amber-600 dark:text-amber-400 shadow-xs font-bold"
+                ? "bg-amber-500/15 text-amber-400 shadow-xs font-bold border border-amber-500/30"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Drafts
+            Drafts ({countByStatus.draft})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus("archived")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-all cursor-pointer",
+              "px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap",
               filterStatus === "archived"
-                ? "bg-card text-muted-foreground shadow-xs font-bold"
+                ? "bg-card text-muted-foreground shadow-xs font-bold border border-border/80"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Archived
+            Archived ({countByStatus.archived})
           </button>
+        </div>
+
+        {/* Live Search Filter */}
+        <div className="relative w-full md:w-72">
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search your stories..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-9 pr-4 rounded-full bg-secondary/40 border border-border/80 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Loading Skeletons */}
+      {/* Loading State */}
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="rounded-2xl border border-border bg-card p-6 h-48 animate-pulse bg-secondary/50"
-            />
+              className="rounded-3xl border border-border/70 bg-card/60 p-6 h-80 animate-pulse bg-secondary/30 flex flex-col justify-between"
+            >
+              <div className="w-full h-32 rounded-2xl bg-secondary/60 mb-4" />
+              <div className="w-3/4 h-5 rounded-md bg-secondary/60 mb-2" />
+              <div className="w-1/2 h-4 rounded-md bg-secondary/40" />
+            </div>
           ))}
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && filteredStories.length === 0 && (
-        <div className="text-center py-20 px-4 rounded-2xl border border-dashed border-border bg-card/40 flex flex-col items-center gap-4 max-w-md mx-auto">
-          <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground">
-            <Feather className="w-8 h-8 text-primary" />
+        <div className="text-center py-20 px-6 rounded-3xl border border-dashed border-amber-500/30 bg-card/40 backdrop-blur-md flex flex-col items-center gap-5 max-w-lg mx-auto">
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-inner">
+            <Feather className="w-10 h-10" />
           </div>
-          <div className="flex flex-col gap-1">
-            <h3 className="font-serif text-lg font-bold text-foreground">
-              {filterStatus === "all"
-                ? "No Stories Created Yet"
-                : `No ${filterStatus} stories found`}
+          <div className="flex flex-col gap-1.5">
+            <h3 className="font-serif text-2xl font-bold text-foreground">
+              {stories.length === 0
+                ? "Start Your Literary Journey"
+                : searchQuery
+                ? "No Novellas Match Your Search"
+                : `No ${filterStatus} novellas found`}
             </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              {filterStatus === "all"
-                ? "Begin your writing voyage today. Create a story, write captivating chapters, and schedule your release cadence."
-                : `Switch to another filter or create a new story to get started.`}
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm">
+              {stories.length === 0
+                ? "Begin crafting your serialized novellas today. Publish chapters, schedule automated releases, and captivate readers."
+                : "Try resetting your search query or switching tabs to view other works."}
             </p>
           </div>
           <Link href="/studio/new">
-            <Button size="sm" className="gap-2 mt-2 cursor-pointer">
-              <Plus className="w-4 h-4" />
-              <span>Create Your First Story</span>
+            <Button
+              size="sm"
+              className="h-10 px-5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold shadow-[0_0_20px_rgba(245,158,11,0.25)] gap-2 mt-2 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Create Your First Novella</span>
             </Button>
           </Link>
         </div>
       )}
 
-      {/* Stories Grid */}
+      {/* Modern Stories Bento Grid */}
       {!isLoading && filteredStories.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredStories.map((story) => {
             const coverGradient =
-              story.cover_gradient || "from-amber-700 via-stone-800 to-zinc-950";
+              story.cover_gradient || "from-amber-900 via-stone-900 to-zinc-950";
+            const primaryGenre = story.genres?.[0]?.name || "Fiction";
+            const publishedPct = story.chaptersCount > 0
+              ? Math.round((story.publishedChaptersCount / story.chaptersCount) * 100)
+              : 0;
 
             return (
               <div
                 key={story.id}
-                className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all group"
+                className="group relative rounded-3xl border border-border/80 bg-card/80 backdrop-blur-md overflow-hidden flex flex-col justify-between hover:border-amber-500/50 hover:shadow-[0_12px_40px_rgba(0,0,0,0.25)] transition-all duration-300"
               >
-                {/* Top Section: Banner & Details */}
-                <div className="flex flex-col">
-                  {/* Visual Header Banner */}
+                {/* Top Section: Visual Book Cover Banner */}
+                <div>
                   <div
                     className={cn(
-                      "h-28 w-full p-4 flex items-start justify-between relative overflow-hidden text-white bg-gradient-to-r",
+                      "h-44 w-full p-4 flex flex-col justify-between relative overflow-hidden text-white bg-gradient-to-br",
                       coverGradient
                     )}
                   >
                     {story.cover_image_url && (
-                      <div
-                        className="absolute inset-0 bg-cover bg-center opacity-80"
-                        style={{ backgroundImage: `url(${story.cover_image_url})` }}
+                      <Image
+                        src={story.cover_image_url}
+                        alt={story.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        unoptimized={
+                          !story.cover_image_url.includes(".supabase.co") &&
+                          !story.cover_image_url.startsWith("/")
+                        }
+                        className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       />
                     )}
-                    <div className="absolute inset-0 bg-black/45 group-hover:bg-black/30 transition-colors" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20 group-hover:from-black/80 transition-colors" />
 
-                    <div className="relative z-10 flex items-center gap-2">
+                    {/* Book Spine 3D Crease Effect on left */}
+                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-r from-black/60 via-white/20 to-transparent z-20 pointer-events-none" />
+
+                    {/* Top Badges: Status & Release Cadence */}
+                    <div className="relative z-10 flex items-start justify-between gap-2">
                       <Badge
                         variant="warm"
                         className={cn(
-                          "backdrop-blur-xs text-[11px] font-semibold uppercase tracking-wider",
-                          story.status === "published" && "bg-emerald-600/80 text-white border-emerald-400/40",
-                          story.status === "draft" && "bg-amber-600/80 text-white border-amber-400/40",
-                          story.status === "archived" && "bg-zinc-700/80 text-white border-zinc-500/40"
+                          "backdrop-blur-md text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border",
+                          story.status === "published" && "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+                          story.status === "draft" && "bg-amber-500/20 text-amber-300 border-amber-500/40",
+                          story.status === "archived" && "bg-zinc-800/80 text-zinc-300 border-zinc-600/40"
                         )}
                       >
                         {story.status}
                       </Badge>
-                      <span className="text-[11px] text-white/80 font-medium">
-                        {story.genres?.[0]?.name || "Fiction"}
-                      </span>
-                    </div>
 
-                    <div className="relative z-10 text-right text-xs font-medium text-white/90">
-                      {story.release_schedule !== "immediate" && (
-                        <span className="px-2 py-0.5 rounded-full bg-black/40 border border-white/20 text-[10px] capitalize">
+                      {story.release_schedule && story.release_schedule !== "immediate" && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-medium capitalize text-white/90">
                           {story.release_schedule} Cadence
                         </span>
                       )}
                     </div>
+
+                    {/* Bottom of Banner: Genre & Read Time */}
+                    <div className="relative z-10 flex items-center justify-between text-xs">
+                      <span className="px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-[11px] font-medium text-white/90">
+                        {primaryGenre}
+                      </span>
+                      {story.estimated_read_time_minutes ? (
+                        <span className="flex items-center gap-1 text-[11px] text-white/80">
+                          <Clock className="w-3 h-3" />
+                          {story.estimated_read_time_minutes} min
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-5 flex flex-col gap-3">
+                  <div className="p-5 flex flex-col gap-3.5">
                     <div>
-                      <h3 className="font-serif text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      <Link
+                        href={`/studio/${story.id}`}
+                        className="font-serif text-xl font-bold text-foreground group-hover:text-amber-400 transition-colors line-clamp-1 block focus:outline-hidden"
+                      >
                         {story.title}
-                      </h3>
+                      </Link>
                       {story.subtitle && (
-                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5 font-medium">
                           {story.subtitle}
                         </p>
                       )}
@@ -444,34 +557,49 @@ export default function AuthorStudioPage() {
                       </p>
                     )}
 
+                    {/* Chapter Progress Bar */}
+                    <div className="flex flex-col gap-1.5 pt-1">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground font-medium">
+                          Publishing Progress
+                        </span>
+                        <span className="font-bold text-foreground">
+                          {story.publishedChaptersCount} / {story.chaptersCount} chapters ({publishedPct}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-secondary/80 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-500"
+                          style={{ width: `${Math.min(publishedPct, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+
                     {/* Counts Row */}
-                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-border/60 text-xs">
+                    <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-secondary/40 border border-border/60 text-xs">
                       <div className="flex flex-col">
                         <span className="text-[10px] text-muted-foreground font-medium">
                           Chapters
                         </span>
-                        <span className="font-semibold text-foreground">
-                          {story.chaptersCount}{" "}
-                          <span className="text-[10px] text-muted-foreground font-normal">
-                            ({story.publishedChaptersCount} live)
-                          </span>
+                        <span className="font-bold text-foreground mt-0.5">
+                          {story.chaptersCount}
                         </span>
                       </div>
 
                       <div className="flex flex-col">
                         <span className="text-[10px] text-muted-foreground font-medium">
-                          Scheduled
+                          Queued
                         </span>
-                        <span className="font-semibold text-sky-600 dark:text-sky-400">
-                          {story.scheduledChaptersCount} queued
+                        <span className="font-bold text-sky-500 mt-0.5">
+                          {story.scheduledChaptersCount}
                         </span>
                       </div>
 
                       <div className="flex flex-col">
                         <span className="text-[10px] text-muted-foreground font-medium">
-                          Word Count
+                          Total Words
                         </span>
-                        <span className="font-semibold text-foreground">
+                        <span className="font-bold text-foreground mt-0.5">
                           {story.totalWords.toLocaleString()}
                         </span>
                       </div>
@@ -479,19 +607,26 @@ export default function AuthorStudioPage() {
                   </div>
                 </div>
 
-                {/* Bottom Action Footer */}
-                <div className="px-5 py-3.5 bg-secondary/30 border-t border-border/80 flex items-center justify-between gap-2 text-xs">
+                {/* Bottom Action Dock */}
+                <div className="px-5 py-4 bg-secondary/20 border-t border-border/70 flex items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-2">
                     <Link href={`/studio/${story.id}/chapters/new`}>
-                      <Button size="sm" className="h-8 gap-1.5 text-xs cursor-pointer">
+                      <Button
+                        size="sm"
+                        className="h-8 px-3 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 border border-amber-500/30 gap-1.5 text-xs font-semibold cursor-pointer transition-all"
+                      >
                         <Feather className="w-3.5 h-3.5" />
                         <span>Write Chapter</span>
                       </Button>
                     </Link>
                     <Link href={`/studio/${story.id}/chapters`}>
-                      <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs cursor-pointer">
-                        <Layers className="w-3.5 h-3.5" />
-                        <span>Chapters ({story.chaptersCount})</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 rounded-full border-border/80 bg-background/50 hover:bg-secondary gap-1.5 text-xs font-medium cursor-pointer transition-all"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span>Chapters</span>
                       </Button>
                     </Link>
                   </div>
@@ -500,7 +635,7 @@ export default function AuthorStudioPage() {
                     <Link
                       href={`/studio/${story.id}`}
                       title="Edit Story Details"
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                      className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     >
                       <Edit className="w-4 h-4" />
                     </Link>
@@ -508,7 +643,7 @@ export default function AuthorStudioPage() {
                       <Link
                         href={`/books/${story.slug}`}
                         title="View Public Story Page"
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-secondary transition-colors cursor-pointer"
+                        className="p-2 rounded-full text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 transition-colors cursor-pointer"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Link>
@@ -523,3 +658,4 @@ export default function AuthorStudioPage() {
     </div>
   );
 }
+

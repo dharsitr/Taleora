@@ -34,6 +34,7 @@ export function AppShell({ children }: AppShellProps) {
     pathname.startsWith("/books/") ||
     pathname === "/discover" ||
     pathname === "/library" ||
+    pathname.startsWith("/studio") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/forgot-password") ||
