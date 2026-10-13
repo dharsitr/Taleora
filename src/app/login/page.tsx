@@ -8,11 +8,18 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AuthVisualSide } from "@/components/auth/AuthVisualSide";
+import { validateSafeRedirect } from "@/lib/security/validation";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/library";
+  const nextParam = searchParams.get("next");
+  // Default destination after login is Explore (/discover).
+  // Overrides default /library or accidental /studio guard redirects.
+  const targetNext = (!nextParam || nextParam === "/studio" || nextParam === "/library")
+    ? "/discover"
+    : nextParam;
+  const next = validateSafeRedirect(targetNext, "/discover");
   const errorParam = searchParams.get("error");
   const noticeParam = searchParams.get("notice");
 

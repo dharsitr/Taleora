@@ -5,7 +5,11 @@ import { validateSafeRedirect } from "@/lib/security/validation";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const safeNext = validateSafeRedirect(searchParams.get("next"), "/library");
+  const rawNext = searchParams.get("next");
+  const targetNext = (!rawNext || rawNext === "/studio" || rawNext === "/library")
+    ? "/discover"
+    : rawNext;
+  const safeNext = validateSafeRedirect(targetNext, "/discover");
 
   if (code) {
     const supabase = await createClient();

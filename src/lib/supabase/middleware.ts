@@ -149,10 +149,13 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // If already authenticated user visits login or signup, redirect to /library or safe next
+  // If already authenticated user visits login or signup, redirect to /discover or safe next
   if (user && isAuthRoute) {
     const nextParam = request.nextUrl.searchParams.get("next");
-    const redirectUrl = validateSafeRedirect(nextParam, "/library");
+    const targetNext = (!nextParam || nextParam === "/studio" || nextParam === "/library")
+      ? "/discover"
+      : nextParam;
+    const redirectUrl = validateSafeRedirect(targetNext, "/discover");
     const url = request.nextUrl.clone();
     url.pathname = redirectUrl;
     url.search = "";
