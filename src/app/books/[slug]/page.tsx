@@ -389,13 +389,13 @@ export default async function BookDetailsPage({ params }: BookPageProps) {
 
           {/* Horizontal Visual Timeline Track */}
           <div className="relative pt-6 pb-2 overflow-x-auto scrollbar-none">
-            <div className="min-w-[650px] relative">
-              {/* Connecting Milestone Track Line */}
-              <div className="absolute top-3 left-4 right-4 h-0.5 bg-gradient-to-r from-amber-500 via-amber-400 to-secondary" />
+            <div className="min-w-full w-max relative px-2">
+              {/* Connecting Milestone Track Line - runs cleanly through dot centers */}
+              <div className="absolute top-[39px] left-12 right-12 h-0.5 bg-gradient-to-r from-amber-500 via-amber-400 to-secondary z-0 pointer-events-none" />
 
               {/* Milestones Nodes */}
-              <div className="grid grid-flow-col auto-cols-fr gap-4 relative z-10">
-                {chapters.slice(0, 7).map((chap, idx) => {
+              <div className="grid grid-flow-col auto-cols-[minmax(100px,1fr)] gap-3 relative z-10">
+                {chapters.map((chap, idx) => {
                   const isReleased = chap.status === "published";
                   const chapHref = `/read/${book.slug}/${chap.slug}`;
 
@@ -403,12 +403,12 @@ export default async function BookDetailsPage({ params }: BookPageProps) {
                     <Link
                       key={chap.id}
                       href={chapHref}
-                      className="group flex flex-col items-center text-center gap-2.5 cursor-pointer"
+                      className="group flex flex-col items-center text-center cursor-pointer"
                     >
-                      {/* Node Status Badge */}
+                      {/* Node Status Badge - sits cleanly on top of the track line */}
                       <span
                         className={cn(
-                          "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all",
+                          "inline-flex items-center justify-center h-5 px-2.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all mb-3 z-10",
                           isReleased
                             ? "bg-amber-500/20 text-amber-400 border-amber-500/40 group-hover:bg-amber-500/30"
                             : "bg-secondary text-muted-foreground border-border/80"
@@ -420,19 +420,19 @@ export default async function BookDetailsPage({ params }: BookPageProps) {
                       {/* Timeline Dot Indicator */}
                       <div
                         className={cn(
-                          "w-4 h-4 rounded-full border-2 transition-all duration-300 group-hover:scale-125",
+                          "relative z-20 w-4 h-4 rounded-full border-2 transition-all duration-300 group-hover:scale-125 flex items-center justify-center",
                           isReleased
                             ? "bg-amber-500 border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.6)]"
-                            : "bg-secondary border-border"
+                            : "bg-card border-border"
                         )}
                       />
 
                       {/* Chapter Title */}
-                      <div className="flex flex-col items-center">
+                      <div className="flex flex-col items-center mt-2.5">
                         <span className="text-xs font-serif font-bold text-foreground group-hover:text-amber-400 transition-colors line-clamp-1">
                           Chapter {chap.chapter_number || idx + 1}
                         </span>
-                        <span className="text-[10px] text-muted-foreground line-clamp-1 max-w-[90px]">
+                        <span className="text-[10px] text-muted-foreground line-clamp-1 max-w-[100px]">
                           {chap.title}
                         </span>
                       </div>

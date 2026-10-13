@@ -15,6 +15,8 @@ import {
   Loader2,
   Inbox,
   ArrowRight,
+  WifiOff,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { NotificationRow, NotificationType } from "@/types/social";
@@ -25,15 +27,32 @@ import {
 } from "@/lib/social/queries";
 import { useWebSocketNotifications } from "@/lib/network/websocket-notifications";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 export default function NotificationsPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   const [notifications, setNotifications] = React.useState<NotificationRow[]>([]);
   const [activeTab, setActiveTab] = React.useState<"all" | "unread">("all");
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isMarkingAll, setIsMarkingAll] = React.useState<boolean>(false);
+  const [isOffline, setIsOffline] = React.useState<boolean>(false);
+
+  // Monitor network status
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsOffline(!navigator.onLine);
+      const handleOnline = () => setIsOffline(false);
+      const handleOffline = () => setIsOffline(true);
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
+      return () => {
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+      };
+    }
+  }, []);
 
   const handleNotificationReceived = React.useCallback((newNotif: NotificationRow) => {
     setNotifications((prev) => {
@@ -48,21 +67,27 @@ export default function NotificationsPage() {
   });
 
   const loadNotifications = React.useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      if (!authLoading) setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const data = await getUserNotifications(user.id);
-      setNotifications(data);
+      setNotifications(data || []);
     } catch (err) {
       console.error("Failed to load notifications:", err);
+      setNotifications([]);
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   React.useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+    if (!authLoading) {
+      loadNotifications();
+    }
+  }, [authLoading, loadNotifications]);
 
   const handleMarkAllRead = async () => {
     if (!user || isMarkingAll) return;
@@ -94,9 +119,11 @@ export default function NotificationsPage() {
     }
   };
 
-  const formatTimeAgo = (dateStr: string) => {
+  const formatTimeAgo = (dateStr?: string | null) => {
+    if (!dateStr) return "Recently";
     try {
       const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "Recently";
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffMin = Math.floor(diffMs / (1000 * 60));
@@ -107,28 +134,28 @@ export default function NotificationsPage() {
       if (diffMin < 60) return `${diffMin}m ago`;
       if (diffHours < 24) return `${diffHours}h ago`;
       if (diffDays < 7) return `${diffDays}d ago`;
-      return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     } catch {
       return "Recently";
     }
   };
 
-  const getIconForType = (type: NotificationType | string) => {
+  const getIconForType = (type?: NotificationType | string | null) => {
     switch (type) {
       case "review_like":
         return <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />;
       case "review_comment":
       case "book_comment":
-        return <MessageSquare className="w-5 h-5 text-sky-500" />;
+        return <MessageSquare className="w-5 h-5 text-sky-400" />;
       case "author_new_chapter":
-        return <BookOpen className="w-5 h-5 text-amber-500" />;
+        return <BookOpen className="w-5 h-5 text-amber-400" />;
       case "author_follow":
-        return <Feather className="w-5 h-5 text-emerald-500" />;
+        return <Feather className="w-5 h-5 text-emerald-400" />;
       default:
-        if (type.startsWith("security")) {
-          return <ShieldAlert className="w-5 h-5 text-amber-500" />;
+        if (typeof type === "string" && type.startsWith("security")) {
+          return <ShieldAlert className="w-5 h-5 text-amber-400" />;
         }
-        return <Sparkles className="w-5 h-5 text-primary" />;
+        return <Sparkles className="w-5 h-5 text-amber-400" />;
     }
   };
 
@@ -139,125 +166,161 @@ export default function NotificationsPage() {
       : notifications;
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-primary text-xs font-semibold tracking-wider uppercase">
-            <Bell className="w-4 h-4" />
-            <span>Activity Feed</span>
-            <span
-              className={`ml-1 text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                wsStatus === "connected"
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                  : "bg-secondary text-muted-foreground border-border"
-              }`}
-            >
-              ● {wsStatus === "connected" ? "Live Stream" : wsStatus}
-            </span>
-          </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Activity & Notifications
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Updates on story reactions, author publications, community interactions, and account security.
-          </p>
-        </div>
+    <div className="relative flex flex-col gap-8 max-w-4xl mx-auto w-full pb-20">
+      {/* Background Ambient Warm Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-80 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
 
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleMarkAllRead}
-            disabled={isMarkingAll}
-            className="self-start sm:self-center gap-1.5 text-xs shrink-0"
-          >
-            {isMarkingAll ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <CheckCheck className="w-3.5 h-3.5" />
-            )}
-            <span>Mark all as read</span>
-          </Button>
-        )}
+      {/* Page Header Card */}
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/25 bg-card/85 p-6 sm:p-8 shadow-[0_12px_45px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+        <div className="absolute top-0 right-0 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-amber-400">
+              <Bell className="w-4 h-4 text-amber-400 animate-pulse" />
+              <span className="font-mono text-[11px] tracking-widest">Chronicle & Activity</span>
+              <span
+                className={cn(
+                  "ml-1 text-[10px] font-mono px-2.5 py-0.5 rounded-full border",
+                  isOffline
+                    ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                    : wsStatus === "connected"
+                    ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                    : "bg-stone-900 text-stone-400 border-stone-800"
+                )}
+              >
+                ● {isOffline ? "Offline Mode" : wsStatus === "connected" ? "Live Feed" : wsStatus}
+              </span>
+            </div>
+
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Activity & Notifications
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Updates on story releases, reader reactions, author publications, and security alerts.
+            </p>
+          </div>
+
+          {unreadCount > 0 && !isOffline && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMarkAllRead}
+              disabled={isMarkingAll}
+              className="self-start sm:self-center gap-1.5 text-xs shrink-0 border-amber-500/30 hover:border-amber-400 text-amber-300 bg-stone-950/60"
+            >
+              {isMarkingAll ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <CheckCheck className="w-3.5 h-3.5" />
+              )}
+              <span>Mark all read</span>
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-border pb-1">
+      {/* Offline Notice Banner if offline */}
+      {isOffline && (
+        <div className="flex items-center justify-between p-4 rounded-2xl border border-amber-500/30 bg-stone-950/80 text-xs shadow-lg backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              <WifiOff className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="font-serif font-bold text-foreground">Offline Sanctuary Active</p>
+              <p className="text-muted-foreground">
+                You are currently disconnected from the internet. Fresh notifications will stream once back online.
+              </p>
+            </div>
+          </div>
+          <Link href="/offline">
+            <Button size="sm" variant="outline" className="text-xs border-amber-500/30 text-amber-400">
+              Offline Stories
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Segmented Tab Dock */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-stone-900/60 dark:bg-stone-950/70 border border-border/60 self-start backdrop-blur-md">
         <button
           type="button"
           onClick={() => setActiveTab("all")}
-          className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+          className={cn(
+            "px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer",
             activeTab === "all"
-              ? "bg-primary text-primary-foreground shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-          }`}
+              ? "bg-amber-500 text-stone-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.3)]"
+              : "text-muted-foreground hover:text-amber-300 hover:bg-white/5"
+          )}
         >
           All Updates ({notifications.length})
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("unread")}
-          className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+          className={cn(
+            "px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer",
             activeTab === "unread"
-              ? "bg-primary text-primary-foreground shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-          }`}
+              ? "bg-amber-500 text-stone-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.3)]"
+              : "text-muted-foreground hover:text-amber-300 hover:bg-white/5"
+          )}
         >
           Unread ({unreadCount})
         </button>
       </div>
 
-      {/* Content */}
+      {/* Content Stream */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-sm">Loading your activity updates...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+          <p className="text-sm font-mono text-muted-foreground">Consulting the archives...</p>
         </div>
       ) : filteredNotifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-2xl border border-dashed border-border bg-card/40 gap-3">
-          <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground">
-            <Inbox className="w-6 h-6" />
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border border-dashed border-amber-500/25 bg-card/60 gap-3 shadow-md">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+            <Inbox className="w-7 h-7" />
           </div>
-          <h3 className="font-serif text-base font-bold text-foreground">
-            {activeTab === "unread" ? "No unread notifications" : "No notifications yet"}
+          <h3 className="font-serif text-lg font-bold text-foreground">
+            {activeTab === "unread" ? "No unread alerts" : "No activity recorded yet"}
           </h3>
           <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
             {activeTab === "unread"
-              ? "You are all caught up on your reading and community updates!"
-              : "When authors publish new chapters or readers react to your reviews, they will appear here."}
+              ? "You are completely caught up on reading milestones and community alerts."
+              : "When authors publish new chapters or readers react to your reviews, alerts will appear right here."}
           </p>
           <Link href="/discover" className="mt-2">
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+            <Button size="sm" className="gap-1.5 text-xs bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold border-none">
               <span>Browse Stories</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3">
           {filteredNotifications.map((notification) => (
             <div
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
-              className={`group relative p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-4 ${
+              className={cn(
+                "group relative p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-4 shadow-sm",
                 notification.is_read
-                  ? "bg-card/40 border-border/60 hover:bg-secondary/40 text-foreground/80"
-                  : "bg-primary/[0.04] border-primary/25 hover:bg-primary/[0.08] text-foreground ring-1 ring-primary/10 shadow-2xs"
-              }`}
+                  ? "bg-card/70 border-border/60 hover:bg-card hover:border-amber-500/30 text-foreground/85"
+                  : "bg-amber-500/5 border-amber-500/30 hover:bg-amber-500/10 text-foreground shadow-[0_0_15px_rgba(245,158,11,0.1)] ring-1 ring-amber-500/20"
+              )}
             >
               {/* Icon Container */}
-              <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+              <div className="w-10 h-10 rounded-xl bg-stone-950/80 border border-amber-500/25 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
                 {getIconForType(notification.type)}
               </div>
 
               {/* Message Details */}
               <div className="flex-1 flex flex-col gap-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-semibold text-sm text-foreground">
+                  <h4 className="font-serif font-bold text-sm text-foreground">
                     {notification.title}
                   </h4>
-                  <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+                  <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap">
                     {formatTimeAgo(notification.created_at)}
                   </span>
                 </div>
@@ -269,7 +332,7 @@ export default function NotificationsPage() {
 
               {/* Unread indicator */}
               {!notification.is_read && (
-                <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 self-center" />
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0 self-center" />
               )}
             </div>
           ))}

@@ -61,8 +61,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 1. Navigation requests (HTML pages)
-  if (request.mode === "navigate") {
+  // 1. Navigation requests & Next.js RSC router requests
+  if (request.mode === "navigate" || request.headers.get("RSC") === "1" || url.searchParams.has("_rsc")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
