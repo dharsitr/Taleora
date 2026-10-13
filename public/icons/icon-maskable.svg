@@ -1,47 +1,163 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1c1917" />
-      <stop offset="100%" stop-color="#0c0a09" />
+    <!-- Background Gradients (Full bleed for adaptive maskable) -->
+    <radialGradient id="bgGlowMask" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#2a201b" />
+      <stop offset="45%" stop-color="#181310" />
+      <stop offset="85%" stop-color="#0e0b0a" />
+      <stop offset="100%" stop-color="#070605" />
+    </radialGradient>
+
+    <!-- Gold Foil Gradients -->
+    <linearGradient id="goldSheenMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="25%" stop-color="#f59e0b" />
+      <stop offset="60%" stop-color="#d97706" />
+      <stop offset="90%" stop-color="#b45309" />
+      <stop offset="100%" stop-color="#78350f" />
     </linearGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fbbf24" />
-      <stop offset="50%" stop-color="#d97706" />
+
+    <linearGradient id="goldLightMask" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="35%" stop-color="#fde68a" />
+      <stop offset="70%" stop-color="#f59e0b" />
       <stop offset="100%" stop-color="#b45309" />
     </linearGradient>
-    <linearGradient id="pages" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fdfbf7" />
-      <stop offset="100%" stop-color="#f3ede2" />
+
+    <!-- Parchment Page Gradients -->
+    <linearGradient id="pageLeftTopMask" x1="100%" y1="50%" x2="0%" y2="50%">
+      <stop offset="0%" stop-color="#e8ded1" />
+      <stop offset="20%" stop-color="#f7f3eb" />
+      <stop offset="70%" stop-color="#fffefb" />
+      <stop offset="100%" stop-color="#f3ebe0" />
     </linearGradient>
+
+    <linearGradient id="pageRightTopMask" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#e3d8ca" />
+      <stop offset="20%" stop-color="#f7f3eb" />
+      <stop offset="70%" stop-color="#fffefb" />
+      <stop offset="100%" stop-color="#f3ebe0" />
+    </linearGradient>
+
+    <linearGradient id="pageUnderMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c8bcaa" />
+      <stop offset="50%" stop-color="#ded4c5" />
+      <stop offset="100%" stop-color="#b8ab96" />
+    </linearGradient>
+
+    <radialGradient id="storyLightMask" cx="50%" cy="52%" r="40%">
+      <stop offset="0%" stop-color="#fde68a" stop-opacity="0.35" />
+      <stop offset="40%" stop-color="#f59e0b" stop-opacity="0.15" />
+      <stop offset="80%" stop-color="#b45309" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="ribbonGradMask" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b45309" />
+      <stop offset="35%" stop-color="#f59e0b" />
+      <stop offset="60%" stop-color="#fef08a" />
+      <stop offset="85%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#92400e" />
+    </linearGradient>
+
+    <linearGradient id="starGlowMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="50%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+
+    <filter id="bookShadowMask" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="28" stdDeviation="32" flood-color="#000000" flood-opacity="0.75" />
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+
+    <filter id="glowFilterMask" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
-  <!-- Full bleed background for maskable -->
-  <rect width="512" height="512" fill="url(#bg)" />
-  
-  <!-- Safe zone inner content (centered) -->
-  <g transform="translate(106, 140) scale(0.92)">
-    <!-- Book Shadow -->
-    <path d="M 160 234 C 112 224, 48 230, 10 252 L 10 74 C 48 52, 112 48, 160 70 C 208 48, 272 52, 310 74 L 310 252 C 272 230, 208 224, 160 234 Z" fill="#000000" opacity="0.45" transform="translate(0, 10)" />
-    
-    <!-- Left Leaf / Page -->
-    <path d="M 160 224 C 112 214, 48 220, 10 242 L 10 64 C 48 42, 112 38, 160 60 Z" fill="url(#pages)" />
-    <path d="M 160 224 C 112 214, 48 220, 10 242 L 10 64 C 48 42, 112 38, 160 60 Z" fill="url(#gold)" opacity="0.08" />
-    <line x1="42" y1="96" x2="128" y2="88" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
-    <line x1="42" y1="122" x2="128" y2="114" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
-    <line x1="42" y1="148" x2="118" y2="140" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
-    <line x1="42" y1="174" x2="108" y2="166" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
-    
-    <!-- Right Leaf / Page -->
-    <path d="M 160 224 C 208 214, 272 220, 310 242 L 310 64 C 272 42, 208 38, 160 60 Z" fill="url(#pages)" />
-    <path d="M 160 224 C 208 214, 272 220, 310 242 L 310 64 C 272 42, 208 38, 160 60 Z" fill="url(#gold)" opacity="0.12" />
-    <line x1="192" y1="88" x2="278" y2="96" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
-    <line x1="192" y1="114" x2="278" y2="122" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
-    <line x1="192" y1="140" x2="268" y2="148" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
-    <line x1="192" y1="166" x2="258" y2="174" stroke="#78716c" stroke-width="6.5" stroke-linecap="round" opacity="0.4" />
 
-    <!-- Center Spine Crease -->
-    <path d="M 160 60 L 160 224" stroke="url(#gold)" stroke-width="8" stroke-linecap="round" />
+  <!-- Full Bleed Square (Safe for circular/squircle masking) -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bgGlowMask)" />
 
-    <!-- Golden Silk Ribbon Bookmark -->
-    <path d="M 160 44 L 160 140 L 173 126 L 186 140 L 186 46 Z" fill="url(#gold)" />
+  <!-- Ambient Light Core -->
+  <circle cx="512" cy="512" r="420" fill="url(#storyLightMask)" />
+
+  <!-- Centered Scaled Content to stay within 80% safe zone -->
+  <g transform="translate(112, 102) scale(0.78)">
+    <g filter="url(#bookShadowMask)">
+      <path d="M 512 730 C 410 706, 275 722, 192 762 L 192 485 C 275 442, 410 430, 512 452 C 614 430, 749 442, 832 485 L 832 762 C 749 722, 614 706, 512 730 Z"
+            fill="#45382b" opacity="0.6" />
+
+      <path d="M 512 718 C 412 696, 280 710, 202 748 L 202 476 C 280 436, 412 424, 512 444 C 612 424, 744 436, 822 476 L 822 748 C 744 710, 612 696, 512 718 Z"
+            fill="url(#pageUnderMask)" />
+
+      <path d="M 512 702 C 415 674, 290 686, 214 728 C 210 710, 208 510, 214 466 C 290 422, 415 410, 512 432 Z"
+            fill="url(#pageLeftTopMask)" />
+
+      <path d="M 512 702 C 609 674, 734 686, 810 728 C 814 710, 816 510, 810 466 C 734 422, 609 410, 512 432 Z"
+            fill="url(#pageRightTopMask)" />
+
+      <g opacity="0.28" stroke="#8b7355" stroke-width="5" stroke-linecap="round">
+        <line x1="285" y1="504" x2="455" y2="486" />
+        <line x1="285" y1="544" x2="455" y2="526" />
+        <line x1="285" y1="584" x2="435" y2="566" />
+        <line x1="285" y1="624" x2="415" y2="606" />
+      </g>
+
+      <g opacity="0.28" stroke="#8b7355" stroke-width="5" stroke-linecap="round">
+        <line x1="569" y1="486" x2="739" y2="504" />
+        <line x1="569" y1="526" x2="739" y2="544" />
+        <line x1="589" y1="566" x2="739" y2="584" />
+        <line x1="609" y1="606" x2="739" y2="624" />
+      </g>
+
+      <path d="M 512 432 C 496 520, 496 615, 512 702 C 528 615, 528 520, 512 432 Z"
+            fill="#1c1612" opacity="0.45" />
+
+      <line x1="512" y1="428" x2="512" y2="705"
+            stroke="url(#goldSheenMask)" stroke-width="4.5" stroke-linecap="round" />
+
+      <path d="M 512 410 Q 528 540, 560 660 L 588 775 L 560 755 L 532 775 L 522 650 Q 508 535, 512 410 Z"
+            fill="#000000" opacity="0.35" transform="translate(6, 12)" />
+
+      <path d="M 508 405 C 514 490, 532 580, 558 668 L 582 768 L 556 746 L 530 766 C 520 670, 508 580, 504 405 Z"
+            fill="url(#ribbonGradMask)" />
+
+      <path d="M 512 405 C 516 490, 533 580, 556 665 L 560 665 C 536 580, 520 490, 516 405 Z"
+            fill="#fef08a" opacity="0.75" />
+    </g>
+
+    <!-- Star Glow -->
+    <g filter="url(#glowFilterMask)">
+      <path d="M 512 260 Q 512 320, 538 335 Q 512 350, 512 410 Q 512 350, 486 335 Q 512 320, 512 260 Z"
+            fill="url(#starGlowMask)" />
+
+      <path d="M 437 335 Q 490 335, 512 318 Q 534 335, 587 335 Q 534 335, 512 352 Q 490 335, 437 335 Z"
+            fill="url(#starGlowMask)" />
+
+      <path d="M 466 289 Q 505 328, 512 335 Q 519 342, 558 381 Q 519 342, 512 335 Q 505 328, 466 289 Z"
+            stroke="url(#goldLightMask)" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+
+      <path d="M 558 289 Q 519 328, 512 335 Q 505 342, 466 381 Q 505 342, 512 335 Q 519 328, 558 289 Z"
+            stroke="url(#goldLightMask)" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+
+      <circle cx="512" cy="335" r="9" fill="#ffffff" />
+      <circle cx="512" cy="335" r="22" fill="#fde68a" opacity="0.6" />
+      <circle cx="512" cy="335" r="45" fill="#f59e0b" opacity="0.25" />
+
+      <path d="M 388 385 Q 388 397, 396 401 Q 388 405, 388 417 Q 388 405, 380 401 Q 388 397, 388 385 Z"
+            fill="#fde68a" opacity="0.85" />
+
+      <path d="M 648 375 Q 648 390, 658 395 Q 648 400, 648 415 Q 648 400, 638 395 Q 648 390, 648 375 Z"
+            fill="#fef08a" opacity="0.9" />
+
+      <circle cx="440" cy="425" r="3.5" fill="#fde68a" opacity="0.7" />
+      <circle cx="584" cy="420" r="4" fill="#fde68a" opacity="0.75" />
+      <circle cx="512" cy="225" r="2.5" fill="#ffffff" opacity="0.8" />
+    </g>
   </g>
 </svg>
