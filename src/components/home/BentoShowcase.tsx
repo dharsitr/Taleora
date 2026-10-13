@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getUserReadingStats } from "@/lib/stats/queries";
-import { getCurrentWeekDays } from "@/lib/stats/home";
+import { getCurrentWeekDays } from "@/lib/stats/week";
 import type { BookWithAuthorAndGenres } from "@/types/books";
 import type { UserHomeStats, UserStatsPayload } from "@/types/stats";
 

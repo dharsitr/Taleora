@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getBooks } from "@/lib/books/queries";
 import { getUserHomeStats } from "@/lib/stats/home";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Taleora · Modern Story & Book Reader",
   description:
