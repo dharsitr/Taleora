@@ -26,6 +26,7 @@ import { OfflineDownloadButton } from "@/components/offline/OfflineDownloadButto
 import { ChapterList } from "@/components/books/ChapterList";
 import { AuthorCard } from "@/components/books/AuthorCard";
 import { BookReviewsSection } from "@/components/social";
+import { cn } from "@/lib/utils";
 
 interface BookPageProps {
   params: Promise<{
