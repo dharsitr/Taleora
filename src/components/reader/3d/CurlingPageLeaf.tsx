@@ -115,6 +115,7 @@ export function CurlingPageLeaf({
 
         let newX = origX;
         let newY = origY;
+        let newZ = 0;
 
         if (direction === "next") {
           // Turning forward: right -> left (angle 0 -> -PI)

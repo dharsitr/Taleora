@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { BookScene3D } from "./BookScene3D";
 import { BookPage } from "../usePagePaginator";
 import { ChapterRow, HighlightRow, ReaderSettings } from "@/types/books";
@@ -35,6 +36,38 @@ interface BookCanvas3DProps {
   prefersReducedMotion?: boolean;
 }
 
+/**
+ * Camera controller that smoothly transitions framing based on device dimensions,
+ * active page on mobile, and desktop spreads.
+ */
+function ResponsiveCameraRig({
+  targetX,
+  targetZ,
+  mouseOffset,
+  prefersReducedMotion,
+}: {
+  targetX: number;
+  targetZ: number;
+  mouseOffset: { x: number; y: number };
+  prefersReducedMotion?: boolean;
+}) {
+  const { camera } = useThree();
+
+  useFrame((_, delta) => {
+    const speed = prefersReducedMotion ? 14 : 5.2;
+    const destX = targetX + mouseOffset.x;
+    const destY = 0.1 + mouseOffset.y;
+    const destZ = targetZ;
+
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, destX, speed, delta);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, destY, speed, delta);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, destZ, speed, delta);
+    camera.lookAt(camera.position.x, 0, 0);
+  });
+
+  return null;
+}
+
 export function BookCanvas3D({
   pages,
   pageNumber,
@@ -60,38 +93,91 @@ export function BookCanvas3D({
   coverImageUrl: _coverImageUrl,
   prefersReducedMotion = false,
 }: BookCanvas3DProps) {
-  // Mobile / desktop screen detection for camera distance
-  const [isMobile, setIsMobile] = React.useState(false);
+  // Viewport tracking for fluid responsive framing on mobile & laptop
+  const [viewport, setViewport] = React.useState<{
+    width: number;
+    height: number;
+    aspect: number;
+  }>({
+    width: typeof window !== "undefined" ? window.innerWidth : 1200,
+    height: typeof window !== "undefined" ? window.innerHeight : 800,
+    aspect: typeof window !== "undefined" ? window.innerWidth / Math.max(1, window.innerHeight) : 1.5,
+  });
 
   React.useEffect(() => {
-    const checkSize = () => {
-      setIsMobile(window.innerWidth < 768);
+    const updateSize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setViewport({
+        width: w,
+        height: h,
+        aspect: w / Math.max(1, h),
+      });
     };
-    checkSize();
-    window.addEventListener("resize", checkSize);
-    return () => window.removeEventListener("resize", checkSize);
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Subtle interactive parallax tilt based on mouse position
+  const isMobileLayout = viewport.width < 768 || viewport.aspect < 1.15;
+
+  // Subtle interactive parallax tilt based on mouse position (desktop only)
   const [mouseOffset, setMouseOffset] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const handleMouseMove = React.useCallback(
     (e: React.MouseEvent) => {
-      if (coverState !== "open") return;
+      if (coverState !== "open" || isMobileLayout) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-      // Gentle subtle tilt (max ~0.08 radians)
       setMouseOffset({ x: nx * 0.08, y: -ny * 0.06 });
     },
-    [coverState]
+    [coverState, isMobileLayout]
   );
 
   const handleMouseLeave = React.useCallback(() => {
     setMouseOffset({ x: 0, y: 0 });
   }, []);
 
-  const cameraZ = isMobile ? 7.6 : 5.85;
+  // Compute mathematically ideal camera distance and center X
+  const cameraFraming = React.useMemo(() => {
+    const tanFovHalf = Math.tan((34 * Math.PI) / 360); // ~0.3057
+    const aspect = Math.max(0.35, viewport.aspect);
+
+    if (coverState === "closed") {
+      const closedWidth = 2.46;
+      const closedHeight = 3.50;
+      const zHeight = (closedHeight * 1.16) / (2 * tanFovHalf);
+      const zWidth = (closedWidth * 1.25) / (2 * tanFovHalf * aspect);
+      return {
+        x: 0,
+        z: Math.max(5.8, Math.max(zHeight, zWidth)),
+      };
+    }
+
+    if (isMobileLayout) {
+      // Mobile / Portrait: Focus on active reading page
+      const pageWidth = 2.38;
+      const pageHeight = 3.34;
+      const zHeight = (pageHeight * 1.14) / (2 * tanFovHalf);
+      const zWidth = (pageWidth * 1.18) / (2 * tanFovHalf * aspect);
+      const activePageX = pageNumber % 2 === 1 ? -pageWidth / 2 : pageWidth / 2;
+      return {
+        x: activePageX,
+        z: Math.max(5.6, Math.max(zHeight, zWidth)),
+      };
+    }
+
+    // Laptop / Desktop: Center the two-page reading spread
+    const spreadWidth = 4.92;
+    const spreadHeight = 3.50;
+    const zHeight = (spreadHeight * 1.15) / (2 * tanFovHalf);
+    const zWidth = (spreadWidth * 1.15) / (2 * tanFovHalf * aspect);
+    return {
+      x: 0,
+      z: Math.max(5.85, Math.max(zHeight, zWidth)),
+    };
+  }, [coverState, isMobileLayout, viewport.aspect, pageNumber]);
 
   return (
     <div
@@ -99,7 +185,7 @@ export function BookCanvas3D({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Floating Prev Page Chevron */}
+      {/* Floating Prev Page Chevron (Desktop only) */}
       {coverState === "open" && (
         <button
           type="button"
@@ -117,7 +203,7 @@ export function BookCanvas3D({
         </button>
       )}
 
-      {/* Floating Next Page Chevron */}
+      {/* Floating Next Page Chevron (Desktop only) */}
       {coverState === "open" && (
         <button
           type="button"
@@ -146,7 +232,7 @@ export function BookCanvas3D({
         <Canvas
           shadows
           camera={{
-            position: [mouseOffset.x, mouseOffset.y + 0.1, cameraZ],
+            position: [cameraFraming.x, 0.1, cameraFraming.z],
             fov: 34,
             near: 0.1,
             far: 50,
@@ -158,6 +244,12 @@ export function BookCanvas3D({
           }}
           dpr={typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 2) : 1}
         >
+          <ResponsiveCameraRig
+            targetX={cameraFraming.x}
+            targetZ={cameraFraming.z}
+            mouseOffset={mouseOffset}
+            prefersReducedMotion={prefersReducedMotion}
+          />
           <BookScene3D
             pages={pages}
             pageNumber={pageNumber}
@@ -179,25 +271,25 @@ export function BookCanvas3D({
 
       {/* Closed Book State Action Prompt Overlay */}
       {coverState === "closed" && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-end pb-12 sm:pb-16 pointer-events-none">
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-end pb-8 sm:pb-12 md:pb-16 pointer-events-none px-4">
           <button
             type="button"
             onClick={onOpenBook}
-            className="pointer-events-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-zinc-950 font-serif font-bold text-sm sm:text-base shadow-2xl flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 cursor-pointer ring-2 ring-amber-400/50"
+            className="pointer-events-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-zinc-950 font-serif font-bold text-sm sm:text-base shadow-2xl flex items-center gap-2.5 sm:gap-3 transition-all transform hover:scale-105 active:scale-95 cursor-pointer ring-2 ring-amber-400/50"
           >
-            <BookOpen className="w-5 h-5" />
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Open Book</span>
           </button>
         </div>
       )}
 
-      {/* Interactive Page Margins for Click-to-Turn */}
+      {/* Interactive Page Margins for Click/Tap-to-Turn */}
       {coverState === "open" && !isTurning && (
         <>
           <div
             onClick={onPrevPage}
             className={cn(
-              "absolute inset-y-0 left-0 w-1/4 z-20 cursor-w-resize",
+              "absolute inset-y-0 left-0 w-1/3 sm:w-1/4 z-20 cursor-w-resize",
               !hasPrev && "pointer-events-none"
             )}
             title="Click to turn to previous page"
@@ -205,7 +297,7 @@ export function BookCanvas3D({
           <div
             onClick={onNextPage}
             className={cn(
-              "absolute inset-y-0 right-0 w-1/4 z-20 cursor-e-resize",
+              "absolute inset-y-0 right-0 w-1/3 sm:w-1/4 z-20 cursor-e-resize",
               !hasNext && "pointer-events-none"
             )}
             title="Click to turn to next page"
