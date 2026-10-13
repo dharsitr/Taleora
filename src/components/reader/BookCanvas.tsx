@@ -561,7 +561,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
           <div className="absolute inset-y-2 right-0 w-2.5 rounded-r-md book-pages-stack-right pointer-events-none" />
 
           {/* Book Inner Spread Container */}
-          <div className="relative w-full h-full flex rounded-xl overflow-hidden book-preserve-3d shadow-inner">
+          <div className="relative w-full h-full flex rounded-xl overflow-visible book-preserve-3d shadow-inner">
             {/* Silk Ribbon Bookmark at the Top Spine */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 book-ribbon pointer-events-none" />
 

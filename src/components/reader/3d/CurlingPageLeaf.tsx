@@ -16,7 +16,7 @@ interface CurlingPageLeafProps {
 
 /**
  * Realistic 3D turning leaf with authentic vertex curling, bending, and shadow casting.
- * Text is guaranteed never to appear reversed, mirrored, or flipped on either face.
+ * Text is guaranteed never to appear reversed, mirrored, or inverted on either face.
  */
 export function CurlingPageLeaf({
   width,
@@ -30,10 +30,13 @@ export function CurlingPageLeaf({
   const frontMeshRef = React.useRef<THREE.Mesh>(null);
   const backMeshRef = React.useRef<THREE.Mesh>(null);
 
+  const gridX = 54;
+  const gridY = 28;
+  const stride = gridX + 1; // 55 vertices per row
+
   // High-density plane geometry for smooth organic curvature
   const geometry = React.useMemo(() => {
-    // 54 segments horizontally, 28 vertically
-    const geom = new THREE.PlaneGeometry(width, height, 54, 28);
+    const geom = new THREE.PlaneGeometry(width, height, gridX, gridY);
     // Align origin to spine (x = 0)
     if (direction === "next") {
       geom.translate(width / 2, 0, 0);
@@ -43,16 +46,31 @@ export function CurlingPageLeaf({
     return geom;
   }, [width, height, direction]);
 
-  // Back face geometry with flipped UV.x so Verso text is NEVER mirrored
+  // Back face geometry: inverted UV.x and reversed winding so Verso text is right-reading
   const backGeometry = React.useMemo(() => {
     const geom = geometry.clone();
+
+    // Invert horizontal UV coordinate for the back face
     const uvs = geom.attributes.uv;
     for (let i = 0; i < uvs.count; i++) {
       const u = uvs.getX(i);
-      // Invert horizontal UV coordinate for the back face
       uvs.setX(i, 1.0 - u);
     }
     uvs.needsUpdate = true;
+
+    // Flip triangle winding so the back face is front-facing when turned over
+    const index = geom.index;
+    if (index) {
+      const arr = index.array;
+      for (let i = 0; i < arr.length; i += 3) {
+        const tmp = arr[i + 1];
+        arr[i + 1] = arr[i + 2];
+        arr[i + 2] = tmp;
+      }
+      index.needsUpdate = true;
+    }
+
+    geom.computeVertexNormals();
     return geom;
   }, [geometry]);
 
@@ -79,29 +97,28 @@ export function CurlingPageLeaf({
       const count = posAttr.count;
 
       for (let i = 0; i < count; i++) {
-        // Retrieve original grid coordinates
-        let origX = 0;
-        let origY = 0;
+        const ix = i % stride;
+        const iy = Math.floor(i / stride);
 
+        // Three.js PlaneGeometry: iy = 0 is top (+height/2), iy = gridY is bottom (-height/2)
+        const origY = (0.5 - iy / gridY) * height;
+        const normalizedV = 1.0 - iy / gridY; // 0 at bottom, 1 at top
+
+        let origX = 0;
         if (direction === "next") {
-          origX = (i % 55) * (width / 54);
-          origY = (Math.floor(i / 55) / 28 - 0.5) * height;
+          origX = ix * (width / gridX);
         } else {
-          origX = -width + (i % 55) * (width / 54);
-          origY = (Math.floor(i / 55) / 28 - 0.5) * height;
+          origX = -width + ix * (width / gridX);
         }
 
         const normalizedU = Math.abs(origX) / width; // 0 at spine, 1 at outer edge
-        const normalizedV = (origY + height * 0.5) / height; // 0 at bottom, 1 at top
 
         let newX = origX;
         let newY = origY;
-        let newZ = isBack ? -0.002 : 0.002;
 
         if (direction === "next") {
           // Turning forward: right -> left (angle 0 -> -PI)
           const baseAngle = -smoothT * Math.PI;
-          // Outer edge lags slightly in angle, creating natural flex
           const angleLag = curlPeak * normalizedU * 0.38 * Math.sin(normalizedU * Math.PI * 0.9);
           const currentAngle = baseAngle - angleLag;
 
@@ -110,9 +127,12 @@ export function CurlingPageLeaf({
           // Diagonal corner lift (thumb peeling page from bottom outer corner)
           const cornerLift = curlPeak * (1.0 - normalizedV) * normalizedU * (width * 0.14);
 
+          // Dynamic Z bias ensures the camera-facing side is always slightly in front
+          const dynamicZBias = (isBack ? -1 : 1) * Math.cos(currentAngle) * 0.002;
+
           const r = normalizedU * width;
           newX = r * Math.cos(currentAngle);
-          newZ = -r * Math.sin(currentAngle) + archHeight + cornerLift * 0.5 + (isBack ? -0.002 : 0.002);
+          newZ = -r * Math.sin(currentAngle) + archHeight + cornerLift * 0.5 + dynamicZBias;
           newY = origY + cornerLift * 0.25;
         } else {
           // Turning backward: left -> right (angle -PI -> 0)
@@ -123,9 +143,11 @@ export function CurlingPageLeaf({
           const archHeight = curlPeak * Math.sin(normalizedU * Math.PI) * (width * 0.32);
           const cornerLift = curlPeak * (1.0 - normalizedV) * normalizedU * (width * 0.14);
 
+          const dynamicZBias = (isBack ? 1 : -1) * Math.cos(currentAngle) * 0.002;
+
           const r = normalizedU * width;
           newX = r * Math.cos(currentAngle);
-          newZ = -r * Math.sin(currentAngle) + archHeight + cornerLift * 0.5 + (isBack ? -0.002 : 0.002);
+          newZ = -r * Math.sin(currentAngle) + archHeight + cornerLift * 0.5 + dynamicZBias;
           newY = origY + cornerLift * 0.25;
         }
 
@@ -155,7 +177,7 @@ export function CurlingPageLeaf({
         />
       </mesh>
 
-      {/* Back Face (Verso): Next Landing Page (Never Mirrored) */}
+      {/* Back Face (Verso): Next Landing Page (Never Inverted or Mirrored) */}
       <mesh
         ref={backMeshRef}
         geometry={backGeometry}
@@ -166,7 +188,7 @@ export function CurlingPageLeaf({
           map={backTexture}
           roughness={0.7}
           metalness={0.05}
-          side={THREE.BackSide}
+          side={THREE.FrontSide}
           shadowSide={THREE.DoubleSide}
         />
       </mesh>
