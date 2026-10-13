@@ -590,12 +590,6 @@ export function createHardcoverTexture({
     g.fillText("ARCHIVE EDITION", width / 2, height / 2 + 60);
   }
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.generateMipmaps = true;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
   return texture;
 }
 
