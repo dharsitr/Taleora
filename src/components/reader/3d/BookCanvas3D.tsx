@@ -136,7 +136,13 @@ export function BookCanvas3D({
       )}
 
       {/* Three.js + React Three Fiber WebGL Canvas */}
-      <div className="w-full h-full absolute inset-0 z-10">
+      <div
+        className={cn(
+          "w-full h-full absolute inset-0 z-10",
+          coverState === "closed" && "cursor-pointer"
+        )}
+        onClick={coverState === "closed" ? onOpenBook : undefined}
+      >
         <Canvas
           shadows
           camera={{
@@ -166,6 +172,7 @@ export function BookCanvas3D({
             coverState={coverState}
             authorName={authorName}
             prefersReducedMotion={prefersReducedMotion}
+            onOpenBook={onOpenBook}
           />
         </Canvas>
       </div>

@@ -12,6 +12,7 @@ interface HardcoverCasingProps {
   backCoverTexture: THREE.CanvasTexture;
   theme: string;
   coverState: "closed" | "opening" | "open" | "closing";
+  openProgressRef: React.MutableRefObject<number>;
   onOpenBook?: () => void;
 }
 
@@ -23,9 +24,10 @@ export function HardcoverCasing({
   backCoverTexture,
   theme,
   coverState,
+  openProgressRef,
+  onOpenBook,
 }: HardcoverCasingProps) {
   const frontCoverGroupRef = React.useRef<THREE.Group>(null);
-  const openProgressRef = React.useRef<number>(coverState === "closed" ? 0 : 1);
 
   const overhang = 0.08;
   const coverWidth = pageWidth + overhang;
@@ -41,39 +43,18 @@ export function HardcoverCasing({
       : "#1c1410";
 
   const spineRadius = (bookThickness + boardThickness * 2) / 2;
+  const boardZOffset = bookThickness / 2 + boardThickness / 2;
 
-    const boardZOffset = bookThickness / 2 + boardThickness / 2;
-
-    useFrame((_, delta) => {
-      let target = 1; // open
-      if (coverState === "closed") {
-        target = 0;
-      } else if (coverState === "closing") {
-        target = 0;
-      } else if (coverState === "opening") {
-        target = 1;
-      } else if (coverState === "open") {
-        target = 1;
-      }
-
-      // Smooth spring-damped interpolation for authentic heavy hardcover swing
-      const speed = 4.2;
-      openProgressRef.current = THREE.MathUtils.damp(
-        openProgressRef.current,
-        target,
-        speed,
-        delta
-      );
-
-      if (frontCoverGroupRef.current) {
-        // Rotate around spine hinge from 0 (closed over right) to -PI (open to left)
-        const currentAngle = -(openProgressRef.current * Math.PI);
-        // Move Z from +boardZOffset (closed, on top) down to -boardZOffset (open, under paper stack)
-        const currentZ = boardZOffset * Math.cos(openProgressRef.current * Math.PI);
-        frontCoverGroupRef.current.position.z = currentZ;
-        frontCoverGroupRef.current.rotation.y = currentAngle;
-      }
-    });
+  useFrame(() => {
+    if (frontCoverGroupRef.current) {
+      // Rotate around spine hinge from 0 (closed over right) to -PI (open to left)
+      const currentAngle = -(openProgressRef.current * Math.PI);
+      // Move Z from +boardZOffset (closed, on top) down to -boardZOffset (open, under paper stack)
+      const currentZ = boardZOffset * Math.cos(openProgressRef.current * Math.PI);
+      frontCoverGroupRef.current.position.z = currentZ;
+      frontCoverGroupRef.current.rotation.y = currentAngle;
+    }
+  });
 
   return (
     <group position={[0, 0, 0]}>
@@ -171,6 +152,7 @@ export function HardcoverCasing({
         ref={frontCoverGroupRef}
         position={[0, 0, coverState === "closed" ? boardZOffset : -boardZOffset]}
         rotation={[0, coverState === "closed" ? 0 : -Math.PI, 0]}
+        onClick={coverState === "closed" ? onOpenBook : undefined}
       >
         {/* Outer Front Cover Artwork Face */}
         <mesh

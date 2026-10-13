@@ -29,6 +29,7 @@ interface BookScene3DProps {
   authorName?: string;
   prefersReducedMotion?: boolean;
   onPageTurnComplete?: () => void;
+  onOpenBook?: () => void;
 }
 
 export function BookScene3D({
@@ -46,11 +47,18 @@ export function BookScene3D({
   authorName,
   prefersReducedMotion = false,
   onPageTurnComplete,
+  onOpenBook,
 }: BookScene3DProps) {
   // 3D Physical Scale
   const pageWidth = 2.38;
   const pageHeight = 3.34;
   const bookThickness = 0.28;
+  const overhang = 0.08;
+  const coverWidth = pageWidth + overhang;
+
+  // Root physical book group & cover state animation ref
+  const bookGroupRef = React.useRef<THREE.Group>(null);
+  const openProgressRef = React.useRef<number>(coverState === "closed" ? 0 : 1);
 
   // Spreads: Left is odd (1, 3, 5...), Right is even (2, 4, 6...)
   const effectiveLeftPageNum =
@@ -238,18 +246,37 @@ export function BookScene3D({
     }
   }, [isTurning]);
 
-  useFrame(() => {
-    if (!isTurning || turnStartTimeRef.current === null) return;
+  useFrame((_, delta) => {
+    // 1. Cover Open/Close animation interpolation & book centering
+    const target = coverState === "closed" || coverState === "closing" ? 0 : 1;
+    const speed = prefersReducedMotion ? 12 : 4.5;
+    openProgressRef.current = THREE.MathUtils.damp(
+      openProgressRef.current,
+      target,
+      speed,
+      delta
+    );
 
-    const duration = prefersReducedMotion ? 180 : 540;
-    const elapsed = performance.now() - turnStartTimeRef.current;
-    const p = Math.min(1, elapsed / duration);
-    setTurnProgress(p);
+    // Center the single closed book at world x = 0; center 2-page spread when open
+    if (bookGroupRef.current) {
+      const offsetX = -(1 - openProgressRef.current) * (coverWidth / 2);
+      bookGroupRef.current.position.x = offsetX;
+    }
 
-    if (p >= 1 && onPageTurnComplete) {
-      onPageTurnComplete();
+    // 2. Turning page leaf animation driver
+    if (isTurning && turnStartTimeRef.current !== null) {
+      const duration = prefersReducedMotion ? 180 : 540;
+      const elapsed = performance.now() - turnStartTimeRef.current;
+      const p = Math.min(1, elapsed / duration);
+      setTurnProgress(p);
+
+      if (p >= 1 && onPageTurnComplete) {
+        onPageTurnComplete();
+      }
     }
   });
+
+  const initialOffsetX = coverState === "closed" ? -(coverWidth / 2) : 0;
 
   return (
     <group position={[0, 0, 0]}>
@@ -282,71 +309,78 @@ export function BookScene3D({
         <shadowMaterial opacity={settings.theme === "dark" ? 0.6 : 0.28} />
       </mesh>
 
-      {/* 3. HARDCOVER CASING */}
-      <HardcoverCasing
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-        bookThickness={bookThickness}
-        coverTexture={coverTexture}
-        backCoverTexture={backCoverTexture}
-        theme={settings.theme}
-        coverState={coverState}
-      />
-
-      {/* 4. PAPER BLOCK (Layered thickness with stacked page edge texture) */}
-      <PaperBlock
-        pageWidth={pageWidth}
-        pageHeight={pageHeight}
-        totalThickness={bookThickness}
-        currentPage={pageNumber}
-        totalPages={totalPages}
-        paperEdgesTexture={paperEdgesTexture}
-        theme={settings.theme}
-      />
-
-      {/* 5. STATIC OPEN SPREAD (Visible when book is open) */}
-      {coverState === "open" && (
-        <group position={[0, 0, 0.015]}>
-          {/* Base Left Page */}
-          <mesh
-            position={[-pageWidth / 2, 0, 0]}
-            geometry={leftPageGeom}
-            receiveShadow
-          >
-            <meshStandardMaterial
-              map={isTurning && turnDirection === "prev" ? prevLeftTexture : leftPageTexture}
-              roughness={0.75}
-              metalness={0.02}
-            />
-          </mesh>
-
-          {/* Base Right Page */}
-          <mesh
-            position={[pageWidth / 2, 0, 0]}
-            geometry={rightPageGeom}
-            receiveShadow
-          >
-            <meshStandardMaterial
-              map={isTurning && turnDirection === "next" ? nextRightTexture : rightPageTexture}
-              roughness={0.75}
-              metalness={0.02}
-            />
-          </mesh>
-        </group>
-      )}
-
-      {/* 7. DYNAMIC CURLING PAGE LEAF (Active exclusively during page turn) */}
-      {isTurning && coverState === "open" && (
-        <CurlingPageLeaf
-          width={pageWidth}
-          height={pageHeight}
-          progress={turnProgress}
-          direction={turnDirection || "next"}
-          frontTexture={turnDirection === "next" ? rightPageTexture : leftPageTexture}
-          backTexture={turnDirection === "next" ? nextLeftTexture : prevRightTexture}
-          prefersReducedMotion={prefersReducedMotion}
+      {/* 3. PHYSICAL 3D BOOK ASSEMBLY */}
+      <group ref={bookGroupRef} position={[initialOffsetX, 0, 0]}>
+        {/* Hardcover Casing */}
+        <HardcoverCasing
+          pageWidth={pageWidth}
+          pageHeight={pageHeight}
+          bookThickness={bookThickness}
+          coverTexture={coverTexture}
+          backCoverTexture={backCoverTexture}
+          theme={settings.theme}
+          coverState={coverState}
+          openProgressRef={openProgressRef}
+          onOpenBook={onOpenBook}
         />
-      )}
+
+        {/* Paper Block (Single solid block when closed; split stacks when open) */}
+        <PaperBlock
+          pageWidth={pageWidth}
+          pageHeight={pageHeight}
+          totalThickness={bookThickness}
+          currentPage={pageNumber}
+          totalPages={totalPages}
+          paperEdgesTexture={paperEdgesTexture}
+          theme={settings.theme}
+          coverState={coverState}
+          openProgressRef={openProgressRef}
+        />
+
+        {/* Static Open Spread (Visible when book is opening, open, or closing) */}
+        {coverState !== "closed" && (
+          <group position={[0, 0, 0.015]}>
+            {/* Base Left Page */}
+            <mesh
+              position={[-pageWidth / 2, 0, 0]}
+              geometry={leftPageGeom}
+              receiveShadow
+            >
+              <meshStandardMaterial
+                map={isTurning && turnDirection === "prev" ? prevLeftTexture : leftPageTexture}
+                roughness={0.75}
+                metalness={0.02}
+              />
+            </mesh>
+
+            {/* Base Right Page */}
+            <mesh
+              position={[pageWidth / 2, 0, 0]}
+              geometry={rightPageGeom}
+              receiveShadow
+            >
+              <meshStandardMaterial
+                map={isTurning && turnDirection === "next" ? nextRightTexture : rightPageTexture}
+                roughness={0.75}
+                metalness={0.02}
+              />
+            </mesh>
+          </group>
+        )}
+
+        {/* Dynamic Curling Page Leaf (Active exclusively during page turn) */}
+        {isTurning && coverState === "open" && (
+          <CurlingPageLeaf
+            width={pageWidth}
+            height={pageHeight}
+            progress={turnProgress}
+            direction={turnDirection || "next"}
+            frontTexture={turnDirection === "next" ? rightPageTexture : leftPageTexture}
+            backTexture={turnDirection === "next" ? nextLeftTexture : prevRightTexture}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+        )}
+      </group>
     </group>
   );
 }
