@@ -25,7 +25,7 @@ export interface NavItemDef {
 }
 
 export const MAIN_NAV_ITEMS: NavItemDef[] = [
-  { label: "Discover", href: "/", icon: Compass },
+  { label: "Discover", href: "/discover", icon: Compass },
   { label: "My Library", href: "/library", icon: Library },
   { label: "Saved Bookmarks", href: "/bookmarks", icon: BookMarked },
   { label: "Reading Goals", href: "/goals", icon: Target },

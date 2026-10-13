@@ -2,7 +2,7 @@ import * as React from "react";
 import { HeroSection } from "@/components/home/HeroSection";
 import { ContinueReadingCard } from "@/components/home/ContinueReadingCard";
 import { CuratedShelves } from "@/components/home/CuratedShelves";
-import { ReadingPhilosophy } from "@/components/home/ReadingPhilosophy";
+import { BentoShowcase } from "@/components/home/BentoShowcase";
 import { createClient } from "@/lib/supabase/server";
 import { getBooks } from "@/lib/books/queries";
 
@@ -49,15 +49,19 @@ async function UserContinueReading() {
 
 export default async function Home() {
   const books = await getBooks({ sort: "newest" });
+  const featuredBook = books.length > 0 ? books[0] : null;
 
   return (
-    <div className="flex flex-col gap-10">
-      <HeroSection />
+    <div className="flex flex-col gap-12 sm:gap-16">
+      <HeroSection featuredBook={featuredBook} />
+
       <React.Suspense fallback={null}>
         <UserContinueReading />
       </React.Suspense>
+
+      <BentoShowcase books={books} />
+
       <CuratedShelves books={books} />
-      <ReadingPhilosophy />
     </div>
   );
 }

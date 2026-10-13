@@ -45,14 +45,20 @@ export function AppShell({ children }: AppShellProps) {
       <Navbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
 
       {/* Main Layout Area */}
-      <div className="flex-1 flex w-full max-w-7xl mx-auto">
-        {/* Desktop Sidebar */}
-        <Sidebar />
+      <div className={`flex-1 flex w-full ${pathname === "/" || pathname.startsWith("/books/") || pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password") ? "" : "max-w-7xl mx-auto"}`}>
+        {/* Desktop Sidebar (hidden on landing, book details, and auth pages) */}
+        {pathname !== "/" && !pathname.startsWith("/books/") && !pathname.startsWith("/login") && !pathname.startsWith("/signup") && !pathname.startsWith("/forgot-password") && !pathname.startsWith("/reset-password") && <Sidebar />}
 
         {/* Content Container */}
         <main
           id="main-content"
-          className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 flex flex-col gap-8"
+          className={`flex-1 min-w-0 flex flex-col ${
+            pathname === "/" || pathname.startsWith("/books/")
+              ? "w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 gap-10 sm:gap-14"
+              : pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password")
+              ? "w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
+              : "p-4 sm:p-6 lg:p-8 gap-8"
+          }`}
         >
           {children}
         </main>

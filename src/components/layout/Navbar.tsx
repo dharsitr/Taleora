@@ -104,19 +104,41 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
               </div>
             </div>
           </Link>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-5 ml-4 text-xs font-medium">
+            <Link
+              href="/discover"
+              className="text-foreground/75 hover:text-primary transition-colors"
+            >
+              Explore
+            </Link>
+            <Link
+              href="/library"
+              className="text-foreground/75 hover:text-primary transition-colors"
+            >
+              Library
+            </Link>
+            <Link
+              href="/studio"
+              className="text-foreground/75 hover:text-primary transition-colors"
+            >
+              Studio
+            </Link>
+          </nav>
         </div>
 
         {/* Center: Quick Story Search */}
         <form
           onSubmit={handleSearch}
-          className="hidden sm:flex flex-1 max-w-md mx-6"
+          className="hidden sm:flex flex-1 max-w-sm mx-4"
         >
           <Input
             placeholder="Search stories, authors, or genres..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             icon={<Search className="w-4 h-4" />}
-            className="bg-secondary/40 border-border/70 focus:bg-card"
+            className="bg-secondary/40 border-border/70 focus:bg-card h-9 text-xs"
           />
         </form>
 
@@ -285,13 +307,16 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
             <div className="flex items-center gap-2">
               <PwaInstallButton size="sm" className="hidden sm:inline-flex" />
               <Link href="/login">
-                <Button variant="ghost" size="sm" className="text-xs">
+                <Button variant="ghost" size="sm" className="text-xs hover:text-foreground">
                   Sign In
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button size="sm" className="text-xs">
-                  Get Started
+                <Button
+                  size="sm"
+                  className="text-xs font-semibold bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white shadow-md shadow-amber-600/25 border border-amber-500/30"
+                >
+                  Start Reading
                 </Button>
               </Link>
             </div>
