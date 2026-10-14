@@ -35,9 +35,9 @@ export function ReaderSettingsDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl flex flex-col gap-6"
+        className="w-full max-w-md max-h-[88dvh] overflow-y-auto rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-2xl flex flex-col gap-4 sm:gap-6"
         role="dialog"
         aria-label="Reader Appearance Settings"
       >

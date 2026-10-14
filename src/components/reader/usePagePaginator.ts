@@ -122,14 +122,14 @@ export function usePagePaginator({
     // Available width for prose content on an individual book page (accommodates larger padding)
     const horizontalPadding = isTwoPage
       ? (clientWidth >= 1280 ? 104 : clientWidth >= 1024 ? 92 : 76)
-      : (clientWidth >= 640 ? 76 : 48);
+      : (clientWidth >= 640 ? 76 : 40);
 
     const availableWidth = isTwoPage
       ? Math.max(260, Math.floor((clientWidth - 40) / 2) - horizontalPadding)
-      : Math.max(280, clientWidth - horizontalPadding);
+      : Math.max(240, clientWidth - horizontalPadding);
 
-    // Reserve vertical space for running page header (~44px), running page footer (~44px), and page padding (~48px)
-    const availableHeight = Math.max(280, clientHeight - 110);
+    // Reserve vertical space for running page header (~32-44px), running page footer (~32-44px), and page padding (~24-48px)
+    const availableHeight = Math.max(240, clientHeight - (isTwoPage ? 110 : 84));
 
     // Font classes & styles matching Reader settings
     const fontClass =

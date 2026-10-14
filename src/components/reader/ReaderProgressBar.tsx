@@ -54,19 +54,19 @@ export function ReaderProgressBar({
       {/* Floating Bottom HUD Indicator */}
       <div
         className={cn(
-          "fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 transition-all duration-300 pointer-events-auto select-none",
+          "fixed bottom-3 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:bottom-5 sm:right-5 z-40 transition-all duration-300 pointer-events-auto select-none max-w-[calc(100vw-20px)]",
           visible ? "opacity-90 translate-y-0 hover:opacity-100" : "opacity-0 translate-y-4 pointer-events-none"
         )}
       >
-        <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2 rounded-full border border-border/80 bg-background/90 backdrop-blur-md text-xs text-muted-foreground shadow-lg">
+        <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full border border-border/80 bg-background/90 backdrop-blur-md text-[11px] sm:text-xs text-muted-foreground shadow-lg whitespace-nowrap overflow-x-auto">
           <span className="font-semibold text-foreground">
             Ch. {chapterNumber} of {totalChapters}
           </span>
 
           {mounted && pageNumber !== undefined && totalPages !== undefined && (
             <>
-              <span className="h-3 w-px bg-border" />
-              <div className="flex items-center gap-1 font-mono text-[11px] sm:text-xs">
+              <span className="h-3 w-px bg-border shrink-0" />
+              <div className="flex items-center gap-1 font-mono text-[10px] sm:text-xs shrink-0">
                 {onPageChange && (
                   <button
                     type="button"
@@ -96,9 +96,8 @@ export function ReaderProgressBar({
             </>
           )}
 
-
-          <span className="h-3 w-px bg-border" />
-          <span className="flex items-center gap-1 text-[11px]">
+          <span className="hidden xs:inline-block h-3 w-px bg-border shrink-0" />
+          <span className="hidden xs:flex items-center gap-1 text-[10px] sm:text-[11px] shrink-0">
             <Clock className="w-3 h-3" />
             <span>~{minutesRemaining}m left</span>
           </span>

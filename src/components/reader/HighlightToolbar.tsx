@@ -50,7 +50,10 @@ export function HighlightToolbar({
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        transform: "translate(-50%, -100%) translateY(-10px)",
+        transform:
+          position.y < 85
+            ? "translate(-50%, 15px)"
+            : "translate(-50%, -100%) translateY(-10px)",
       }}
       onMouseDown={(e) => {
         // Prevent loss of selection on click

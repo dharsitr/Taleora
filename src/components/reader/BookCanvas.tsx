@@ -104,45 +104,45 @@ export function SingleBookPageContent({
       )}
 
       {/* Running Top Page Header */}
-      <header className="px-6 sm:px-9 lg:px-11 pt-4 pb-2 flex items-center justify-between border-b border-current/10 text-[11px] font-medium tracking-wide uppercase opacity-70 select-none z-10">
+      <header className="px-3.5 sm:px-8 lg:px-11 pt-2.5 sm:pt-4 pb-1.5 sm:pb-2 flex items-center justify-between border-b border-current/10 text-[10px] sm:text-[11px] font-medium tracking-wide uppercase opacity-70 select-none z-10 gap-2">
         {side === "left" ? (
           <>
             <span className="truncate max-w-[65%] font-serif italic normal-case tracking-normal">
               {bookTitle}
             </span>
-            <span className="text-[10px] tracking-wider opacity-60">
+            <span className="text-[9px] sm:text-[10px] tracking-wider opacity-60 shrink-0">
               Ch. {chapterNumber}
             </span>
           </>
         ) : (
           <>
-            <span className="text-[10px] tracking-wider opacity-60">
+            <span className="text-[9px] sm:text-[10px] tracking-wider opacity-60 shrink-0">
               Chapter {chapterNumber}
             </span>
-            <span className="truncate max-w-[65%] font-serif italic normal-case tracking-normal">
-              {chapterTitle}
+            <span className="truncate max-w-[65%] font-serif italic normal-case tracking-normal text-right">
+              {side === "single" ? (chapterTitle || bookTitle) : chapterTitle}
             </span>
           </>
         )}
       </header>
 
       {/* Prose Text Content */}
-      <div className="flex-1 px-6 sm:px-9 lg:px-11 xl:px-12 py-5 sm:py-6 overflow-hidden flex flex-col justify-start z-10 relative select-text pointer-events-auto">
+      <div className="flex-1 px-3.5 sm:px-8 lg:px-11 xl:px-12 py-3 sm:py-5 lg:py-6 overflow-hidden flex flex-col justify-start z-10 relative select-text pointer-events-auto">
         {/* Chapter Opening Header Banner (Page 1 only) */}
         {isFirstPageOfChapter && displayPageNum === 1 && (
-          <div className="text-center pb-5 mb-4 border-b border-current/10">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+          <div className="text-center pb-3 sm:pb-5 mb-3 sm:mb-4 border-b border-current/10">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-primary">
               Chapter {chapterNumber}
             </span>
             <h1
               className={cn(
-                "text-lg sm:text-2xl font-bold tracking-tight mt-1 mb-1 leading-tight",
+                "text-base sm:text-2xl font-bold tracking-tight mt-0.5 sm:mt-1 mb-1 leading-snug",
                 fontClass
               )}
             >
               {chapterTitle}
             </h1>
-            <div className="text-[10px] opacity-50 tracking-widest font-serif">
+            <div className="text-[9px] sm:text-[10px] opacity-50 tracking-widest font-serif">
               ❦ · ❦ · ❦
             </div>
           </div>
@@ -276,7 +276,7 @@ export function SingleBookPageContent({
       </div>
 
       {/* Running Bottom Page Footer */}
-      <footer className="px-6 sm:px-9 lg:px-11 py-2.5 sm:py-3 border-t border-current/10 flex items-center justify-between text-[11px] font-mono opacity-65 select-none z-10">
+      <footer className="px-3.5 sm:px-8 lg:px-11 py-2 sm:py-2.5 lg:py-3 border-t border-current/10 flex items-center justify-between text-[10px] sm:text-[11px] font-mono opacity-65 select-none z-10">
         {side === "left" ? (
           <>
             <span className="font-semibold text-foreground">{displayPageNum}</span>
@@ -439,7 +439,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
             ref={ref}
             onClick={onOpenBook}
             className={cn(
-              "relative w-full max-w-sm sm:max-w-md h-[calc(100vh-140px)] min-h-[480px] max-h-[720px] rounded-2xl p-6 sm:p-8 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 book-cover-casing border group hover:scale-[1.01] select-none overflow-hidden",
+              "relative w-full max-w-sm sm:max-w-md h-[calc(100dvh-120px)] sm:h-[calc(100vh-140px)] min-h-0 sm:min-h-[480px] max-h-[720px] rounded-2xl p-5 sm:p-8 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 book-cover-casing border group hover:scale-[1.01] select-none overflow-hidden",
               coverRimClasses
             )}
             title="Click to Open Book"
@@ -548,22 +548,27 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
         <div
           ref={ref}
           className={cn(
-            "relative w-full rounded-2xl p-1.5 sm:p-2.5 lg:p-3 transition-all duration-300 flex items-center justify-center book-cover-casing border",
+            "relative w-full rounded-2xl p-1 sm:p-2.5 lg:p-3 transition-all duration-300 flex items-center justify-center book-cover-casing border",
             settings.zenMode
-              ? "h-[calc(100vh-28px)] max-h-[96vh]"
-              : "h-[calc(100vh-76px)] sm:h-[calc(100vh-80px)] min-h-[520px] max-h-[960px] 2xl:max-h-[1100px]",
+              ? "h-[calc(100dvh-20px)] sm:h-[calc(100dvh-28px)] max-h-[96vh]"
+              : "h-[calc(100dvh-64px)] sm:h-[calc(100dvh-80px)] min-h-0 sm:min-h-[520px] max-h-[960px] 2xl:max-h-[1100px]",
             coverRimClasses,
             widthClass
           )}
         >
           {/* Stacked Pages Edges (Layered Paper Thickness) */}
-          <div className="absolute inset-y-2 left-0 w-2.5 rounded-l-md book-pages-stack-left pointer-events-none" />
-          <div className="absolute inset-y-2 right-0 w-2.5 rounded-r-md book-pages-stack-right pointer-events-none" />
+          <div className="absolute inset-y-2 left-0 w-1.5 sm:w-2.5 rounded-l-md book-pages-stack-left pointer-events-none" />
+          <div className="absolute inset-y-2 right-0 w-1.5 sm:w-2.5 rounded-r-md book-pages-stack-right pointer-events-none" />
 
           {/* Book Inner Spread Container */}
           <div className="relative w-full h-full flex rounded-xl overflow-visible book-preserve-3d shadow-inner">
-            {/* Silk Ribbon Bookmark at the Top Spine */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 book-ribbon pointer-events-none" />
+            {/* Silk Ribbon Bookmark */}
+            <div
+              className={cn(
+                "absolute top-0 z-30 book-ribbon pointer-events-none",
+                isTwoPageMode ? "left-1/2 -translate-x-1/2" : "right-5 sm:right-8"
+              )}
+            />
 
             {/* TWO-PAGE SPREAD VIEW (Desktop & Tablets) */}
             {isTwoPageMode ? (

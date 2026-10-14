@@ -58,57 +58,57 @@ export function ReaderHeader({
           zenMode ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
         )}
       >
-        <div className="flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6 max-w-6xl mx-auto">
+        <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-6 max-w-6xl mx-auto gap-2">
           {/* Left: Exit Reader / Back to Book */}
           {onExitReader ? (
             <button
               type="button"
               onClick={onExitReader}
-              className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group cursor-pointer"
+              className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group cursor-pointer shrink-0"
               title="Close Book & Return"
             >
-              <div className="w-8 h-8 rounded-lg border border-border/80 flex items-center justify-center group-hover:bg-secondary transition-colors">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center group-hover:bg-secondary transition-colors">
                 <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
               </div>
-              <span className="hidden sm:inline font-serif font-semibold text-foreground/90 line-clamp-1 max-w-[200px]">
+              <span className="hidden md:inline font-serif font-semibold text-foreground/90 line-clamp-1 max-w-[180px] lg:max-w-[240px]">
                 {bookTitle}
               </span>
             </button>
           ) : (
             <Link
               href={`/books/${bookSlug}`}
-              className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group cursor-pointer"
+              className="flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group cursor-pointer shrink-0"
               title="Exit Reader to Book Details"
             >
-              <div className="w-8 h-8 rounded-lg border border-border/80 flex items-center justify-center group-hover:bg-secondary transition-colors">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center group-hover:bg-secondary transition-colors">
                 <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
               </div>
-              <span className="hidden sm:inline font-serif font-semibold text-foreground/90 line-clamp-1 max-w-[200px]">
+              <span className="hidden md:inline font-serif font-semibold text-foreground/90 line-clamp-1 max-w-[180px] lg:max-w-[240px]">
                 {bookTitle}
               </span>
             </Link>
           )}
 
           {/* Center: Current Chapter Title */}
-          <div className="flex flex-col items-center text-center px-2 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-                Chapter {chapterNumber} of {totalChapters}
+          <div className="flex-1 min-w-0 flex flex-col items-center text-center px-1 max-w-[170px] xs:max-w-[220px] sm:max-w-md">
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary truncate">
+                Ch. {chapterNumber} of {totalChapters}
               </span>
               {isOffline && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/25 px-1.5 py-0.2 rounded-md">
+                <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[9px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/25 px-1 sm:px-1.5 py-0.2 rounded-md shrink-0">
                   <WifiOff className="w-2.5 h-2.5" />
-                  <span>Offline</span>
+                  <span className="hidden xs:inline">Offline</span>
                 </span>
               )}
             </div>
-            <span className="font-serif text-xs sm:text-sm font-bold text-foreground line-clamp-1 max-w-[240px] sm:max-w-md">
+            <span className="font-serif text-xs sm:text-sm font-bold text-foreground truncate w-full">
               {chapterTitle}
             </span>
           </div>
 
           {/* Right: Controls & Drawer Triggers */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Quick Bookmark Current Position */}
             {onBookmarkCurrent && (
               <button
@@ -117,7 +117,7 @@ export function ReaderHeader({
                 title={isBookmarked ? "Position Bookmarked" : "Bookmark Current Position"}
                 aria-label="Bookmark Current Position"
                 className={cn(
-                  "w-9 h-9 rounded-lg border border-border/80 flex items-center justify-center transition-colors cursor-pointer",
+                  "w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center transition-colors cursor-pointer shrink-0",
                   isBookmarked
                     ? "bg-primary/15 text-primary border-primary/40"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -125,7 +125,7 @@ export function ReaderHeader({
               >
                 <Bookmark
                   className={cn(
-                    "w-4 h-4 transition-transform active:scale-125",
+                    "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform active:scale-125",
                     isBookmarked && "fill-current text-primary"
                   )}
                 />
@@ -139,11 +139,11 @@ export function ReaderHeader({
                 onClick={onOpenAnnotations}
                 title="Annotations, Bookmarks & Highlights"
                 aria-label="Annotations and Bookmarks"
-                className="w-9 h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer relative"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer relative shrink-0"
               >
-                <Highlighter className="w-4 h-4" />
+                <Highlighter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 {annotationsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-xs">
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold flex items-center justify-center shadow-xs">
                     {annotationsCount > 9 ? "9+" : annotationsCount}
                   </span>
                 )}
@@ -156,9 +156,9 @@ export function ReaderHeader({
               onClick={onOpenChapters}
               title="Table of Contents"
               aria-label="Table of Contents"
-              className="w-9 h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
             >
-              <List className="w-4 h-4" />
+              <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
             {/* Reader Appearance Button */}
@@ -167,18 +167,18 @@ export function ReaderHeader({
               onClick={onOpenSettings}
               title="Reading Appearance (Font, Size, Theme)"
               aria-label="Reading Appearance"
-              className="w-9 h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
             >
-              <Sliders className="w-4 h-4" />
+              <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
-            {/* Zen Mode Button */}
+            {/* Zen Mode Button (Desktop only) */}
             <button
               type="button"
               onClick={onToggleZenMode}
               title="Toggle Zen Mode (F)"
               aria-label="Toggle Zen Mode"
-              className="w-9 h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+              className="hidden sm:flex w-9 h-9 rounded-lg border border-border/80 items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
             >
               <Maximize2 className="w-4 h-4" />
             </button>

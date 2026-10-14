@@ -159,12 +159,12 @@ export function BookCanvas3D({
       // Mobile / Portrait: Focus on active reading page
       const pageWidth = 2.38;
       const pageHeight = 3.34;
-      const zHeight = (pageHeight * 1.14) / (2 * tanFovHalf);
-      const zWidth = (pageWidth * 1.18) / (2 * tanFovHalf * aspect);
+      const zHeight = (pageHeight * 1.08) / (2 * tanFovHalf);
+      const zWidth = (pageWidth * 1.06) / (2 * tanFovHalf * aspect);
       const activePageX = pageNumber % 2 === 1 ? -pageWidth / 2 : pageWidth / 2;
       return {
         x: activePageX,
-        z: Math.max(5.6, Math.max(zHeight, zWidth)),
+        z: Math.max(5.4, Math.min(9.0, Math.max(zHeight, zWidth))),
       };
     }
 

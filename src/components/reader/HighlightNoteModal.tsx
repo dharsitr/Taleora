@@ -63,7 +63,7 @@ function HighlightNoteForm({
   const colors = Object.values(HIGHLIGHT_COLORS);
 
   return (
-    <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+    <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-2xl border border-border bg-card shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border/80 bg-secondary/30">
         <div className="flex items-center gap-2 text-foreground font-serif font-semibold">
