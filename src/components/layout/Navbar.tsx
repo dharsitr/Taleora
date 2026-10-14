@@ -86,28 +86,28 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
   return (
     <>
-      <header className="sticky top-3 sm:top-4 z-40 w-full px-3 sm:px-6 pointer-events-none">
-        <div className="max-w-5xl mx-auto h-14 sm:h-16 px-4 sm:px-6 rounded-full border border-amber-500/25 bg-background/85 dark:bg-[#0B0D11]/90 backdrop-blur-2xl shadow-2xl shadow-black/50 flex items-center justify-between gap-3 sm:gap-4 pointer-events-auto transition-all">
+      <header className="sticky top-2.5 sm:top-4 z-40 w-full px-2.5 sm:px-6 pointer-events-none">
+        <div className="max-w-5xl mx-auto h-13 sm:h-16 px-3 sm:px-6 rounded-full border border-amber-500/25 bg-background/85 dark:bg-[#0B0D11]/90 backdrop-blur-2xl shadow-2xl shadow-black/50 flex items-center justify-between gap-2 sm:gap-4 pointer-events-auto transition-all">
           {/* Left: Mobile Menu Trigger & Taleora Wireframe Logo */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               type="button"
               onClick={onOpenMobileMenu}
               aria-label="Open navigation menu"
-              className="md:hidden flex items-center justify-center w-8 h-8 rounded-full border border-border/80 text-foreground/80 hover:bg-secondary hover:text-foreground cursor-pointer"
+              className="md:hidden flex items-center justify-center w-8 h-8 rounded-full border border-border/80 text-foreground/80 hover:bg-secondary hover:text-foreground cursor-pointer shrink-0"
             >
               <Menu className="w-4 h-4" />
             </button>
 
             <Link
               href="/"
-              className="group flex items-center gap-2.5 transition-transform active:scale-98 focus:outline-none"
+              className="group flex items-center gap-2 sm:gap-2.5 transition-transform active:scale-98 focus:outline-none"
             >
               {/* Elegant Gold Wireframe Book Emblem */}
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/10 border border-amber-400/40 text-amber-400 shadow-xs shadow-amber-500/20 group-hover:bg-amber-500/20 group-hover:border-amber-400 transition-all">
-                <BookOpen className="w-4 h-4" />
+              <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500/10 border border-amber-400/40 text-amber-400 shadow-xs shadow-amber-500/20 group-hover:bg-amber-500/20 group-hover:border-amber-400 transition-all shrink-0">
+                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-foreground group-hover:text-amber-400 transition-colors">
+              <span className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-foreground group-hover:text-amber-400 transition-colors">
                 Taleora
               </span>
             </Link>
@@ -377,7 +377,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                 <Link href="/login" prefetch={true}>
                   <Button
                     size="sm"
-                    className="rounded-full px-4 h-8 text-xs font-semibold bg-amber-500 text-stone-950 hover:bg-amber-400 border-none shadow-sm cursor-pointer"
+                    className="rounded-full px-3.5 sm:px-4 h-7.5 sm:h-8 text-[11px] sm:text-xs font-semibold bg-amber-500 text-stone-950 hover:bg-amber-400 border-none shadow-sm cursor-pointer"
                   >
                     Sign In
                   </Button>

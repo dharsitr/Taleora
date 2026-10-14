@@ -43,43 +43,43 @@ export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
     : "14 days";
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card/80 via-card/40 to-background/90 p-6 sm:p-10 lg:p-14 shadow-2xl backdrop-blur-xl">
+    <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border/80 bg-gradient-to-b from-card/80 via-card/40 to-background/90 p-4 sm:p-10 lg:p-14 shadow-2xl backdrop-blur-xl">
       {/* Warm Ambient Backdrop Glows */}
       <div className="absolute top-1/4 -right-10 w-[500px] h-[500px] bg-amber-500/12 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -top-20 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 lg:gap-8 items-center">
         {/* Left Column: Editorial Headline & Actions */}
-        <div className="lg:col-span-7 flex flex-col gap-6 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium w-fit">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="lg:col-span-7 flex flex-col gap-3.5 sm:gap-6 text-left">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[11px] sm:text-xs font-medium w-fit">
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>Welcome to Taleora · The Art of Reading</span>
           </div>
 
-          <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.12]">
+          <h1 className="font-serif text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.18] sm:leading-[1.12]">
             Every Page Turned is a<br className="hidden sm:inline" /> New World Awakened
           </h1>
 
-          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground leading-relaxed max-w-xl">
+          <p className="text-xs sm:text-base lg:text-lg text-muted-foreground leading-relaxed max-w-xl">
             Immerse yourself in thoughtfully curated tales, novellas, and reflective essays.
             Designed with warm paper tones, refined typography, and zero distractions for true story lovers.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3.5 pt-2">
-            <Link href="/library">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5 pt-1 sm:pt-2 w-full sm:w-auto">
+            <Link href="/library" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="h-12 px-6 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 border border-amber-400/30 transition-all cursor-pointer"
+                className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-6 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-white shadow-lg shadow-amber-500/25 border border-amber-400/30 transition-all cursor-pointer"
               >
                 <span>Explore the Library</span>
               </Button>
             </Link>
 
-            <Link href={bookSlug ? `/books/${bookSlug}` : "/discover"}>
+            <Link href={bookSlug ? `/books/${bookSlug}` : "/discover"} className="w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="lg"
-                className="h-12 px-6 rounded-xl text-sm font-medium border-border/80 bg-secondary/40 backdrop-blur-md hover:bg-secondary hover:border-primary/40 transition-all cursor-pointer"
+                className="w-full sm:w-auto h-11 sm:h-12 px-5 sm:px-6 rounded-xl text-xs sm:text-sm font-medium border-border/80 bg-secondary/40 backdrop-blur-md hover:bg-secondary hover:border-primary/40 transition-all cursor-pointer"
               >
                 <span>Try Reader View</span>
               </Button>
@@ -88,10 +88,10 @@ export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
         </div>
 
         {/* Right Column: 3D Luxury Hardcover Book & Floating Glassmorphic Card */}
-        <div className="lg:col-span-5 flex items-center justify-center relative min-h-[380px] sm:min-h-[440px] pt-4 lg:pt-0">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[300px] sm:min-h-[440px] pt-2 lg:pt-0">
           {/* Subtle Ambient Book Halo */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-72 h-72 sm:w-80 sm:h-80 bg-amber-500/15 rounded-full blur-3xl" />
+            <div className="w-56 h-56 sm:w-80 sm:h-80 bg-amber-500/15 rounded-full blur-3xl" />
           </div>
 
           {/* 3D Tilted Hardcover Book Showcase */}
@@ -102,7 +102,7 @@ export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
             }}
           >
             <div
-              className="relative w-56 sm:w-64 h-80 sm:h-92 rounded-r-xl rounded-l-xs shadow-2xl shadow-black/60 transition-transform duration-500"
+              className="relative w-44 xs:w-52 sm:w-64 h-64 xs:h-76 sm:h-92 rounded-r-xl rounded-l-xs shadow-2xl shadow-black/60 transition-transform duration-500"
               style={{
                 transform: "rotateY(-16deg) rotateX(8deg) rotateZ(1deg)",
                 transformStyle: "preserve-3d",
@@ -198,7 +198,7 @@ export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
           </div>
 
           {/* Floating Glassmorphic "Currently Reading" Card */}
-          <div className="absolute -bottom-4 right-2 sm:right-4 z-20 w-60 sm:w-68 rounded-2xl border border-white/10 dark:border-white/10 bg-card/85 dark:bg-card/75 backdrop-blur-xl p-4 shadow-2xl shadow-black/40 flex flex-col gap-2.5 animate-in fade-in duration-300">
+          <div className="relative sm:absolute mt-4 sm:mt-0 sm:-bottom-4 sm:right-4 z-20 w-full sm:w-68 max-w-xs rounded-2xl border border-white/10 dark:border-white/10 bg-card/85 dark:bg-card/75 backdrop-blur-xl p-3.5 sm:p-4 shadow-2xl shadow-black/40 flex flex-col gap-2 sm:gap-2.5 animate-in fade-in duration-300">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-foreground/80">
                 Currently Reading

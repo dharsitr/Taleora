@@ -55,8 +55,8 @@ export function AppShell({ children }: AppShellProps) {
           id="main-content"
           className={`flex-1 min-w-0 flex flex-col w-full ${
             isAuthPage
-              ? "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
-              : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 gap-10 sm:gap-14"
+              ? "max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-12 pb-24 md:pb-12"
+              : "max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-10 pb-24 md:pb-10 gap-8 sm:gap-14"
           }`}
         >
           {children}
