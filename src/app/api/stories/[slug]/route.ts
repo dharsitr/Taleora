@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { withNetworkTelemetry } from "@/lib/network/telemetry";
 import { enforceRateLimit } from "@/lib/network/rate-limiter";
 import { buildCachedResponse, storyCache } from "@/lib/network/cache";
+import { dispatchCacheInvalidation } from "@/lib/green/eco-reading";
 import { validateStoryPayload } from "@/lib/network/validation";
 
 interface RouteProps {
@@ -175,7 +176,10 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     // Invalidate caches
     storyCache.invalidate(`story:detail:${slug}`);
     storyCache.invalidate(`story:detail:${existingStory.id}`);
+    storyCache.invalidate(`chapter:reader:${slug}`);
+    storyCache.invalidate(`chapter:reader:${existingStory.id}`);
     storyCache.flush();
+    dispatchCacheInvalidation(slug);
 
     return NextResponse.json({
       message: "Story successfully updated",

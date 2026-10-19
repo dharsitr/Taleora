@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChapterReaderData } from "@/types/books";
 import { getOfflineReaderData } from "@/lib/offline/db";
 import { getChapterReaderData } from "@/lib/books/queries";
+import { greenReadingEngine } from "@/lib/green/eco-reading";
 import { StoryReader } from "./StoryReader";
 import { Button } from "@/components/ui/Button";
 import { WifiOff, ArrowLeft, HardDrive, RefreshCw, BookOpen, AlertCircle } from "lucide-react";
@@ -33,7 +34,16 @@ export function ReaderClientContainer({
     const deviceIsOffline = typeof navigator !== "undefined" && !navigator.onLine;
     setIsDeviceOffline(deviceIsOffline);
 
-    // 1. If device is online, try fetching online data first
+    // 1. Check green reading engine cache first to eliminate repeated network fetches
+    const cachedData = greenReadingEngine.get(bookSlug, chapterSlug);
+    if (cachedData) {
+      setReaderData(cachedData);
+      setIsOfflineMode(false);
+      setIsLoading(false);
+      return;
+    }
+
+    // 2. If device is online, try fetching online data
     if (!deviceIsOffline) {
       try {
         const onlineData = await getChapterReaderData(bookSlug, chapterSlug);
@@ -41,6 +51,7 @@ export function ReaderClientContainer({
           setReaderData(onlineData);
           setIsOfflineMode(false);
           setIsLoading(false);
+          greenReadingEngine.set(bookSlug, chapterSlug, onlineData);
           return;
         }
       } catch (err) {
@@ -48,7 +59,7 @@ export function ReaderClientContainer({
       }
     }
 
-    // 2. Fallback to offline IndexedDB
+    // 3. Fallback to offline IndexedDB
     try {
       const offlineData = await getOfflineReaderData(bookSlug, chapterSlug);
       if (offlineData) {
@@ -61,7 +72,7 @@ export function ReaderClientContainer({
       console.warn("Offline IndexedDB fetch failed:", err);
     }
 
-    // 3. Neither online nor offline could load the story
+    // 4. Neither online nor offline could load the story
     setIsLoading(false);
     if (deviceIsOffline) {
       setLoadError("offline_not_saved");
@@ -75,11 +86,12 @@ export function ReaderClientContainer({
       setReaderData(initialData);
       setIsOfflineMode(typeof navigator !== "undefined" && !navigator.onLine);
       setIsLoading(false);
+      greenReadingEngine.set(bookSlug, chapterSlug, initialData);
       return;
     }
 
     loadData();
-  }, [initialData, loadData]);
+  }, [initialData, loadData, bookSlug, chapterSlug]);
 
   // Loading state
   if (isLoading) {

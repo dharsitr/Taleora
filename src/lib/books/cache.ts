@@ -1,4 +1,5 @@
 import { storyCache } from "@/lib/network/cache";
+import { greenReadingEngine, dispatchCacheInvalidation } from "@/lib/green/eco-reading";
 import {
   AuthorStats,
   AuthorStoryWithCounts,
@@ -105,9 +106,23 @@ export function getCachedChapterReader(
   bookSlug: string,
   chapterSlug?: string
 ): ChapterReaderData | null {
+  // Check green reading engine first (session & memory aware)
+  const ecoEntry = greenReadingEngine.get(bookSlug, chapterSlug);
+  if (ecoEntry) {
+    return ecoEntry;
+  }
+
   const key = `chapter:reader:${bookSlug}:${chapterSlug || "first"}`;
   const entry = storyCache.get<ChapterReaderData>(key);
-  return entry ? entry.data : null;
+  if (entry) {
+    // Record hit & sync to green engine
+    const size = greenReadingEngine.estimatePayloadSize(entry.data);
+    greenReadingEngine.recordCacheHit(size);
+    greenReadingEngine.set(bookSlug, chapterSlug, entry.data);
+    return entry.data;
+  }
+
+  return null;
 }
 
 export function setCachedChapterReader(
@@ -117,18 +132,22 @@ export function setCachedChapterReader(
 ) {
   const key = `chapter:reader:${bookSlug}:${chapterSlug || "first"}`;
   storyCache.set(key, data, 120);
+  greenReadingEngine.set(bookSlug, chapterSlug, data);
 }
 
 export function invalidatePublicStoryCaches(bookSlug?: string) {
   if (bookSlug) {
     storyCache.invalidate(`book:detail:${bookSlug}`);
     storyCache.invalidate(`chapter:reader:${bookSlug}`);
+  } else {
+    storyCache.invalidate("chapter:reader");
   }
   storyCache.invalidate("books:query");
   storyCache.invalidate("books:trending");
   storyCache.invalidate("books:featured");
   storyCache.invalidate("genres:stats");
   userCache.discoverSections = undefined;
+  dispatchCacheInvalidation(bookSlug);
 }
 
 // --- Discover Sections Cache (client-side SWR) ---

@@ -31,6 +31,8 @@ import { HighlightToolbar } from "./HighlightToolbar";
 import { HighlightNoteModal } from "./HighlightNoteModal";
 import { ReaderBookmarksDrawer } from "./ReaderBookmarksDrawer";
 import { BookCanvas } from "./BookCanvas";
+import { SustainabilityDashboard } from "./SustainabilityDashboard";
+import { greenReadingEngine } from "@/lib/green/eco-reading";
 import { usePagePaginator, splitContentIntoParagraphs } from "./usePagePaginator";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +50,7 @@ const DEFAULT_SETTINGS: ReaderSettings = {
   zenMode: false,
   pageLayout: "spread",
   readerMode: "3d",
+  ecoMode: false,
 };
 
 const STORAGE_KEY = "taleora-reader-settings";
@@ -159,12 +162,31 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
       if (typeof window !== "undefined") {
         window.history.pushState(null, "", `/read/${book.slug}/${targetChapter.slug}`);
       }
+
+      // 1. If target chapter content is already present in allChapters
       if (targetChapter.content && targetChapter.content.trim() !== "") {
         setChapterContent(targetChapter.content);
         setIsFetchingContent(false);
+        const size = greenReadingEngine.estimatePayloadSize({
+          book,
+          currentChapter: targetChapter,
+          allChapters,
+          prevChapter,
+          nextChapter,
+        });
+        greenReadingEngine.recordCacheHit(size);
+        return;
+      }
+
+      // 2. Check green reading engine cache
+      const cached = greenReadingEngine.get(book.slug, targetChapter.slug);
+      if (cached && cached.currentChapter?.content) {
+        setChapterContent(cached.currentChapter.content);
+        setIsFetchingContent(false);
+        return;
       }
     },
-    [book.slug]
+    [book, allChapters, prevChapter, nextChapter]
   );
 
   // Sync browser back/forward history navigation within chapters of the story
@@ -191,6 +213,19 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   const [chapterDrawerOpen, setChapterDrawerOpen] = React.useState(false);
   const [settingsDrawerOpen, setSettingsDrawerOpen] = React.useState(false);
   const [annotationsDrawerOpen, setAnnotationsDrawerOpen] = React.useState(false);
+  const [sustainabilityDashboardOpen, setSustainabilityDashboardOpen] = React.useState(false);
+
+  // Sync ecoMode with greenReadingEngine
+  React.useEffect(() => {
+    greenReadingEngine.setEcoModeActive(Boolean(settings.ecoMode));
+  }, [settings.ecoMode]);
+
+  // Seed green reading engine with initial chapter data
+  React.useEffect(() => {
+    if (data && data.currentChapter) {
+      greenReadingEngine.set(data.book.slug, data.currentChapter.slug, data);
+    }
+  }, [data]);
 
   // Annotations state
   const [bookmarks, setBookmarks] = React.useState<BookmarkWithDetails[]>([]);
@@ -302,6 +337,14 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
       return;
     }
 
+    // Check green reading engine first
+    const cached = greenReadingEngine.get(book.slug, currentChapter.slug);
+    if (cached && cached.currentChapter?.content) {
+      setChapterContent(cached.currentChapter.content);
+      setIsFetchingContent(false);
+      return;
+    }
+
     let isMounted = true;
     setIsFetchingContent(true);
 
@@ -311,6 +354,16 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
           .then((text) => {
             if (isMounted && text) {
               setChapterContent(text);
+              const fullData: ChapterReaderData = {
+                book,
+                currentChapter: { ...currentChapter, content: text },
+                allChapters,
+                prevChapter,
+                nextChapter,
+              };
+              const payloadSize = greenReadingEngine.estimatePayloadSize(fullData);
+              greenReadingEngine.recordNetworkFetch(payloadSize);
+              greenReadingEngine.set(book.slug, currentChapter.slug, fullData);
             }
           })
           .finally(() => {
@@ -324,7 +377,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     return () => {
       isMounted = false;
     };
-  }, [book.slug, currentChapter.slug, currentChapter.content]);
+  }, [book, allChapters, prevChapter, nextChapter, currentChapter]);
 
   // Hook up Pagination Engine
   const {
@@ -1098,6 +1151,8 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         annotationsCount={bookmarks.length + highlights.length}
         onExitReader={handleCloseAndExit}
         isOffline={isOffline}
+        isEcoMode={Boolean(settings.ecoMode)}
+        onOpenSustainability={() => setSustainabilityDashboardOpen(true)}
       />
 
       {/* Main Book-Style Paginated Canvas */}
@@ -1201,6 +1256,18 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
       <ReaderSettingsDrawer
         isOpen={settingsDrawerOpen}
         onClose={() => setSettingsDrawerOpen(false)}
+        settings={settings}
+        onUpdateSettings={handleUpdateSettings}
+        onOpenSustainability={() => {
+          setSettingsDrawerOpen(false);
+          setSustainabilityDashboardOpen(true);
+        }}
+      />
+
+      {/* Sustainability & Green Reading Dashboard */}
+      <SustainabilityDashboard
+        isOpen={sustainabilityDashboardOpen}
+        onClose={() => setSustainabilityDashboardOpen(false)}
         settings={settings}
         onUpdateSettings={handleUpdateSettings}
       />

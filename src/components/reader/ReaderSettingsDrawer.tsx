@@ -15,6 +15,8 @@ import {
   FileText,
   Box,
   Sparkles,
+  Leaf,
+  Activity,
 } from "lucide-react";
 import { ReaderSettings, ReaderFontFamily, ReaderWidth } from "@/types/books";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,7 @@ interface ReaderSettingsDrawerProps {
   onClose: () => void;
   settings: ReaderSettings;
   onUpdateSettings: (newSettings: Partial<ReaderSettings>) => void;
+  onOpenSustainability?: () => void;
 }
 
 export function ReaderSettingsDrawer({
@@ -31,6 +34,7 @@ export function ReaderSettingsDrawer({
   onClose,
   settings,
   onUpdateSettings,
+  onOpenSustainability,
 }: ReaderSettingsDrawerProps) {
   if (!isOpen) return null;
 
@@ -362,6 +366,50 @@ export function ReaderSettingsDrawer({
               </>
             )}
           </button>
+        </div>
+
+        {/* 8. Eco Reading Mode (Green Computing) */}
+        <div className="pt-2 border-t border-border/70 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col pr-2">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Leaf className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Eco Reading Mode</span>
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                Low-power 2D canvas, persistent chapter cache, zero repeat requests
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const nextEco = !settings.ecoMode;
+                onUpdateSettings({
+                  ecoMode: nextEco,
+                  readerMode: nextEco ? "2d" : settings.readerMode || "3d",
+                });
+              }}
+              className={cn(
+                "px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0",
+                settings.ecoMode
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                  : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+              )}
+            >
+              <Leaf className="w-3.5 h-3.5" />
+              <span>{settings.ecoMode ? "Eco Active" : "Enable Eco"}</span>
+            </button>
+          </div>
+          {onOpenSustainability && (
+            <button
+              type="button"
+              onClick={onOpenSustainability}
+              className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 w-fit cursor-pointer font-medium mt-0.5"
+            >
+              <Activity className="w-3 h-3" />
+              <span>Open Sustainability & Telemetry Dashboard</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

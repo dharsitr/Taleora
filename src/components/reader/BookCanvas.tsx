@@ -331,7 +331,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
     ref
   ) {
     const { isSupported: isWebGLSupported, prefersReducedMotion } = useWebGLSupport();
-    const is3DActive = isWebGLSupported && settings.readerMode !== "2d";
+    const is3DActive = isWebGLSupported && settings.readerMode !== "2d" && !settings.ecoMode;
 
     // Detect viewport width for two-page spread support
     const [isDesktopScreen, setIsDesktopScreen] = React.useState(true);
@@ -451,7 +451,8 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                   src={coverImageUrl}
                   alt={bookTitle}
                   fill
-                  priority
+                  loading="lazy"
+                  decoding="async"
                   unoptimized={!coverImageUrl.includes(".supabase.co") && !coverImageUrl.startsWith("/")}
                   className="absolute inset-0 w-full h-full object-cover object-center rounded-2xl pointer-events-none"
                 />
@@ -702,6 +703,8 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                             src={coverImageUrl}
                             alt={bookTitle}
                             fill
+                            loading="lazy"
+                            decoding="async"
                             unoptimized={!coverImageUrl.includes(".supabase.co") && !coverImageUrl.startsWith("/")}
                             className="absolute inset-0 w-full h-full object-cover object-center rounded-r-xl pointer-events-none"
                           />
@@ -1012,6 +1015,8 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                             src={coverImageUrl}
                             alt={bookTitle}
                             fill
+                            loading="lazy"
+                            decoding="async"
                             unoptimized={!coverImageUrl.includes(".supabase.co") && !coverImageUrl.startsWith("/")}
                             className="absolute inset-0 w-full h-full object-cover object-center rounded-xl pointer-events-none"
                           />

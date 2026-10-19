@@ -6,6 +6,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { storyCache } from "@/lib/network/cache";
+import { dispatchCacheInvalidation } from "@/lib/green/eco-reading";
 
 export interface DeletionResult {
   success: boolean;
@@ -127,6 +128,7 @@ export async function deleteBookSecurely(
   storyCache.invalidate(`story:detail:${book.id}`);
   storyCache.invalidate(`chapter:reader:${book.slug}`);
   storyCache.flush();
+  dispatchCacheInvalidation(book.slug);
 
   return {
     success: true,
@@ -175,7 +177,7 @@ export async function deleteChapterSecurely(
   // 2. Fetch chapter
   let chapterQuery = supabase
     .from("chapters")
-    .select("id, book_id, user_id, title, chapter_number")
+    .select("id, book_id, user_id, title, chapter_number, slug")
     .eq("book_id", book.id);
 
   if (isChapterUuid) {
@@ -260,6 +262,7 @@ export async function deleteChapterSecurely(
   storyCache.invalidate(`story:detail:${book.id}`);
   storyCache.invalidate(`chapter:reader:${book.slug}`);
   storyCache.flush();
+  dispatchCacheInvalidation(book.slug, chapter.slug);
 
   return {
     success: true,

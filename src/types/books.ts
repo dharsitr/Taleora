@@ -72,6 +72,7 @@ export interface ReaderSettings {
   zenMode: boolean;
   pageLayout: ReaderPageLayout;
   readerMode?: "3d" | "2d";
+  ecoMode?: boolean;
 }
 
 export interface ChapterReaderData {

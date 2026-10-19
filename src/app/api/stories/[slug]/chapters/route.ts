@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { withNetworkTelemetry } from "@/lib/network/telemetry";
 import { enforceRateLimit } from "@/lib/network/rate-limiter";
 import { storyCache } from "@/lib/network/cache";
+import { dispatchCacheInvalidation } from "@/lib/green/eco-reading";
 import { validateChapterPayload } from "@/lib/network/validation";
 import { slugify } from "@/lib/utils";
 
@@ -154,7 +155,10 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     // Invalidate caches
     storyCache.invalidate(`story:detail:${slug}`);
     storyCache.invalidate(`story:detail:${book.id}`);
+    storyCache.invalidate(`chapter:reader:${slug}`);
+    storyCache.invalidate(`chapter:reader:${book.id}`);
     storyCache.flush();
+    dispatchCacheInvalidation(slug);
 
     return NextResponse.json(
       {

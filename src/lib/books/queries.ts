@@ -1,6 +1,7 @@
 import { cache as reactCache } from "react";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import { apiClient } from "@/lib/network/api-client";
+import { greenReadingEngine } from "@/lib/green/eco-reading";
 import {
   getCachedBooks,
   setCachedBooks,
@@ -786,6 +787,8 @@ async function fetchChapterReaderDataUncached(
     nextChapter,
   };
 
+  const payloadSize = greenReadingEngine.estimatePayloadSize(result);
+  greenReadingEngine.recordNetworkFetch(payloadSize);
   setCachedChapterReader(bookSlug, chapterSlug, result);
   return result;
 }

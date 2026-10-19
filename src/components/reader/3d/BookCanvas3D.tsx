@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as THREE from "three";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { BookScene3D } from "./BookScene3D";
 import { BookPage } from "../usePagePaginator";
 import { ChapterRow, HighlightRow, ReaderSettings } from "@/types/books";
@@ -51,18 +51,16 @@ function ResponsiveCameraRig({
   mouseOffset: { x: number; y: number };
   prefersReducedMotion?: boolean;
 }) {
-  const { camera } = useThree();
-
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const speed = prefersReducedMotion ? 14 : 5.2;
     const destX = targetX + mouseOffset.x;
     const destY = 0.1 + mouseOffset.y;
     const destZ = targetZ;
 
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, destX, speed, delta);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, destY, speed, delta);
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, destZ, speed, delta);
-    camera.lookAt(camera.position.x, 0, 0);
+    state.camera.position.x = THREE.MathUtils.damp(state.camera.position.x, destX, speed, delta);
+    state.camera.position.y = THREE.MathUtils.damp(state.camera.position.y, destY, speed, delta);
+    state.camera.position.z = THREE.MathUtils.damp(state.camera.position.z, destZ, speed, delta);
+    state.camera.lookAt(state.camera.position.x, 0, 0);
   });
 
   return null;

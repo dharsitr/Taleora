@@ -11,6 +11,7 @@ import {
   Bookmark,
   Highlighter,
   WifiOff,
+  Leaf,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,8 @@ interface ReaderHeaderProps {
   annotationsCount?: number;
   onExitReader?: () => void;
   isOffline?: boolean;
+  isEcoMode?: boolean;
+  onOpenSustainability?: () => void;
 }
 
 export function ReaderHeader({
@@ -48,6 +51,8 @@ export function ReaderHeader({
   annotationsCount = 0,
   onExitReader,
   isOffline = false,
+  isEcoMode = false,
+  onOpenSustainability,
 }: ReaderHeaderProps) {
   return (
     <>
@@ -160,6 +165,36 @@ export function ReaderHeader({
             >
               <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
+
+            {/* Eco Reading & Sustainability Dashboard Button */}
+            {onOpenSustainability && (
+              <button
+                type="button"
+                onClick={onOpenSustainability}
+                title={
+                  isEcoMode
+                    ? "Eco Reading Mode Active · Click for Sustainability Dashboard"
+                    : "Eco Reading Mode & Sustainability Dashboard"
+                }
+                aria-label="Eco Reading Mode and Sustainability Dashboard"
+                className={cn(
+                  "h-8 sm:h-9 px-2 sm:px-2.5 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer shrink-0",
+                  isEcoMode
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 font-semibold shadow-xs"
+                    : "border-border/80 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <Leaf
+                  className={cn(
+                    "w-3.5 h-3.5 sm:w-4 sm:h-4",
+                    isEcoMode && "fill-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  )}
+                />
+                <span className="text-[11px] font-semibold hidden md:inline">
+                  {isEcoMode ? "Eco Active" : "Eco"}
+                </span>
+              </button>
+            )}
 
             {/* Reader Appearance Button */}
             <button
