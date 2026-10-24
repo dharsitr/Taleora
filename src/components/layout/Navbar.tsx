@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   User,
   Pencil,
+  Leaf,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
@@ -27,6 +28,7 @@ import { useAuth } from "@/lib/auth/use-auth";
 import { NotificationBell } from "@/components/social";
 import { PwaInstallButton } from "@/components/pwa/PwaInstallButton";
 import { ProfileModal } from "@/components/profile/ProfileModal";
+import { SustainabilityDashboard } from "@/components/reader/SustainabilityDashboard";
 
 interface NavbarProps {
   onOpenMobileMenu?: () => void;
@@ -38,6 +40,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [profileModalOpen, setProfileModalOpen] = React.useState(false);
+  const [sustainabilityModalOpen, setSustainabilityModalOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const { user, profile, signOut, isLoading } = useAuth();
@@ -159,6 +162,17 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
           {/* Right: Unified Action Dock */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Sustainability / Eco Telemetry Quick Button */}
+            <button
+              type="button"
+              onClick={() => setSustainabilityModalOpen(true)}
+              title="Green Computing & Sustainability Telemetry"
+              aria-label="Open Sustainability Dashboard"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex items-center justify-center transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+            >
+              <Leaf className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 dark:text-emerald-400" />
+            </button>
+
             {/* Theme Toggle */}
             <ThemeToggle />
 
@@ -334,6 +348,18 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
                           <span>Preferences</span>
                         </Link>
 
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            setSustainabilityModalOpen(true);
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-emerald-500/90 hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors w-full text-left cursor-pointer"
+                        >
+                          <Leaf className="w-4 h-4 text-emerald-500" />
+                          <span>Eco Telemetry</span>
+                        </button>
+
                         <Link
                           href="/offline"
                           prefetch={true}
@@ -392,6 +418,12 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
       <ProfileModal
         isOpen={profileModalOpen}
         onClose={() => setProfileModalOpen(false)}
+      />
+
+      {/* Sustainability & Green Reading Dashboard Modal */}
+      <SustainabilityDashboard
+        isOpen={sustainabilityModalOpen}
+        onClose={() => setSustainabilityModalOpen(false)}
       />
     </>
   );

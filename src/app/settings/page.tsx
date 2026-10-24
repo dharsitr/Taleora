@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  Settings,
   Eye,
   Type,
   Moon,
@@ -16,8 +15,10 @@ import {
   Trash2,
   Sparkles,
   CheckCircle2,
-  Sliders,
-  BookOpen,
+  Leaf,
+  Activity,
+  Database,
+  CloudOff,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -28,6 +29,8 @@ import { MfaSetupModal } from "@/components/auth/MfaSetupModal";
 import { createSecurityNotification } from "@/lib/security/notifications";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { greenReadingEngine, formatBytes, SustainabilityMetrics } from "@/lib/green/eco-reading";
+import { SustainabilityDashboard } from "@/components/reader/SustainabilityDashboard";
 
 type FontStyleType = "serif" | "sans" | "mono";
 
@@ -36,12 +39,23 @@ export default function SettingsPage() {
   const [fontSize, setFontSize] = React.useState<"small" | "medium" | "large" | "xlarge">("medium");
   const [fontStyle, setFontStyle] = React.useState<FontStyleType>("serif");
   const [distractionFree, setDistractionFree] = React.useState(false);
+  const [sustainabilityModalOpen, setSustainabilityModalOpen] = React.useState(false);
+  const [sustainabilityMetrics, setSustainabilityMetrics] = React.useState<SustainabilityMetrics>(() =>
+    greenReadingEngine.getMetrics()
+  );
   const [mfaStatus, setMfaStatus] = React.useState<MfaStatus | null>(null);
   const [loadingMfa, setLoadingMfa] = React.useState(true);
   const [showSetupModal, setShowSetupModal] = React.useState(false);
   const [removingFactorId, setRemovingFactorId] = React.useState<string | null>(null);
   const [userRole, setUserRole] = React.useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const unsub = greenReadingEngine.subscribe(() => {
+      setSustainabilityMetrics(greenReadingEngine.getMetrics());
+    });
+    return unsub;
+  }, []);
 
   const supabase = createClient();
 
@@ -385,7 +399,130 @@ export default function SettingsPage() {
           </CardHeader>
         </Card>
 
-        {/* Section 4: Vault Security & Two-Factor Authentication (TOTP) */}
+        {/* Section 4: Green Computing & Digital Sustainability */}
+        <Card className="border border-emerald-500/25 bg-card/90 shadow-[0_8px_30px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+          <CardHeader className="pb-4 border-b border-border/40">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+                  <Leaf className="w-4 h-4 text-emerald-400" />
+                  <span>Green Computing & Digital Sustainability</span>
+                </div>
+                <CardTitle className="text-xl font-bold font-serif text-foreground mt-1">
+                  Eco Reading & Telemetry
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                  Minimize network payloads, eliminate redundant API calls via chapter caching, and conserve GPU energy with 2D rendering.
+                </CardDescription>
+              </div>
+
+              {/* Eco Mode Toggle Switch */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-foreground hidden sm:inline">
+                  {sustainabilityMetrics.ecoModeActive ? "Eco Mode Active" : "Eco Mode Off"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => greenReadingEngine.setEcoModeActive(!sustainabilityMetrics.ecoModeActive)}
+                  aria-label="Toggle Eco Reading Mode"
+                  className={cn(
+                    "w-12 h-7 rounded-full transition-all duration-300 relative cursor-pointer border p-0.5 shadow-inner shrink-0",
+                    sustainabilityMetrics.ecoModeActive
+                      ? "bg-emerald-500 border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+                      : "bg-stone-900 border-stone-800"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "block w-5 h-5 rounded-full transition-transform duration-300 shadow-md",
+                      sustainabilityMetrics.ecoModeActive
+                        ? "translate-x-5 bg-stone-950"
+                        : "translate-x-0 bg-stone-500"
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-6 pb-6 flex flex-col gap-5">
+            {/* Live Metrics Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3.5 rounded-2xl bg-secondary/40 border border-border/70 flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
+                  <Database className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Cache Hits</span>
+                </div>
+                <p className="text-xl font-serif font-bold text-foreground">
+                  {sustainabilityMetrics.cacheHits}
+                </p>
+                <span className="text-[10px] text-muted-foreground">Tracked in session</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-secondary/40 border border-border/70 flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
+                  <CloudOff className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Avoided Calls</span>
+                </div>
+                <p className="text-xl font-serif font-bold text-foreground">
+                  {sustainabilityMetrics.networkRequestsAvoided}
+                </p>
+                <span className="text-[10px] text-muted-foreground">Requests prevented</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-secondary/40 border border-border/70 flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
+                  <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Transferred</span>
+                </div>
+                <p className="text-xl font-serif font-bold text-foreground">
+                  {formatBytes(sustainabilityMetrics.totalDataTransferredBytes)}
+                </p>
+                <span className="text-[10px] text-muted-foreground">Actual measured</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
+                  <Leaf className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Est. Data Saved</span>
+                </div>
+                <p className="text-xl font-serif font-bold text-emerald-400">
+                  {formatBytes(sustainabilityMetrics.estimatedDataSavedBytes)}
+                </p>
+                <span className="text-[10px] text-emerald-500/80 font-mono">Formula estimated</span>
+              </div>
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <p className="text-xs text-muted-foreground text-center sm:text-left">
+                Measurements reflect client-side session payload caching and avoid speculative carbon claims.
+              </p>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => greenReadingEngine.resetMetrics()}
+                  className="text-xs h-8 rounded-xl border-border/80 hover:bg-secondary cursor-pointer"
+                >
+                  Reset Session
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setSustainabilityModalOpen(true)}
+                  className="text-xs h-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer shadow-sm shadow-emerald-600/20"
+                >
+                  <Activity className="w-3.5 h-3.5 mr-1.5" />
+                  Full Telemetry Modal
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Section 5: Vault Security & Two-Factor Authentication (TOTP) */}
         <Card className="border border-amber-500/25 bg-card/90 shadow-[0_8px_30px_rgba(0,0,0,0.3)] backdrop-blur-xl">
           <CardHeader className="pb-4 border-b border-border/40">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -508,6 +645,12 @@ export default function SettingsPage() {
         onSuccess={() => {
           loadMfa();
         }}
+      />
+
+      {/* Sustainability & Green Telemetry Modal */}
+      <SustainabilityDashboard
+        isOpen={sustainabilityModalOpen}
+        onClose={() => setSustainabilityModalOpen(false)}
       />
     </div>
   );

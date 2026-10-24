@@ -1101,7 +1101,9 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
 
   // Theme Wrapper Classes
   const themeClasses =
-    settings.theme === "sepia"
+    settings.theme === "oled"
+      ? "bg-black text-[#f8fafc]"
+      : settings.theme === "sepia"
       ? "bg-[#ede4cb] text-[#3d2e1e]"
       : settings.theme === "dark"
       ? "bg-[#08090d] text-[#e2e8f0]"

@@ -50,6 +50,7 @@ const createMockChapterData = (
 describe("Green Reading System & Sustainability Telemetry", () => {
   beforeEach(() => {
     greenReadingEngine.resetMetrics();
+    greenReadingEngine.setEcoModeActive(false);
     greenReadingEngine.invalidate();
   });
 
@@ -219,6 +220,43 @@ describe("Green Reading System & Sustainability Telemetry", () => {
       expect(resetSnapshot.estimatedDataSavedBytes).toBe(0);
       // Eco mode preference retained
       expect(resetSnapshot.ecoModeActive).toBe(true);
+    });
+  });
+
+  describe("Environmental Triggers & Hardware Awareness", () => {
+    it("auto-engages Eco Mode when Data Saver is detected", () => {
+      expect(greenReadingEngine.getMetrics().ecoModeActive).toBe(false);
+
+      greenReadingEngine.setEnvironmentalTriggers({ dataSaver: true });
+      const metrics = greenReadingEngine.getMetrics();
+      expect(metrics.dataSaverDetected).toBe(true);
+      expect(metrics.ecoModeActive).toBe(true);
+    });
+
+    it("auto-engages Eco Mode when Low Battery is detected", () => {
+      greenReadingEngine.setEcoModeActive(false);
+      expect(greenReadingEngine.getMetrics().ecoModeActive).toBe(false);
+
+      greenReadingEngine.setEnvironmentalTriggers({ lowBattery: true });
+      const metrics = greenReadingEngine.getMetrics();
+      expect(metrics.lowBatteryDetected).toBe(true);
+      expect(metrics.ecoModeActive).toBe(true);
+    });
+
+    it("validates that ReaderSettings accepts OLED true black theme", () => {
+      const oledSettings: ReaderSettings = {
+        theme: "oled",
+        fontSize: 16,
+        lineHeight: 1.75,
+        width: "standard",
+        fontFamily: "serif",
+        zenMode: false,
+        pageLayout: "single",
+        ecoMode: true,
+      };
+
+      expect(oledSettings.theme).toBe("oled");
+      expect(oledSettings.ecoMode).toBe(true);
     });
   });
 });

@@ -56,3 +56,11 @@ next-env.d.ts
 !readme.md
 !Readme.md
 
+# Document exports, reports, and generator scripts
+*.docx
+*.pdf
+*.doc
+Dharsit_R_Green_Computing_Report.*
+scripts/generate_doc_report.py
+
+

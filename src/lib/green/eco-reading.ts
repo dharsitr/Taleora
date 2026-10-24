@@ -19,6 +19,8 @@ export interface SustainabilityMetrics {
   estimatedDataSavedBytes: number;
   totalRequests: number;
   ecoModeActive: boolean;
+  dataSaverDetected?: boolean;
+  lowBatteryDetected?: boolean;
   lastUpdated: number;
 }
 
@@ -29,6 +31,8 @@ const DEFAULT_METRICS: SustainabilityMetrics = {
   estimatedDataSavedBytes: 0,
   totalRequests: 0,
   ecoModeActive: false,
+  dataSaverDetected: false,
+  lowBatteryDetected: false,
   lastUpdated: Date.now(),
 };
 
@@ -51,6 +55,7 @@ class GreenReadingEngine {
   constructor() {
     this.initFromStorage();
     this.setupWindowListeners();
+    this.checkEnvironmentalTriggers();
   }
 
   private initFromStorage() {
@@ -126,6 +131,83 @@ class GreenReadingEngine {
       this.saveMetricsToStorage();
       this.notifyListeners();
     }
+  }
+
+  /**
+   * Set environmental trigger flags manually (for testing or overrides).
+   */
+  public setEnvironmentalTriggers(triggers: { dataSaver?: boolean; lowBattery?: boolean }) {
+    if (triggers.dataSaver !== undefined) {
+      this.metrics.dataSaverDetected = triggers.dataSaver;
+      if (triggers.dataSaver) this.metrics.ecoModeActive = true;
+    }
+    if (triggers.lowBattery !== undefined) {
+      this.metrics.lowBatteryDetected = triggers.lowBattery;
+      if (triggers.lowBattery) this.metrics.ecoModeActive = true;
+    }
+    this.metrics.lastUpdated = Date.now();
+    this.saveMetricsToStorage();
+    this.notifyListeners();
+  }
+
+  /**
+   * Check client hardware & network constraints (Data-Saver, Low Battery).
+   */
+  public checkEnvironmentalTriggers(): { dataSaver: boolean; lowBattery: boolean } {
+    if (typeof window === "undefined") {
+      return {
+        dataSaver: Boolean(this.metrics.dataSaverDetected),
+        lowBattery: Boolean(this.metrics.lowBatteryDetected),
+      };
+    }
+
+    let changed = false;
+
+    // 1. Network Data Saver API (navigator.connection.saveData)
+    try {
+      const navConn = (navigator as unknown as { connection?: { saveData?: boolean } }).connection;
+      if (navConn?.saveData === true) {
+        if (!this.metrics.dataSaverDetected) {
+          this.metrics.dataSaverDetected = true;
+          this.metrics.ecoModeActive = true; // Auto-engage eco mode to minimize payload
+          changed = true;
+        }
+      }
+    } catch {
+      // Ignored if API unsupported
+    }
+
+    // 2. Battery Status API (navigator.getBattery)
+    try {
+      const navBattery = navigator as unknown as {
+        getBattery?: () => Promise<{ level: number; charging: boolean; addEventListener?: (t: string, cb: () => void) => void }>;
+      };
+      if (typeof navBattery.getBattery === "function") {
+        navBattery.getBattery().then((battery) => {
+          if (battery && battery.level <= 0.2 && !battery.charging) {
+            if (!this.metrics.lowBatteryDetected) {
+              this.metrics.lowBatteryDetected = true;
+              this.metrics.ecoModeActive = true;
+              this.saveMetricsToStorage();
+              this.notifyListeners();
+            }
+          }
+        }).catch(() => {});
+      }
+    } catch {
+      // Ignored if battery API unsupported
+    }
+
+    if (changed) {
+      this.metrics.lastUpdated = Date.now();
+      this.saveMetricsToStorage();
+      this.notifyListeners();
+    }
+
+    return {
+      dataSaver: Boolean(this.metrics.dataSaverDetected),
+      lowBattery: Boolean(this.metrics.lowBatteryDetected),
+    };
   }
 
   /**

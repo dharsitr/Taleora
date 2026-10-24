@@ -58,7 +58,7 @@ export interface GenreWithCount extends GenreRow {
   bookCount: number;
 }
 
-export type ReaderTheme = "light" | "dark" | "sepia";
+export type ReaderTheme = "light" | "dark" | "sepia" | "oled";
 export type ReaderFontFamily = "serif" | "sans" | "mono";
 export type ReaderWidth = "narrow" | "standard" | "wide";
 export type ReaderPageLayout = "spread" | "single";

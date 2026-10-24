@@ -80,7 +80,13 @@ export function createPageCanvasTexture(ctx: PageRenderContext): THREE.CanvasTex
   let borderColor = "rgba(0, 0, 0, 0.08)";
   let accentColor = "#b45309"; // warm amber
 
-  if (settings.theme === "sepia") {
+  if (settings.theme === "oled") {
+    bgColor = "#000000";
+    textColor = "#f8fafc";
+    mutedColor = "#94a3b8";
+    borderColor = "rgba(255, 255, 255, 0.12)";
+    accentColor = "#10b981";
+  } else if (settings.theme === "sepia") {
     bgColor = "#f5eedb";
     textColor = "#3d2e1e";
     mutedColor = "#78624a";

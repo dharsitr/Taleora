@@ -14,12 +14,14 @@ import {
   LogOut,
   LogIn,
   UserPlus,
+  Leaf,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MAIN_NAV_ITEMS, AUTHOR_NAV_ITEMS } from "./Sidebar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useDailyReadingProgress } from "@/lib/stats/use-daily-reading-progress";
 import { useAuth } from "@/lib/auth/use-auth";
+import { SustainabilityDashboard } from "@/components/reader/SustainabilityDashboard";
 
 interface MobileNavProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ interface MobileNavProps {
 
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname();
+  const [sustainabilityModalOpen, setSustainabilityModalOpen] = React.useState(false);
   const {
     minutesReadToday,
     dailyGoalMinutes,
@@ -90,7 +93,21 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                     {user ? (profile?.streak_days ?? 0) : 14} Day Streak
                   </span>
                 </div>
-                <ThemeToggle />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      setSustainabilityModalOpen(true);
+                    }}
+                    title="Sustainability Dashboard"
+                    aria-label="Sustainability Dashboard"
+                    className="w-8 h-8 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <Leaf className="w-4 h-4 text-emerald-500" />
+                  </button>
+                  <ThemeToggle />
+                </div>
               </div>
 
               {user ? (
@@ -158,6 +175,24 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   </Link>
                 );
               })}
+
+              {/* Sustainability & Eco Reading link */}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setSustainabilityModalOpen(true);
+                }}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-emerald-500/90 hover:bg-emerald-500/10 transition-colors w-full text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <Leaf className="w-4 h-4 text-emerald-500" />
+                  <span>Eco Telemetry</span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 font-mono">
+                  Green
+                </span>
+              </button>
 
               {/* Creator Studio for Mobile - only visible when authenticated */}
               {user && (
@@ -312,6 +347,12 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <span>Settings</span>
         </Link>
       </div>
+
+      {/* Sustainability & Green Reading Dashboard Modal */}
+      <SustainabilityDashboard
+        isOpen={sustainabilityModalOpen}
+        onClose={() => setSustainabilityModalOpen(false)}
+      />
     </>
   );
 }

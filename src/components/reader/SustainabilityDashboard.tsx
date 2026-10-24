@@ -13,6 +13,8 @@ import {
   Cpu,
   Layers,
   Sparkles,
+  Wifi,
+  Battery,
 } from "lucide-react";
 import {
   SustainabilityMetrics,
@@ -25,8 +27,8 @@ import { cn } from "@/lib/utils";
 interface SustainabilityDashboardProps {
   isOpen: boolean;
   onClose: () => void;
-  settings: ReaderSettings;
-  onUpdateSettings: (newSettings: Partial<ReaderSettings>) => void;
+  settings?: ReaderSettings;
+  onUpdateSettings?: (newSettings: Partial<ReaderSettings>) => void;
 }
 
 export function SustainabilityDashboard({
@@ -50,16 +52,18 @@ export function SustainabilityDashboard({
     return unsubscribe;
   }, [isOpen]);
 
-  // Sync Eco mode state with settings
-  const isEcoActive = Boolean(settings.ecoMode);
+  // Sync Eco mode state with settings or engine
+  const isEcoActive = settings?.ecoMode !== undefined ? Boolean(settings.ecoMode) : metrics.ecoModeActive;
 
   const toggleEcoMode = () => {
     const nextState = !isEcoActive;
-    onUpdateSettings({
-      ecoMode: nextState,
-      // When Eco mode is turned on, force readerMode to 2d for low-power rendering
-      readerMode: nextState ? "2d" : settings.readerMode || "3d",
-    });
+    if (onUpdateSettings && settings) {
+      onUpdateSettings({
+        ecoMode: nextState,
+        // When Eco mode is turned on, force readerMode to 2d for low-power rendering
+        readerMode: nextState ? "2d" : settings.readerMode || "3d",
+      });
+    }
     greenReadingEngine.setEcoModeActive(nextState);
   };
 
@@ -127,7 +131,7 @@ export function SustainabilityDashboard({
               <Cpu className="w-4 h-4" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span className="text-sm font-bold">Eco Reading Mode</span>
                 <span
                   className={cn(
@@ -139,6 +143,18 @@ export function SustainabilityDashboard({
                 >
                   {isEcoActive ? "Active" : "Disabled"}
                 </span>
+                {metrics.dataSaverDetected && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30 flex items-center gap-1">
+                    <Wifi className="w-2.5 h-2.5" />
+                    Data Saver
+                  </span>
+                )}
+                {metrics.lowBatteryDetected && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 flex items-center gap-1">
+                    <Battery className="w-2.5 h-2.5" />
+                    Low Battery
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                 {isEcoActive
@@ -259,11 +275,19 @@ export function SustainabilityDashboard({
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span>OLED True-Black pixel shutoff</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span>Offline-first IndexedDB (zero radio)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
               <span>Lazy loading for non-essential media</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <span>Zero-redundancy repeated reads</span>
+              <span>Scale-to-zero serverless compute</span>
             </div>
           </div>
         </div>

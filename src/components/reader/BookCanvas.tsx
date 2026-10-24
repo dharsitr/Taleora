@@ -386,7 +386,9 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
 
     // Theme Classes for Pages
     const paperClasses =
-      settings.theme === "sepia"
+      settings.theme === "oled"
+        ? "bg-black text-[#f8fafc] border-zinc-800"
+        : settings.theme === "sepia"
         ? "bg-[#f5eedb] text-[#3e2e1e] border-[#e3d7bc]"
         : settings.theme === "dark"
         ? "bg-[#13171f] text-[#e2e8f0] border-[#1f2533]"
@@ -394,7 +396,9 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
 
     // Theme Classes for Book Cover Hardcover Rim
     const coverRimClasses =
-      settings.theme === "sepia"
+      settings.theme === "oled"
+        ? "bg-black border-zinc-900"
+        : settings.theme === "sepia"
         ? "bg-[#382315] border-[#4a301d]"
         : settings.theme === "dark"
         ? "bg-[#0b0e14] border-[#161c28]"

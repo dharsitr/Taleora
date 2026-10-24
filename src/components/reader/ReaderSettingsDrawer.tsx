@@ -68,7 +68,7 @@ export function ReaderSettingsDrawer({
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Reading Palette
           </label>
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {/* Light / Warm Paper */}
             <button
               type="button"
@@ -112,6 +112,24 @@ export function ReaderSettingsDrawer({
             >
               <Moon className="w-4 h-4 text-primary" />
               <span className="text-xs">Obsidian</span>
+            </button>
+
+            {/* OLED / True Black Eco */}
+            <button
+              type="button"
+              onClick={() => onUpdateSettings({ theme: "oled" })}
+              className={cn(
+                "p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer",
+                settings.theme === "oled"
+                  ? "border-emerald-500 bg-black text-white shadow-xs ring-2 ring-emerald-500/20 font-bold"
+                  : "border-zinc-800 bg-black text-zinc-400 hover:text-zinc-200"
+              )}
+              title="OLED Pure Black - Shuts off display pixels for maximum power savings"
+            >
+              <Moon className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs flex items-center gap-1">
+                <span>OLED Eco</span>
+              </span>
             </button>
           </div>
         </div>
