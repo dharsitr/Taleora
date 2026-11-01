@@ -11,6 +11,7 @@ import {
   Activity,
   ArrowLeft,
   Radio,
+  Leaf,
 } from "lucide-react";
 import Link from "next/link";
 import type {
@@ -38,6 +39,7 @@ import { AdminUsersTab } from "./AdminUsersTab";
 import { AdminReviewsTab } from "./AdminReviewsTab";
 import { AdminAuditLogsTab } from "./AdminAuditLogsTab";
 import { AdminNetworkTab } from "./AdminNetworkTab";
+import { AdminGreenComputingTab } from "./AdminGreenComputingTab";
 
 interface AdminDashboardProps {
   currentUserId: string;
@@ -49,6 +51,7 @@ interface AdminDashboardProps {
   initialUsers: AdminUserItem[];
   initialReviews: AdminReviewItem[];
   initialLogs: AdminAuditLogDisplayItem[];
+  initialTab?: AdminTab;
 }
 
 export function AdminDashboard({
@@ -61,8 +64,9 @@ export function AdminDashboard({
   initialUsers,
   initialReviews,
   initialLogs,
+  initialTab = "overview",
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = React.useState<AdminTab>("overview");
+  const [activeTab, setActiveTab] = React.useState<AdminTab>(initialTab);
   const [metrics, setMetrics] = React.useState<AdminOverviewMetrics>(initialMetrics);
   const [reports, setReports] = React.useState<AdminReportItem[]>(initialReports);
   const [books, setBooks] = React.useState<AdminBookItem[]>(initialBooks);
@@ -104,6 +108,7 @@ export function AdminDashboard({
     { id: "reviews", label: "Reviews & Comments", icon: <MessageSquare className="w-4 h-4" /> },
     { id: "logs", label: "Audit Logs", icon: <Activity className="w-4 h-4" /> },
     { id: "network", label: "Network Monitor", icon: <Radio className="w-4 h-4 text-emerald-500" /> },
+    { id: "green", label: "Green Assessment", icon: <Leaf className="w-4 h-4 text-emerald-400" /> },
   ];
 
   return (
@@ -232,6 +237,8 @@ export function AdminDashboard({
         )}
 
         {activeTab === "network" && <AdminNetworkTab />}
+
+        {activeTab === "green" && <AdminGreenComputingTab />}
       </main>
     </div>
   );

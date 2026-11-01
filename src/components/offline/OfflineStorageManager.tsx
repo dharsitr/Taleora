@@ -266,6 +266,8 @@ export function OfflineStorageManager({ isOpen, onClose }: OfflineStorageManager
                             <img
                               src={b.cover_data_url || b.cover_image_url || ""}
                               alt={b.title}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover"
                             />
                           ) : (

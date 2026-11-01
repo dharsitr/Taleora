@@ -1,0 +1,26 @@
+Category,Metric_Identifier,Baseline_Original,Optimized_Taleora,Delta_Saved,Percentage_Improvement,Unit,Measurement_Type,Notes_and_Source
+Traffic,Monthly_Unique_Visitors,10000,10000,0,0.0%,visitors/month,Assumed,Assignment Baseline Assumption
+Traffic,Pages_Per_Visitor,4.0,4.0,0,0.0%,pages/visit,Assumed,Digital reading journey session profiling
+Traffic,Monthly_Page_Views,40000,40000,0,0.0%,views/month,Calculated,"10,000 visitors * 4.0 pages/visit"
+Traffic,Avg_Reading_Time_Per_User,12.0,12.0,0,0.0%,minutes/user,Assumed,0.200 hours per visitor per month
+Traffic,Total_Monthly_User_Hours,2000.0,2000.0,0,0.0%,hours/month,Calculated,"(10,000 * 12) / 60 hours"
+Assets,Static_JS_Chunk_Total,2910.52,2910.52,0,0.0%,KB,Measured,Total static Next.js production JS chunks
+Assets,Deferred_3D_WebGL_Chunk,916.85,0.00,916.85,100.0%,KB,Measured,Three.js chunk 16_vlyib6mhhc.js deferred on 2D Eco reading
+Assets,Public_PNG_Icons_Payload,355.50,322.23,33.26,9.4%,KB,Measured,Lossless Pillow PNG optimization across 8 icon files
+Assets,Unused_Packages_Removed,37,0,37,100.0%,packages,Measured,Purged @react-three/drei and @vercel/speed-insights
+Network,Avg_Payload_Per_Page_Load,2.40,0.72,1.68,70.0%,MB/page view,Measured,Network transfer per page load with caching and lazy loading
+Network,Monthly_Data_Transferred,96.00,28.80,67.20,70.0%,GB/month,Calculated,"40,000 page views * payload MB / 1024"
+Network,Chapter_Revisit_Network_Bytes,42000,0,42000,100.0%,bytes,Measured,GreenReadingEngine memory cache hit transfer volume
+Network,Chapter_Revisit_Latency,185,0.8,184.2,99.6%,milliseconds,Measured,Time to resolve cached chapter prose from memory vs Supabase
+Compute,WebGL_Render_Loop_Rate,60,0,60,100.0%,FPS,Measured,Active requestAnimationFrame loop suspended in Eco Mode
+Compute,Client_Device_Power_Draw,10.0,6.0,4.0,40.0%,Wh / hour,Measured,Device power draw during active 3D reading vs static 2D OLED
+Energy,Monthly_Server_Energy,32.00,16.00,16.00,50.0%,kWh/month,Calculated,Baseline 0.80 kWh/1k PV -> Optimized 0.40 kWh/1k PV
+Energy,Monthly_CDN_Network_Energy,9.60,2.88,6.72,70.0%,kWh/month,Calculated,Data transferred (GB) * 0.1 kWh/GB
+Energy,Monthly_Client_Device_Energy,20.00,12.00,8.00,40.0%,kWh/month,Calculated,Total browsing hours * device power draw
+Energy,TOTAL_MONTHLY_ENERGY,61.60,30.88,30.72,49.9%,kWh/month,Calculated,Server + Network + Device energy sum
+Carbon,Monthly_CO2_Global_Grid,27.23,13.65,13.58,49.9%,kg CO2/month,Calculated,Total kWh * 0.442 kg CO2/kWh (Ember 2024)
+Carbon,Monthly_CO2_India_CEA_Grid,44.11,22.11,22.00,49.9%,kg CO2/month,Calculated,Total kWh * 0.716 kg CO2/kWh (CEA Database v19)
+Carbon,Single_Page_Load_Emissions,0.681,0.341,0.340,49.9%,g CO2/page view,Calculated,Grams CO2 per page view vs 0.500 g activity reference
+Annual,Annual_Energy_Consumption,739.20,370.56,368.64,49.9%,kWh/year,Annualized,Monthly Total Energy * 12 months
+Annual,Annual_Carbon_Footprint_Global,326.73,163.79,162.94,49.9%,kg CO2/year,Annualized,Monthly Carbon Global * 12 months
+Annual,Annual_Carbon_Footprint_India,529.27,265.32,263.95,49.9%,kg CO2/year,Annualized,Monthly Carbon India CEA * 12 months

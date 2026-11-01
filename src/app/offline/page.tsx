@@ -135,6 +135,8 @@ export default function OfflineFallbackPage() {
                       <img
                         src={book.cover_data_url || book.cover_image_url || ""}
                         alt={book.title}
+                        loading="lazy"
+                        decoding="async"
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
