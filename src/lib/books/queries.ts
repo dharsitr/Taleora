@@ -814,12 +814,10 @@ async function fetchChapterReaderDataUncached(
 
   const book = transformBook(bookData);
 
-  // 2. Fetch all published chapters for this book (metadata only for index/navigation)
+  // 2. Fetch all published chapters for this reader (including full content for story rendering)
   const { data: chaptersData, error: chaptersErr } = await supabase
     .from("chapters")
-    .select(
-      "id, book_id, chapter_number, title, slug, estimated_read_minutes, word_count, status, published_at, created_at, updated_at"
-    )
+    .select("*")
     .eq("book_id", book.id)
     .eq("status", "published")
     .order("chapter_number", { ascending: true });
@@ -829,12 +827,7 @@ async function fetchChapterReaderDataUncached(
     return null;
   }
 
-  // Cast metadata list with blank content so ChapterRow type contract is satisfied
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allChapters: ChapterRow[] = chaptersData.map((ch: any) => ({
-    ...ch,
-    content: ch.content || "",
-  }));
+  const allChapters = chaptersData;
 
   // 3. Resolve target chapter: by slug/id or fallback to first chapter
   let currentIdx = -1;
@@ -852,22 +845,13 @@ async function fetchChapterReaderDataUncached(
   }
 
   let currentChapter = allChapters[currentIdx];
-
-  // Fetch full content specifically for the single active chapter
-  const { data: activeContentRes } = await supabase
-    .from("chapters")
-    .select("content")
-    .eq("id", currentChapter.id)
-    .maybeSingle();
-
-  if (activeContentRes?.content) {
-    currentChapter = { ...currentChapter, content: activeContentRes.content };
-  } else if (!currentChapter.content || currentChapter.content.trim() === "") {
+  if (!currentChapter.content || currentChapter.content.trim() === "") {
     try {
       const { getChapterContentWithFallback } = await import("./chapter-storage");
       const text = await getChapterContentWithFallback(book.slug, currentChapter.slug);
       if (text) {
         currentChapter = { ...currentChapter, content: text };
+        allChapters[currentIdx] = currentChapter;
       }
     } catch {
       // Fallback gracefully

@@ -143,6 +143,9 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
 
   const { book, allChapters } = data;
   const currentChapter = React.useMemo(() => {
+    if (data.currentChapter && data.currentChapter.id === activeChapterId && data.currentChapter.content) {
+      return data.currentChapter;
+    }
     return allChapters.find((c) => c.id === activeChapterId) || data.currentChapter;
   }, [allChapters, activeChapterId, data.currentChapter]);
 
