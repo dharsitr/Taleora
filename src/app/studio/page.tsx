@@ -21,7 +21,9 @@ import {
   Clock,
   ArrowUpRight,
   TrendingUp,
+  Upload,
 } from "lucide-react";
+import { EpubIngestModal } from "@/components/studio/EpubIngestModal";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
   getAuthorStats,
@@ -73,6 +75,7 @@ export default function AuthorStudioPage() {
   const [filterStatus, setFilterStatus] = React.useState<"all" | BookStatus>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [loading, setLoading] = React.useState(!cachedStudio);
+  const [ingestModalOpen, setIngestModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!user) return;
@@ -179,7 +182,16 @@ export default function AuthorStudioPage() {
         </div>
 
         {/* Primary Action Buttons */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 shrink-0">
+          <Button
+            size="sm"
+            onClick={() => setIngestModalOpen(true)}
+            className="h-10 px-4 rounded-full border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 dark:text-amber-400 font-semibold gap-2 cursor-pointer transition-all shadow-xs"
+          >
+            <Upload className="w-4 h-4 text-amber-500" />
+            <span className="text-xs">Import EPUB / MD</span>
+          </Button>
+
           <Link href="/studio/profile">
             <Button
               variant="outline"
@@ -655,6 +667,15 @@ export default function AuthorStudioPage() {
           })}
         </div>
       )}
+
+      <EpubIngestModal
+        isOpen={ingestModalOpen}
+        onClose={() => setIngestModalOpen(false)}
+        onSuccess={() => {
+          setIngestModalOpen(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

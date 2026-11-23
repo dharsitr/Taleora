@@ -20,6 +20,7 @@ import { GenreRow, BookStatus, ReleaseCadence } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/network/api-client";
+import { EpubIngestModal } from "@/components/studio/EpubIngestModal";
 
 const GRADIENT_PRESETS = [
   {
@@ -84,6 +85,7 @@ export default function CreateStoryPage() {
   // Status & Error handling
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [ingestModalOpen, setIngestModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!user) return;
@@ -223,6 +225,34 @@ export default function CreateStoryPage() {
         <p className="text-sm text-muted-foreground">
           Establish the literary foundation, aesthetics, and release cadence for your novella.
         </p>
+      </div>
+
+      {/* Quick EPUB / Manuscript Ingest Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent backdrop-blur-md">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 shrink-0 shadow-xs">
+            <Upload className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              Have a finished manuscript?
+              <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                Fast Ingest
+              </span>
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Directly import .epub, .md, or .txt files with automatic chapter splitting and cover art extraction.
+            </p>
+          </div>
+        </div>
+        <Button
+          type="button"
+          onClick={() => setIngestModalOpen(true)}
+          className="shrink-0 h-9 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs gap-1.5 shadow-sm cursor-pointer transition-all"
+        >
+          <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Import Manuscript</span>
+        </Button>
       </div>
 
       {errorMessage && (
@@ -535,6 +565,16 @@ export default function CreateStoryPage() {
           </Button>
         </div>
       </form>
+
+      {/* EPUB / Manuscript Ingestion Modal */}
+      <EpubIngestModal
+        isOpen={ingestModalOpen}
+        onClose={() => setIngestModalOpen(false)}
+        onSuccess={(slug) => {
+          setIngestModalOpen(false);
+          router.push(`/books/${slug}`);
+        }}
+      />
     </div>
   );
 }
