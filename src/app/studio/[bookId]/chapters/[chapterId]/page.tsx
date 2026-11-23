@@ -25,6 +25,15 @@ import { BookDetail, ChapterRow, ChapterStatus, ScheduleType } from "@/types/boo
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal";
+import {
+  saveLocalDraftBackup,
+  getLocalDraftBackup,
+  clearLocalDraftBackup,
+  LocalDraftBackup,
+  AutosaveStatus,
+} from "@/lib/stores/studio-store";
+import { AutosaveBadge } from "@/components/studio/AutosaveBadge";
+import { DraftRecoveryBanner } from "@/components/studio/DraftRecoveryBanner";
 
 export default function EditChapterPage() {
   const params = useParams();
@@ -63,6 +72,12 @@ export default function EditChapterPage() {
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
+  // Autosave and Recovery states
+  const [autosaveStatus, setAutosaveStatus] = React.useState<AutosaveStatus>("idle");
+  const [isDirty, setIsDirty] = React.useState(false);
+  const [lastSavedAt, setLastSavedAt] = React.useState<number | null>(null);
+  const [detectedBackup, setDetectedBackup] = React.useState<LocalDraftBackup | null>(null);
+
   React.useEffect(() => {
     if (!user || !bookId || !chapterId) return;
     let isMounted = true;
@@ -92,6 +107,15 @@ export default function EditChapterPage() {
             tomorrow.setDate(tomorrow.getDate() + 1);
             tomorrow.setHours(18, 0, 0, 0);
             setScheduledDateTime(tomorrow.toISOString().slice(0, 16));
+          }
+
+          // Check if an unsaved local draft backup exists
+          const backup = getLocalDraftBackup(chapterId);
+          if (backup && backup.content !== c.content) {
+            const serverTime = c.updated_at ? new Date(c.updated_at).getTime() : 0;
+            if (backup.updatedAt > serverTime) {
+              setDetectedBackup(backup);
+            }
           }
         }
         setLoading(false);
@@ -131,6 +155,47 @@ export default function EditChapterPage() {
 
     return result;
   }, [status, scheduleType, scheduledDateTime, customDaysInterval]);
+
+  // Debounced Local Draft Backup (every 2.5 seconds of typing pause)
+  React.useEffect(() => {
+    if (loading || !chapterId || !bookId) return;
+    if (!isDirty) return;
+
+    setAutosaveStatus("saving");
+    const timer = setTimeout(() => {
+      saveLocalDraftBackup(chapterId, {
+        chapterId,
+        bookId,
+        title,
+        content,
+        chapterNumber,
+        wordCount,
+        updatedAt: Date.now(),
+      });
+      setLastSavedAt(Date.now());
+      setAutosaveStatus("saved");
+      setIsDirty(false);
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [title, content, chapterNumber, chapterId, bookId, isDirty, wordCount, loading]);
+
+  const handleRestoreBackup = () => {
+    if (!detectedBackup) return;
+    setTitle(detectedBackup.title);
+    setContent(detectedBackup.content);
+    setChapterNumber(detectedBackup.chapterNumber);
+    setDetectedBackup(null);
+    setIsDirty(true);
+    setSuccessMessage("Local draft backup successfully restored!");
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  const handleDiscardBackup = () => {
+    if (!chapterId) return;
+    clearLocalDraftBackup(chapterId);
+    setDetectedBackup(null);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,6 +246,11 @@ export default function EditChapterPage() {
       if (updated) {
         setChapter(updated);
         setSuccessMessage("Chapter updated successfully!");
+        clearLocalDraftBackup(chapterId);
+        setDetectedBackup(null);
+        setIsDirty(false);
+        setAutosaveStatus("saved");
+        setLastSavedAt(Date.now());
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         setErrorMessage("Failed to update chapter.");
@@ -260,18 +330,35 @@ export default function EditChapterPage() {
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-1 border-b border-border/70 pb-5">
-        <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
-          <Feather className="w-4 h-4" />
-          <span>Writer Studio · {book?.title}</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-5">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
+            <Feather className="w-4 h-4" />
+            <span>Writer Studio · {book?.title}</span>
+          </div>
+          <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
+            Edit Chapter {chapter.chapter_number}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Refine your story text and adjust release scheduling.
+          </p>
         </div>
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
-          Edit Chapter {chapter.chapter_number}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Refine your story text and adjust release scheduling.
-        </p>
+
+        <AutosaveBadge
+          status={autosaveStatus}
+          isDirty={isDirty}
+          lastSavedAt={lastSavedAt}
+          className="self-start sm:self-center"
+        />
       </div>
+
+      {detectedBackup && (
+        <DraftRecoveryBanner
+          backup={detectedBackup}
+          onRestore={handleRestoreBackup}
+          onDiscard={handleDiscardBackup}
+        />
+      )}
 
       {successMessage && (
         <div className="flex items-center gap-2 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium animate-in fade-in">
@@ -298,7 +385,10 @@ export default function EditChapterPage() {
               type="text"
               required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setIsDirty(true);
+              }}
               className="w-full px-3.5 py-2.5 rounded-xl border border-input bg-background font-serif text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
             />
           </div>
@@ -312,7 +402,10 @@ export default function EditChapterPage() {
               min={1}
               required
               value={chapterNumber}
-              onChange={(e) => setChapterNumber(parseInt(e.target.value, 10) || 1)}
+              onChange={(e) => {
+                setChapterNumber(parseInt(e.target.value, 10) || 1);
+                setIsDirty(true);
+              }}
               className="w-full px-3.5 py-2.5 rounded-xl border border-input bg-background font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
             />
           </div>
@@ -340,7 +433,10 @@ export default function EditChapterPage() {
             rows={18}
             required
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setIsDirty(true);
+            }}
             className="w-full p-4 rounded-xl border border-input bg-background/50 font-serif text-base leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-y"
           />
         </div>

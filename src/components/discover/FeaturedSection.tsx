@@ -32,9 +32,7 @@ export function FeaturedSection({ books, loading }: FeaturedSectionProps) {
   const heroBook = books[0];
   const secondaryBooks = books.slice(1);
 
-  const heroHref = user
-    ? `/books/${heroBook.slug}`
-    : `/login?next=${encodeURIComponent(`/books/${heroBook.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`;
+  const heroHref = `/books/${heroBook.slug}`;
 
   const readHref = `/read/${heroBook.slug}`;
 

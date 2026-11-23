@@ -70,6 +70,19 @@ export async function downloadBookForOffline(
   };
 
   try {
+    // 0. Storage Quota Safety Guard
+    if (typeof navigator !== "undefined" && navigator.storage?.estimate) {
+      const estimate = await navigator.storage.estimate();
+      const remainingBytes = (estimate.quota || 0) - (estimate.usage || 0);
+      const MIN_REQUIRED_BYTES = 20 * 1024 * 1024; // 20MB safety margin
+
+      if (estimate.quota && remainingBytes < MIN_REQUIRED_BYTES) {
+        const errorMsg = "Insufficient device storage available to download this story for offline reading.";
+        updateProgress("error", 0, errorMsg, errorMsg);
+        return false;
+      }
+    }
+
     updateProgress("downloading", 10, "Fetching book details...");
     let bookData: OfflineBookPayload | null = null;
     let chaptersData: OfflineChapterPayload[] = [];

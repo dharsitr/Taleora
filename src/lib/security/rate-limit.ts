@@ -107,3 +107,61 @@ export const RateLimitProfiles = {
   // Admin and moderation actions: 60 per minute
   admin: (id: string) => checkRateLimit(`admin:${id}`, 60, 60 * 1000),
 };
+
+/**
+ * Distributed rate limiter supporting Upstash Redis REST when environment variables
+ * (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) are configured.
+ * Automatically falls back to local in-memory sliding window for single-node / development.
+ */
+export async function checkDistributedRateLimit(
+  key: string,
+  limit: number,
+  windowMs = 60000
+): Promise<RateLimitResult> {
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!redisUrl || !redisToken) {
+    // Zero-overhead local fallback
+    return checkRateLimit(key, limit, windowMs);
+  }
+
+  const windowSec = Math.ceil(windowMs / 1000);
+  const now = Date.now();
+  const redisKey = `ratelimit:${key}:${Math.floor(now / windowMs)}`;
+
+  try {
+    const res = await fetch(`${redisUrl}/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${redisToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([
+        ["INCR", redisKey],
+        ["EXPIRE", redisKey, windowSec * 2],
+      ]),
+      // Short timeout to avoid blocking requests if Redis is unreachable
+      signal: AbortSignal.timeout(1500),
+    });
+
+    if (!res.ok) {
+      return checkRateLimit(key, limit, windowMs);
+    }
+
+    const json = (await res.json()) as Array<{ result?: number }>;
+    const count = json[0]?.result ?? 1;
+    const remaining = Math.max(0, limit - count);
+
+    return {
+      success: count <= limit,
+      limit,
+      remaining,
+      reset: now + windowMs,
+    };
+  } catch {
+    // Fail-open to local fallback on network error
+    return checkRateLimit(key, limit, windowMs);
+  }
+}
+

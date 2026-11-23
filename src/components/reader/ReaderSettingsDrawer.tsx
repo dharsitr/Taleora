@@ -64,7 +64,7 @@ export function ReaderSettingsDrawer({
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Reading Palette
           </label>
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* Light / Warm Paper */}
             <button
               type="button"
@@ -77,7 +77,7 @@ export function ReaderSettingsDrawer({
               )}
             >
               <Sun className="w-4 h-4 text-amber-600" />
-              <span className="text-xs">Warm Paper</span>
+              <span className="text-xs">Linen</span>
             </button>
 
             {/* Sepia / Vintage Parchment */}
@@ -108,6 +108,21 @@ export function ReaderSettingsDrawer({
             >
               <Moon className="w-4 h-4 text-primary" />
               <span className="text-xs">Obsidian</span>
+            </button>
+
+            {/* Nordic / Modern White */}
+            <button
+              type="button"
+              onClick={() => onUpdateSettings({ theme: "nordic" })}
+              className={cn(
+                "p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer",
+                settings.theme === "nordic"
+                  ? "border-primary bg-white text-zinc-950 shadow-xs ring-2 ring-primary/20 font-bold"
+                  : "border-zinc-200 bg-white text-zinc-700 hover:opacity-90"
+              )}
+            >
+              <Sparkles className="w-4 h-4 text-indigo-500" />
+              <span className="text-xs">Nordic</span>
             </button>
           </div>
         </div>

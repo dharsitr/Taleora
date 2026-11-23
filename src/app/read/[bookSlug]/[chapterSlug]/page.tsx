@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { getChapterReaderData } from "@/lib/books/queries";
 import { ReaderClientContainer } from "@/components/reader/ReaderClientContainer";
 
+export const dynamic = "force-dynamic";
+
 interface ChapterPageProps {
   params: Promise<{
     bookSlug: string;

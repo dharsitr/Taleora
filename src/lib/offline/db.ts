@@ -433,6 +433,8 @@ export async function getOfflineReaderData(
     average_rating: 4.8,
     featured: false,
     trending: false,
+    file_path: null,
+    file_url: null,
     release_schedule: "immediate",
     tags: [],
     user_id: null,

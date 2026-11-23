@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getChapterReaderData } from "@/lib/books/queries";
 import { ReaderClientContainer } from "@/components/reader/ReaderClientContainer";
 
+export const dynamic = "force-dynamic";
+
 interface ReadEntryPageProps {
   params: Promise<{
     bookSlug: string;

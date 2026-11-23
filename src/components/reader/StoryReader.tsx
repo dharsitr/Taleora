@@ -25,6 +25,7 @@ import {
 } from "@/lib/offline/sync";
 import { ReaderHeader } from "./ReaderHeader";
 import { ReaderProgressBar } from "./ReaderProgressBar";
+import { ReaderFloatingHUD } from "./ReaderFloatingHUD";
 import { ReaderSettingsDrawer } from "./ReaderSettingsDrawer";
 import { ChapterDrawer } from "./ChapterDrawer";
 import { HighlightToolbar } from "./HighlightToolbar";
@@ -1051,8 +1052,10 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     settings.theme === "sepia"
       ? "bg-[#ede4cb] text-[#3d2e1e]"
       : settings.theme === "dark"
-      ? "bg-[#08090d] text-[#e2e8f0]"
-      : "bg-[#f3eee5] text-[#1c222c]";
+      ? "bg-[#090a0f] text-[#e2e8f0]"
+      : settings.theme === "nordic"
+      ? "bg-[#ffffff] text-[#111827]"
+      : "bg-[#faf8f5] text-[#1e1b18]";
 
   return (
     <div
@@ -1067,8 +1070,8 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         handleTextSelection();
       }}
     >
-      {/* Top Reading Progress & Floating HUD */}
-      <ReaderProgressBar
+      {/* Floating Centered Glassmorphic HUD Dock */}
+      <ReaderFloatingHUD
         progressPercentage={progressPercentage}
         chapterNumber={currentChapter.chapter_number}
         totalChapters={allChapters.length}
@@ -1077,6 +1080,19 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         pageNumber={currentPage}
         totalPages={totalPages}
         onPageChange={goToPage}
+        onOpenChapters={() => setChapterDrawerOpen(true)}
+        onOpenSettings={() => setSettingsDrawerOpen(true)}
+        onBookmarkCurrent={handleBookmarkCurrentPosition}
+        isBookmarked={isBookmarked}
+        zenMode={settings.zenMode}
+        onToggleZenMode={() =>
+          handleUpdateSettings({ zenMode: !settings.zenMode })
+        }
+        settings={settings}
+        onUpdateSettings={handleUpdateSettings}
+        paragraphs={splitContentIntoParagraphs(chapterContent)}
+        currentParagraphIndex={currentPageData?.chunks[0]?.paragraphIndex ?? 0}
+        onParagraphSelect={(idx) => jumpToParagraph(idx)}
       />
 
       {/* Reader Top Bar */}

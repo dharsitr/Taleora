@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Clock, BookOpen, Layers } from "lucide-react";
+import { Star, Clock, BookOpen, Layers, Sparkles } from "lucide-react";
 import { BookWithAuthorAndGenres } from "@/types/books";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -19,15 +19,13 @@ export function BookCard({ book }: BookCardProps) {
   const primaryGenre = book.genres?.[0]?.name || "Story";
   const authorName = book.author?.name || "Unknown Author";
 
-  const bookHref = user
-    ? `/books/${book.slug}`
-    : `/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`;
+  const bookHref = `/books/${book.slug}`;
 
   const coverGradient =
     book.cover_gradient || "from-stone-800 via-zinc-900 to-black";
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
+    <div className="group relative flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/50 hover:-translate-y-1">
       {/* Visual Cover Banner */}
       <div
         className={`h-48 w-full bg-gradient-to-br ${coverGradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
@@ -44,17 +42,31 @@ export function BookCard({ book }: BookCardProps) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/15 group-hover:from-black/80 transition-colors" />
 
-        {/* Decorative spine crease effect */}
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/25 z-10" />
+        {/* Decorative tactile spine crease effect */}
+        <div className="absolute left-0 top-0 bottom-0 w-3.5 book-spine-shadow z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/20 z-10 pointer-events-none" />
 
-        {/* Top bar: Genre Badge & Library Action Toggle */}
+        {/* Top bar: Genre Badge, Serial Cadence, & Library Action Toggle */}
         <div className="relative z-10 flex items-start justify-between gap-2">
-          <Badge
-            variant="warm"
-            className="bg-black/45 text-white border-white/20 backdrop-blur-xs text-[11px] font-medium"
-          >
-            {primaryGenre}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="warm"
+              className="bg-black/55 text-white border-white/20 backdrop-blur-md text-[11px] font-medium"
+            >
+              {primaryGenre}
+            </Badge>
+
+            {book.release_schedule && book.release_schedule !== "immediate" ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-[10px] text-emerald-300 font-medium backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="capitalize">{book.release_schedule} Serial</span>
+              </span>
+            ) : book.status === "published" ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/40 border border-white/15 text-[10px] text-amber-200 font-medium backdrop-blur-md">
+                <span>Complete</span>
+              </span>
+            ) : null}
+          </div>
 
           <LibraryActionButton
             bookId={book.id}
@@ -118,15 +130,17 @@ export function BookCard({ book }: BookCardProps) {
         <div className="pt-3 border-t border-border/60 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
             {book.trending ? (
-              <span className="text-amber-600 dark:text-amber-400 font-medium text-[11px]">
-                Trending Story
+              <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold text-[11px]">
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                Trending Serial
               </span>
             ) : book.featured ? (
-              <span className="text-primary font-medium text-[11px]">
-                Featured Title
+              <span className="inline-flex items-center gap-1 text-primary font-semibold text-[11px]">
+                <Sparkles className="w-3 h-3 text-primary" />
+                Featured Serial
               </span>
             ) : (
-              <span className="text-[11px]">Published</span>
+              <span className="text-[11px] font-medium text-muted-foreground/80">Published</span>
             )}
           </span>
 
@@ -134,7 +148,7 @@ export function BookCard({ book }: BookCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs gap-1.5 hover:text-primary cursor-pointer"
+              className="text-xs gap-1.5 hover:text-primary hover:bg-primary/10 cursor-pointer font-medium"
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span>Explore Book</span>

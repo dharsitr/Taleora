@@ -2,7 +2,7 @@ import * as React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Star,
@@ -17,7 +17,6 @@ import {
   Bookmark,
   Share2,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { getBookBySlug } from "@/lib/books/queries";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -59,21 +58,10 @@ export async function generateMetadata({
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function BookDetailsPage({ params }: BookPageProps) {
   const { slug } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect(
-      `/login?next=${encodeURIComponent(`/books/${slug}`)}&notice=${encodeURIComponent(
-        "Please sign in to explore books"
-      )}`
-    );
-  }
-
   const book = await getBookBySlug(slug);
 
   if (!book) {

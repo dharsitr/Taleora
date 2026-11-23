@@ -41,12 +41,20 @@ export function sanitizeText(
   }
 
   // 2. Strip potential malicious tags, scripts, and event handlers
-  clean = clean.replace(/<\s*(script|iframe|embed|object)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "");
-  clean = clean.replace(/<\s*(script|iframe|embed|object)[^>]*\/?\s*>/gi, "");
-  clean = clean.replace(/javascript:/gi, "");
-  clean = clean.replace(/vbscript:/gi, "");
-  clean = clean.replace(/data:text\/html/gi, "");
-  clean = clean.replace(/\son\w+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi, "");
+  // Recursively remove dangerous elements including script, iframe, embed, object, svg, math, form, link, meta, style
+  const DANGEROUS_TAGS = "script|iframe|embed|object|svg|math|form|link|meta|style|base|applet";
+  clean = clean.replace(new RegExp(`<\\s*(${DANGEROUS_TAGS})[^>]*>[\\s\\S]*?<\\s*\\/\\s*\\1\\s*>`, "gi"), "");
+  clean = clean.replace(new RegExp(`<\\s*(${DANGEROUS_TAGS})[^>]*\\/?\\s*>`, "gi"), "");
+
+  // Strip dangerous pseudo-protocols and script execution schemes
+  clean = clean.replace(/javascript\s*:/gi, "");
+  clean = clean.replace(/vbscript\s*:/gi, "");
+  clean = clean.replace(/data\s*:\s*text\/html/gi, "");
+  clean = clean.replace(/data\s*:\s*image\/svg\+xml/gi, "");
+
+  // Strip inline event handlers (onload, onerror, onclick, etc.) and dangerous attributes
+  clean = clean.replace(/\s+on\w+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi, "");
+  clean = clean.replace(/\s+(formaction|xlink:href)\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi, "");
 
   // 3. Trim and enforce length limit
   clean = clean.trim();
@@ -230,3 +238,42 @@ export function validateImageUpload(file: {
     mimeType: file.type,
   };
 }
+
+/**
+ * Sanitize rich story or chapter HTML, allowing only safe semantic formatting
+ * (p, b, i, em, strong, br, blockquote, hr) and stripping all scripts, styles,
+ * and dangerous attributes.
+ */
+export function sanitizeRichText(html: unknown, maxLength = 50000): string {
+  if (typeof html !== "string") return "";
+
+  // 1. Initial sanitization for null bytes and control chars
+  let clean = html.replace(/\0/g, "").replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+
+  // 2. Strip dangerous elements entirely
+  const DANGEROUS = "script|iframe|embed|object|svg|math|form|link|meta|style|base|applet";
+  clean = clean.replace(new RegExp(`<\\s*(${DANGEROUS})[^>]*>[\\s\\S]*?<\\s*\\/\\s*\\1\\s*>`, "gi"), "");
+  clean = clean.replace(new RegExp(`<\\s*(${DANGEROUS})[^>]*\\/?\\s*>`, "gi"), "");
+
+  // 3. Strip event handlers and active scripts
+  clean = clean.replace(/\s+on\w+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi, "");
+  clean = clean.replace(/javascript\s*:/gi, "");
+
+  // 4. Strip any tag that is not in the safe whitelist
+  clean = clean.replace(/<\/?([a-z0-9]+)(?:\s+[^>]*?)?(\/?)>/gi, (match, tag, selfClose) => {
+    const lowerTag = tag.toLowerCase();
+    const ALLOWED = ["p", "br", "b", "strong", "i", "em", "blockquote", "hr", "span"];
+    if (!ALLOWED.includes(lowerTag)) {
+      return "";
+    }
+    return selfClose ? `<${lowerTag} />` : `<${match.startsWith("</") ? "/" : ""}${lowerTag}>`;
+  });
+
+  clean = clean.trim();
+  if (clean.length > maxLength) {
+    clean = clean.slice(0, maxLength);
+  }
+
+  return clean;
+}
+

@@ -27,6 +27,15 @@ import {
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/network/api-client";
+import {
+  saveLocalDraftBackup,
+  getLocalDraftBackup,
+  clearLocalDraftBackup,
+  LocalDraftBackup,
+  AutosaveStatus,
+} from "@/lib/stores/studio-store";
+import { AutosaveBadge } from "@/components/studio/AutosaveBadge";
+import { DraftRecoveryBanner } from "@/components/studio/DraftRecoveryBanner";
 
 export default function NewChapterPage() {
   const params = useParams();
@@ -60,6 +69,12 @@ export default function NewChapterPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
+  // Autosave and Recovery states
+  const [autosaveStatus, setAutosaveStatus] = React.useState<AutosaveStatus>("idle");
+  const [isDirty, setIsDirty] = React.useState(false);
+  const [lastSavedAt, setLastSavedAt] = React.useState<number | null>(null);
+  const [detectedBackup, setDetectedBackup] = React.useState<LocalDraftBackup | null>(null);
+
   React.useEffect(() => {
     if (!user || !bookId) return;
     let isMounted = true;
@@ -83,6 +98,12 @@ export default function NewChapterPage() {
         tomorrow.setHours(18, 0, 0, 0);
         setScheduledDateTime(tomorrow.toISOString().slice(0, 16));
 
+        // Check if an unsaved local draft backup exists for a new chapter on this book
+        const backup = getLocalDraftBackup(`new_${bookId}`);
+        if (backup && backup.content && backup.content.trim().length > 0) {
+          setDetectedBackup(backup);
+        }
+
         setLoading(false);
       })
       .catch((err) => {
@@ -104,6 +125,45 @@ export default function NewChapterPage() {
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
+    setIsDirty(true);
+  };
+
+  // Debounced Local Draft Backup (every 2.5 seconds of typing pause)
+  React.useEffect(() => {
+    if (loading || !bookId) return;
+    if (!isDirty || !content.trim()) return;
+
+    setAutosaveStatus("saving");
+    const timer = setTimeout(() => {
+      saveLocalDraftBackup(`new_${bookId}`, {
+        bookId,
+        title,
+        content,
+        chapterNumber,
+        wordCount,
+        updatedAt: Date.now(),
+      });
+      setLastSavedAt(Date.now());
+      setAutosaveStatus("saved");
+      setIsDirty(false);
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [title, content, chapterNumber, bookId, isDirty, wordCount, loading]);
+
+  const handleRestoreBackup = () => {
+    if (!detectedBackup) return;
+    setTitle(detectedBackup.title);
+    setContent(detectedBackup.content);
+    setChapterNumber(detectedBackup.chapterNumber);
+    setDetectedBackup(null);
+    setIsDirty(true);
+  };
+
+  const handleDiscardBackup = () => {
+    if (!bookId) return;
+    clearLocalDraftBackup(`new_${bookId}`);
+    setDetectedBackup(null);
   };
 
   // Compute calculated target date based on scheduling cadence
@@ -189,6 +249,7 @@ export default function NewChapterPage() {
       );
 
       if (res.ok) {
+        clearLocalDraftBackup(`new_${bookId}`);
         router.push(`/studio/${bookId}/chapters`);
       } else {
         const detailsObj = res.details as Record<string, unknown> | undefined;
@@ -237,18 +298,35 @@ export default function NewChapterPage() {
       </Link>
 
       {/* Header */}
-      <div className="flex flex-col gap-1 border-b border-border/70 pb-5">
-        <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
-          <Feather className="w-4 h-4" />
-          <span>Writer Studio · {book?.title}</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-5">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
+            <Feather className="w-4 h-4" />
+            <span>Writer Studio · {book?.title}</span>
+          </div>
+          <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
+            Write New Chapter
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Craft story prose and determine your publication cadence.
+          </p>
         </div>
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
-          Write New Chapter
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Craft story prose and determine your publication cadence.
-        </p>
+
+        <AutosaveBadge
+          status={autosaveStatus}
+          isDirty={isDirty}
+          lastSavedAt={lastSavedAt}
+          className="self-start sm:self-center"
+        />
       </div>
+
+      {detectedBackup && (
+        <DraftRecoveryBanner
+          backup={detectedBackup}
+          onRestore={handleRestoreBackup}
+          onDiscard={handleDiscardBackup}
+        />
+      )}
 
       {errorMessage && (
         <div className="flex items-center gap-2 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium animate-in fade-in">
@@ -311,7 +389,10 @@ export default function NewChapterPage() {
             rows={18}
             required
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setIsDirty(true);
+            }}
             placeholder="Once upon an ember-lit night..."
             className="w-full p-4 rounded-xl border border-input bg-background/50 font-serif text-base leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-y"
           />

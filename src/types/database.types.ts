@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -86,6 +86,42 @@ export type Database = {
           target_id?: string
           target_title?: string | null
           target_type?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -341,6 +377,8 @@ export type Database = {
           description: string | null
           estimated_read_time_minutes: number
           featured: boolean
+          file_path: string | null
+          file_url: string | null
           id: string
           is_suspended: boolean
           moderated_at: string | null
@@ -369,6 +407,8 @@ export type Database = {
           description?: string | null
           estimated_read_time_minutes?: number
           featured?: boolean
+          file_path?: string | null
+          file_url?: string | null
           id?: string
           is_suspended?: boolean
           moderated_at?: string | null
@@ -397,6 +437,8 @@ export type Database = {
           description?: string | null
           estimated_read_time_minutes?: number
           featured?: boolean
+          file_path?: string | null
+          file_url?: string | null
           id?: string
           is_suspended?: boolean
           moderated_at?: string | null
@@ -673,6 +715,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      idempotency_keys: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          key: string
+          response_body: string
+          response_headers: Json
+          response_status: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          key: string
+          response_body: string
+          response_headers?: Json
+          response_status: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          key?: string
+          response_body?: string
+          response_headers?: Json
+          response_status?: number
+          user_id?: string | null
+        }
+        Relationships: []
       }
       notifications: {
         Row: {

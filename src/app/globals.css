@@ -447,4 +447,45 @@ body {
   user-select: text;
 }
 
+/* Taleora Editorial Design System Enhancements */
+.book-spine-shadow {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.03) 8%, transparent 16%);
+}
+
+.dark .book-spine-shadow {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.15) 8%, transparent 16%);
+}
+
+.editorial-glass {
+  background: var(--taleora-glass-bg, rgba(250, 248, 245, 0.82));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 20px 40px -15px rgba(30, 27, 24, 0.12), 0 8px 16px -4px rgba(30, 27, 24, 0.04);
+}
+
+.dark .editorial-glass {
+  background: rgba(13, 15, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+}
+
+/* Golden Satin Bookmark Ribbon */
+.gold-satin-ribbon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+}
+
+/* Crimson Satin Bookmark Ribbon */
+.crimson-satin-ribbon {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #9f1239 100%);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.4);
+}
+
+/* Luxury Book Glow Aura */
+.book-glow-aura {
+  filter: drop-shadow(0 20px 40px rgba(245, 158, 11, 0.22)) drop-shadow(0 0 60px rgba(217, 119, 6, 0.12));
+}
+
+
 

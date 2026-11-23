@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Star, Clock, BookOpen, Bookmark } from "lucide-react";
+import { Star, Clock, BookOpen, Bookmark, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth/use-auth";
@@ -22,12 +22,10 @@ export function StoryCard({ book }: StoryCardProps) {
   const genre = book.genres[0]?.name ?? "Story";
   const authorName = book.author?.name ?? "Unknown Author";
 
-  const bookHref = user
-    ? `/books/${book.slug}`
-    : `/login?next=${encodeURIComponent(`/books/${book.slug}`)}&notice=${encodeURIComponent("Please sign in to explore books")}`;
+  const bookHref = `/books/${book.slug}`;
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
+    <div className="group relative flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/50 hover:-translate-y-1">
       {/* Visual Cover Banner */}
       <div
         className={`h-44 w-full bg-gradient-to-br ${gradient} p-5 flex flex-col justify-between text-white relative overflow-hidden`}
@@ -44,13 +42,30 @@ export function StoryCard({ book }: StoryCardProps) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/30 group-hover:from-black/75 transition-colors" />
 
-        <div className="relative z-10 flex items-start justify-between">
-          <Badge
-            variant="warm"
-            className="bg-black/40 text-white border-white/20 backdrop-blur-xs text-[11px]"
-          >
-            {genre}
-          </Badge>
+        {/* Decorative tactile spine crease effect */}
+        <div className="absolute left-0 top-0 bottom-0 w-3.5 book-spine-shadow z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/20 z-10 pointer-events-none" />
+
+        <div className="relative z-10 flex items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="warm"
+              className="bg-black/55 text-white border-white/20 backdrop-blur-md text-[11px] font-medium"
+            >
+              {genre}
+            </Badge>
+
+            {book.release_schedule && book.release_schedule !== "immediate" ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-[10px] text-emerald-300 font-medium backdrop-blur-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="capitalize">{book.release_schedule}</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/40 border border-white/15 text-[10px] text-amber-200 font-medium backdrop-blur-md">
+                <span>Complete</span>
+              </span>
+            )}
+          </div>
 
           <button
             type="button"

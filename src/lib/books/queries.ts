@@ -461,7 +461,19 @@ async function fetchBookBySlugUncached(slugOrId: string): Promise<BookDetail | n
     book_genres(
       genre:genres(*)
     ),
-    chapters(*)
+    chapters(
+      id,
+      book_id,
+      chapter_number,
+      title,
+      slug,
+      estimated_read_minutes,
+      word_count,
+      status,
+      published_at,
+      created_at,
+      updated_at
+    )
   `;
 
   let query = supabase
@@ -513,8 +525,77 @@ async function fetchBookBySlugUncached(slugOrId: string): Promise<BookDetail | n
 
   if (error || !data) {
     if (error) {
-      console.error("Error fetching book details:", error);
+      console.warn("Nested join error in fetchBookBySlug, trying standalone book query fallback:", error.message || error);
     }
+
+    // Bulletproof fallback: query books table directly then resolve relations
+    try {
+      let fallbackQuery = supabase
+        .from("books")
+        .select("*")
+        .eq("status", "published");
+
+      if (isUuid) {
+        fallbackQuery = fallbackQuery.eq("id", decoded);
+      } else {
+        fallbackQuery = fallbackQuery.eq("slug", decoded);
+      }
+
+      let directBook = (await fallbackQuery.maybeSingle()).data;
+
+      // Prefix fallback for direct query if needed
+      if (!directBook && !isUuid) {
+        const prefix = decoded.split("-").slice(0, 4).join("-");
+        if (prefix.length >= 6) {
+          directBook = (
+            await supabase
+              .from("books")
+              .select("*")
+              .eq("status", "published")
+              .ilike("slug", `${prefix}%`)
+              .limit(1)
+              .maybeSingle()
+          ).data;
+        }
+      }
+
+      if (directBook) {
+        const [authorRes, genresRes, chaptersRes] = await Promise.all([
+          directBook.author_id
+            ? supabase.from("authors").select("*").eq("id", directBook.author_id).maybeSingle()
+            : Promise.resolve({ data: null }),
+          supabase.from("book_genres").select("genre:genres(*)").eq("book_id", directBook.id),
+          supabase
+            .from("chapters")
+            .select("id, book_id, chapter_number, title, slug, estimated_read_minutes, word_count, status, published_at, created_at, updated_at")
+            .eq("book_id", directBook.id)
+            .eq("status", "published")
+            .order("chapter_number", { ascending: true }),
+        ]);
+
+        const genres: GenreRow[] = (genresRes.data || [])
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((bg: any) => bg.genre)
+          .filter(Boolean);
+
+        const chapters = (chaptersRes.data || [])
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((ch: any) => ({ ...ch, content: "" }));
+
+        const recoveredDetail: BookDetail = {
+          ...directBook,
+          author: authorRes.data as any,
+          genres,
+          chapters,
+        };
+
+        setCachedBookDetail(slugOrId, recoveredDetail);
+        return recoveredDetail;
+      }
+    } catch (fallbackErr) {
+      console.error("Direct book query fallback also failed:", fallbackErr);
+    }
+
     return null;
   }
 
@@ -527,6 +608,8 @@ async function fetchBookBySlugUncached(slugOrId: string): Promise<BookDetail | n
   const chapters = (data.chapters || [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((ch: any) => ch.status === "published")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((ch: any) => ({ ...ch, content: ch.content || "" }))
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .sort((a: any, b: any) => a.chapter_number - b.chapter_number);
 
@@ -731,10 +814,12 @@ async function fetchChapterReaderDataUncached(
 
   const book = transformBook(bookData);
 
-  // 2. Fetch all published chapters for this book
+  // 2. Fetch all published chapters for this book (metadata only for index/navigation)
   const { data: chaptersData, error: chaptersErr } = await supabase
     .from("chapters")
-    .select("*")
+    .select(
+      "id, book_id, chapter_number, title, slug, estimated_read_minutes, word_count, status, published_at, created_at, updated_at"
+    )
     .eq("book_id", book.id)
     .eq("status", "published")
     .order("chapter_number", { ascending: true });
@@ -744,7 +829,12 @@ async function fetchChapterReaderDataUncached(
     return null;
   }
 
-  const allChapters = chaptersData;
+  // Cast metadata list with blank content so ChapterRow type contract is satisfied
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allChapters: ChapterRow[] = chaptersData.map((ch: any) => ({
+    ...ch,
+    content: ch.content || "",
+  }));
 
   // 3. Resolve target chapter: by slug/id or fallback to first chapter
   let currentIdx = -1;
@@ -762,7 +852,17 @@ async function fetchChapterReaderDataUncached(
   }
 
   let currentChapter = allChapters[currentIdx];
-  if (!currentChapter.content || currentChapter.content.trim() === "") {
+
+  // Fetch full content specifically for the single active chapter
+  const { data: activeContentRes } = await supabase
+    .from("chapters")
+    .select("content")
+    .eq("id", currentChapter.id)
+    .maybeSingle();
+
+  if (activeContentRes?.content) {
+    currentChapter = { ...currentChapter, content: activeContentRes.content };
+  } else if (!currentChapter.content || currentChapter.content.trim() === "") {
     try {
       const { getChapterContentWithFallback } = await import("./chapter-storage");
       const text = await getChapterContentWithFallback(book.slug, currentChapter.slug);
