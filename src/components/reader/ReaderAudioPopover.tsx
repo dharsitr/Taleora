@@ -328,7 +328,7 @@ export function ReaderAudioPopover({
           </div>
 
           {/* Voice Selection */}
-          {availableVoices.length > 0 && (
+          {availableVoices.length > 0 ? (
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Narrator Voice
@@ -344,6 +344,13 @@ export function ReaderAudioPopover({
                   </option>
                 ))}
               </select>
+            </div>
+          ) : (
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-500 flex flex-col gap-1 leading-snug">
+              <span className="font-semibold">System TTS Voices Not Detected</span>
+              <span className="text-[10px] text-muted-foreground">
+                On Linux, install speech synthesizer backend: <code>sudo pacman -S speech-dispatcher espeak-ng</code>
+              </span>
             </div>
           )}
 
