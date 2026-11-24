@@ -35,6 +35,12 @@ import { BookCanvas } from "./BookCanvas";
 import { ReaderTTSPlayer } from "./ReaderTTSPlayer";
 import { textToSpeechEngine, TtsState } from "@/lib/audio/text-to-speech";
 import { readerPresenceEngine, PresenceState } from "@/lib/network/reader-presence";
+import { readingParlorEngine } from "@/lib/network/parlor-sync";
+import { foleyAudio } from "@/lib/audio/foley-audio";
+import { FloatingReactions } from "./FloatingReactions";
+import { ReadingParlorModal } from "./ReadingParlorModal";
+import { CharacterDossierModal } from "./CharacterDossierModal";
+import { ChapterRecapCard } from "./ChapterRecapCard";
 import { usePagePaginator, splitContentIntoParagraphs } from "./usePagePaginator";
 import { cn } from "@/lib/utils";
 
@@ -198,6 +204,8 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   const [chapterDrawerOpen, setChapterDrawerOpen] = React.useState(false);
   const [settingsDrawerOpen, setSettingsDrawerOpen] = React.useState(false);
   const [annotationsDrawerOpen, setAnnotationsDrawerOpen] = React.useState(false);
+  const [parlorModalOpen, setParlorModalOpen] = React.useState(false);
+  const [dossierModalOpen, setDossierModalOpen] = React.useState(false);
 
   // Annotations state
   const [bookmarks, setBookmarks] = React.useState<BookmarkWithDetails[]>([]);
@@ -244,6 +252,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   });
 
   const handleOpenBook = React.useCallback(() => {
+    foleyAudio.playBookSpineThud();
     setBookCoverState("opening");
     setTimeout(() => {
       setBookCoverState("open");
@@ -251,6 +260,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   }, []);
 
   const handleCloseAndExit = React.useCallback(() => {
+    foleyAudio.playBookSpineThud();
     if (bookCoverState === "closed" || bookCoverState === "closing") {
       router.push(`/books/${book.slug}`);
       return;
@@ -391,6 +401,33 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     readerPresenceEngine.getState()
   );
 
+  // Synchronized Reading Parlor remote page broadcast & subscription
+  React.useEffect(() => {
+    // When guest receives a synced page change from host
+    const unsubParlor = readingParlorEngine.subscribePageSync((payload) => {
+      if (
+        payload.pageNumber > 0 &&
+        payload.pageNumber <= totalPages &&
+        payload.pageNumber !== currentPage
+      ) {
+        goToPage(payload.pageNumber);
+      }
+    });
+
+    return () => unsubParlor();
+  }, [totalPages, currentPage, goToPage]);
+
+  // Broadcast page to parlor when page changes and in active room
+  React.useEffect(() => {
+    if (readingParlorEngine.getActiveRoom()) {
+      readingParlorEngine.broadcastPageTurn(
+        currentChapter.slug,
+        currentPage,
+        user?.user_metadata?.full_name || "Host"
+      );
+    }
+  }, [currentPage, currentChapter.slug, user]);
+
   React.useEffect(() => {
     const unsubPresence = readerPresenceEngine.subscribePresence((st) => {
       setPresenceState({ ...st });
@@ -468,6 +505,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
       : currentPage >= totalPages;
 
     if (!isAtEndOfChapter) {
+      foleyAudio.playPageTurn();
       setTurnDirection("next");
       setIsTurning(true);
       setTimeout(() => {
@@ -475,6 +513,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         setIsTurning(false);
       }, 540);
     } else if (nextChapter) {
+      foleyAudio.playPageTurn();
       setTurnDirection("next");
       setIsTurning(true);
       setTimeout(() => {
@@ -510,6 +549,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
       : currentPage <= 1;
 
     if (!isAtStartOfChapter) {
+      foleyAudio.playPageTurn();
       setTurnDirection("prev");
       setIsTurning(true);
       setTimeout(() => {
@@ -517,6 +557,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         setIsTurning(false);
       }, 540);
     } else if (prevChapter) {
+      foleyAudio.playPageTurn();
       setTurnDirection("prev");
       setIsTurning(true);
       setTimeout(() => {
@@ -1158,6 +1199,30 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         onlineReadersCount={presenceState.onlineCount}
         onExitReader={handleCloseAndExit}
         isOffline={isOffline}
+        onOpenParlor={() => setParlorModalOpen(true)}
+        onOpenDossier={() => setDossierModalOpen(true)}
+      />
+
+      {/* Synchronized Parlor Floating Emoji Reactions */}
+      <FloatingReactions
+        visible={!settings.zenMode}
+        userName={user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Reader"}
+      />
+
+      {/* Reading Parlor Modal */}
+      <ReadingParlorModal
+        isOpen={parlorModalOpen}
+        onClose={() => setParlorModalOpen(false)}
+        bookTitle={book.title}
+        currentChapterTitle={currentChapter.title}
+      />
+
+      {/* Character & Lore Dossier Modal */}
+      <CharacterDossierModal
+        isOpen={dossierModalOpen}
+        onClose={() => setDossierModalOpen(false)}
+        bookTitle={book.title}
+        currentChapterNumber={currentChapter.chapter_number}
       />
 
       {/* Main Book-Style Paginated Canvas */}

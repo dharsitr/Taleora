@@ -15,6 +15,8 @@ import {
   Layers,
   Check,
   BookOpen,
+  BarChart3,
+  ArrowUpDown,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
@@ -27,6 +29,8 @@ import { BookDetail, ChapterRow } from "@/types/books";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal";
+import { ChapterReorderModal } from "@/components/studio/ChapterReorderModal";
+import { StoryAnalyticsDrawer } from "@/components/studio/StoryAnalyticsDrawer";
 
 export default function ChaptersManagerPage() {
   const params = useParams();
@@ -49,6 +53,8 @@ export default function ChaptersManagerPage() {
   const [chapterToDelete, setChapterToDelete] = React.useState<ChapterRow | null>(null);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
+  const [isReorderModalOpen, setIsReorderModalOpen] = React.useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!user || !bookId) return;
@@ -177,6 +183,26 @@ export default function ChaptersManagerPage() {
         </Link>
 
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsAnalyticsOpen(true)}
+            className="gap-2 cursor-pointer shadow-xs"
+          >
+            <BarChart3 className="w-4 h-4 text-primary" />
+            <span>Retention Analytics</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsReorderModalOpen(true)}
+            className="gap-2 cursor-pointer shadow-xs"
+          >
+            <ArrowUpDown className="w-4 h-4" />
+            <span>Reorder Sequencer</span>
+          </Button>
+
           <Link href={`/studio/${bookId}/chapters/new`}>
             <Button size="sm" className="gap-2 cursor-pointer shadow-sm">
               <Plus className="w-4 h-4" />
@@ -411,6 +437,26 @@ export default function ChaptersManagerPage() {
           setChapterToDelete(null);
           setDeleteError(null);
         }}
+      />
+
+      {/* Chapter Reorder Visual Sequencer Modal */}
+      <ChapterReorderModal
+        isOpen={isReorderModalOpen}
+        onClose={() => setIsReorderModalOpen(false)}
+        chapters={chapters}
+        onOrderSaved={(reordered) => {
+          setChapters(reordered);
+          setStatusMessage("Chapter order updated successfully.");
+          setTimeout(() => setStatusMessage(null), 3000);
+        }}
+      />
+
+      {/* Reader Retention Heatmap Analytics Drawer */}
+      <StoryAnalyticsDrawer
+        isOpen={isAnalyticsOpen}
+        onClose={() => setIsAnalyticsOpen(false)}
+        bookTitle={book.title}
+        chapters={chapters}
       />
     </div>
   );

@@ -11,6 +11,8 @@ import {
   Bookmark,
   Highlighter,
   WifiOff,
+  Users,
+  Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +33,8 @@ interface ReaderHeaderProps {
   onExitReader?: () => void;
   isOffline?: boolean;
   onlineReadersCount?: number;
+  onOpenParlor?: () => void;
+  onOpenDossier?: () => void;
 }
 
 export function ReaderHeader({
@@ -50,6 +54,8 @@ export function ReaderHeader({
   onExitReader,
   isOffline = false,
   onlineReadersCount,
+  onOpenParlor,
+  onOpenDossier,
 }: ReaderHeaderProps) {
   return (
     <>
@@ -173,6 +179,32 @@ export function ReaderHeader({
             >
               <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
+
+            {/* Character & Lore Dossier */}
+            {onOpenDossier && (
+              <button
+                type="button"
+                onClick={onOpenDossier}
+                title="Character Dossier & Lore (Spoiler Safe)"
+                aria-label="Character Dossier & Lore"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
+              >
+                <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            )}
+
+            {/* Reading Parlor (Live Buddy Reads) */}
+            {onOpenParlor && (
+              <button
+                type="button"
+                onClick={onOpenParlor}
+                title="Synchronized Reading Parlor"
+                aria-label="Synchronized Reading Parlor"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
+              >
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            )}
 
             {/* Reader Appearance Button */}
             <button
