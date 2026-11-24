@@ -54,6 +54,7 @@ interface BookCanvasProps {
     isPlaying: boolean;
   };
   onOpenMarginNotes?: (paragraphIndex?: number) => void;
+  onOpenMarginDiscussion?: (paragraphIndex: number, snippet: string) => void;
 }
 
 interface SinglePageRenderProps {
@@ -76,6 +77,7 @@ interface SinglePageRenderProps {
     isPlaying: boolean;
   };
   onOpenMarginNotes?: (paragraphIndex?: number) => void;
+  onOpenMarginDiscussion?: (paragraphIndex: number, snippet: string) => void;
 }
 
 /**
@@ -97,6 +99,7 @@ export function SingleBookPageContent({
   isFirstPageOfChapter = false,
   activeTtsState,
   onOpenMarginNotes,
+  onOpenMarginDiscussion,
 }: SinglePageRenderProps) {
   const fontClass =
     settings.fontFamily === "sans"
@@ -216,20 +219,22 @@ export function SingleBookPageContent({
                       "bg-amber-500/10 dark:bg-amber-500/15 border-l-3 border-amber-500 pl-2.5 -ml-2.5 py-0.5 rounded-r-lg shadow-xs"
                   )}
                 >
-                  {/* Margin Note Badge Button */}
-                  {hasNotes && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                  {/* Margin Note / Discussion Badge Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (hasNotes) {
                         onOpenMarginNotes?.(chunk.paragraphIndex);
-                      }}
-                      className="absolute -right-2.5 sm:-right-4.5 top-0.5 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 flex items-center justify-center text-[10px] hover:scale-125 transition-transform cursor-pointer shadow-xs select-none z-30"
-                      title="View margin thoughts on this passage"
-                    >
-                      💬
-                    </button>
-                  )}
+                      } else {
+                        onOpenMarginDiscussion?.(chunk.paragraphIndex, chunk.text);
+                      }
+                    }}
+                    className="absolute -right-2.5 sm:-right-4.5 top-0.5 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 flex items-center justify-center text-[10px] hover:scale-125 transition-transform cursor-pointer shadow-xs select-none z-30"
+                    title={hasNotes ? "View personal margin notes" : "Open paragraph discussion"}
+                  >
+                    💬
+                  </button>
 
                   {showDropCap && (
                     <span className="literary-drop-cap text-primary font-bold">
@@ -364,6 +369,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
       coverImageUrl,
       activeTtsState,
       onOpenMarginNotes,
+      onOpenMarginDiscussion,
     },
     ref
   ) {
@@ -627,6 +633,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                   )}
                 >
                   <SingleBookPageContent
+                    onOpenMarginDiscussion={onOpenMarginDiscussion}
                     pageData={
                       isTurning && turnDirection === "prev"
                         ? prevLeftPageData
@@ -671,6 +678,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                   )}
                 >
                   <SingleBookPageContent
+                    onOpenMarginDiscussion={onOpenMarginDiscussion}
                     pageData={
                       isTurning && turnDirection === "next"
                         ? nextRightPageData
@@ -892,6 +900,7 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                   <div className="absolute inset-y-0 left-0 w-8 z-20 book-spine-crease pointer-events-none" />
 
                   <SingleBookPageContent
+                    onOpenMarginDiscussion={onOpenMarginDiscussion}
                     pageData={
                       isTurning && turnDirection === "next"
                         ? pages[pageNumber] || null

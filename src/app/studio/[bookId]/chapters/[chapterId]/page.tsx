@@ -34,6 +34,8 @@ import {
 } from "@/lib/stores/studio-store";
 import { AutosaveBadge } from "@/components/studio/AutosaveBadge";
 import { DraftRecoveryBanner } from "@/components/studio/DraftRecoveryBanner";
+import { DraftDiffModal } from "@/components/studio/DraftDiffModal";
+import { History } from "lucide-react";
 
 export default function EditChapterPage() {
   const params = useParams();
@@ -69,6 +71,7 @@ export default function EditChapterPage() {
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
+  const [isDraftDiffOpen, setIsDraftDiffOpen] = React.useState(false);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
@@ -418,6 +421,16 @@ export default function EditChapterPage() {
               Story Prose Content
             </span>
             <div className="flex items-center gap-4 font-mono">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDraftDiffOpen(true)}
+                className="gap-1.5 cursor-pointer text-xs h-7"
+              >
+                <History className="w-3.5 h-3.5 text-primary" />
+                <span>Version History</span>
+              </Button>
               <span className="flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-primary" />
                 {wordCount.toLocaleString()} words
@@ -661,6 +674,18 @@ export default function EditChapterPage() {
         onCancel={() => {
           setIsDeleteModalOpen(false);
           setDeleteError(null);
+        }}
+      />
+
+      {/* Writer's Room & Draft Diff Modal */}
+      <DraftDiffModal
+        isOpen={isDraftDiffOpen}
+        onClose={() => setIsDraftDiffOpen(false)}
+        chapterTitle={title || "Untitled Chapter"}
+        currentContent={content}
+        onRestoreSnapshot={(restoredContent) => {
+          setContent(restoredContent);
+          setIsDirty(true);
         }}
       />
     </div>

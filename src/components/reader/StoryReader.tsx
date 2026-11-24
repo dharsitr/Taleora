@@ -41,6 +41,9 @@ import { FloatingReactions } from "./FloatingReactions";
 import { ReadingParlorModal } from "./ReadingParlorModal";
 import { CharacterDossierModal } from "./CharacterDossierModal";
 import { ChapterRecapCard } from "./ChapterRecapCard";
+import { ParagraphDiscussionDrawer } from "./ParagraphDiscussionDrawer";
+import { CharacterRelationshipMap } from "./CharacterRelationshipMap";
+import { ReadingBadgesModal } from "@/components/stats/ReadingBadgesModal";
 import { usePagePaginator, splitContentIntoParagraphs } from "./usePagePaginator";
 import { cn } from "@/lib/utils";
 
@@ -206,6 +209,19 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   const [annotationsDrawerOpen, setAnnotationsDrawerOpen] = React.useState(false);
   const [parlorModalOpen, setParlorModalOpen] = React.useState(false);
   const [dossierModalOpen, setDossierModalOpen] = React.useState(false);
+  const [relationshipMapOpen, setRelationshipMapOpen] = React.useState(false);
+  const [badgesModalOpen, setBadgesModalOpen] = React.useState(false);
+
+  // Paragraph Margin Discussions Drawer state
+  const [marginDiscussionState, setMarginDiscussionState] = React.useState<{
+    isOpen: boolean;
+    paragraphIndex: number | null;
+    snippet: string;
+  }>({
+    isOpen: false,
+    paragraphIndex: null,
+    snippet: "",
+  });
 
   // Annotations state
   const [bookmarks, setBookmarks] = React.useState<BookmarkWithDetails[]>([]);
@@ -1201,6 +1217,8 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         isOffline={isOffline}
         onOpenParlor={() => setParlorModalOpen(true)}
         onOpenDossier={() => setDossierModalOpen(true)}
+        onOpenRelationshipMap={() => setRelationshipMapOpen(true)}
+        onOpenBadges={() => setBadgesModalOpen(true)}
       />
 
       {/* Synchronized Parlor Floating Emoji Reactions */}
@@ -1223,6 +1241,33 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         onClose={() => setDossierModalOpen(false)}
         bookTitle={book.title}
         currentChapterNumber={currentChapter.chapter_number}
+      />
+
+      {/* Dynamic Character Relationship Graph Modal */}
+      <CharacterRelationshipMap
+        isOpen={relationshipMapOpen}
+        onClose={() => setRelationshipMapOpen(false)}
+        bookTitle={book.title}
+        currentChapterNumber={currentChapter.chapter_number}
+      />
+
+      {/* Reading Streaks & Ritual Badges Modal */}
+      <ReadingBadgesModal
+        isOpen={badgesModalOpen}
+        onClose={() => setBadgesModalOpen(false)}
+        userName={user?.user_metadata?.full_name || "Fellow Reader"}
+      />
+
+      {/* Paragraph Margin Discussions Drawer */}
+      <ParagraphDiscussionDrawer
+        isOpen={marginDiscussionState.isOpen}
+        onClose={() =>
+          setMarginDiscussionState({ isOpen: false, paragraphIndex: null, snippet: "" })
+        }
+        chapterNumber={currentChapter.chapter_number}
+        paragraphIndex={marginDiscussionState.paragraphIndex}
+        paragraphSnippet={marginDiscussionState.snippet}
+        currentUserName={user?.user_metadata?.full_name || "Reader"}
       />
 
       {/* Main Book-Style Paginated Canvas */}
@@ -1276,6 +1321,9 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
             isPlaying: ttsState.isPlaying && !ttsState.isPaused,
           }}
           onOpenMarginNotes={() => setAnnotationsDrawerOpen(true)}
+          onOpenMarginDiscussion={(pIdx, snippet) =>
+            setMarginDiscussionState({ isOpen: true, paragraphIndex: pIdx, snippet })
+          }
         />
       </main>
 

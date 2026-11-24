@@ -17,6 +17,7 @@ import {
   BookOpen,
   BarChart3,
   ArrowUpDown,
+  Download,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
@@ -31,6 +32,7 @@ import { Badge } from "@/components/ui/Badge";
 import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal";
 import { ChapterReorderModal } from "@/components/studio/ChapterReorderModal";
 import { StoryAnalyticsDrawer } from "@/components/studio/StoryAnalyticsDrawer";
+import { StoryExportModal } from "@/components/studio/StoryExportModal";
 
 export default function ChaptersManagerPage() {
   const params = useParams();
@@ -55,6 +57,7 @@ export default function ChaptersManagerPage() {
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
   const [isReorderModalOpen, setIsReorderModalOpen] = React.useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = React.useState(false);
+  const [isExportOpen, setIsExportOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!user || !bookId) return;
@@ -183,6 +186,16 @@ export default function ChaptersManagerPage() {
         </Link>
 
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsExportOpen(true)}
+            className="gap-2 cursor-pointer shadow-xs"
+          >
+            <Download className="w-4 h-4 text-primary" />
+            <span>Export Book</span>
+          </Button>
+
           <Button
             size="sm"
             variant="outline"
@@ -456,6 +469,15 @@ export default function ChaptersManagerPage() {
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
         bookTitle={book.title}
+        chapters={chapters}
+      />
+
+      {/* Story DRM-Free & Print Exporter Modal */}
+      <StoryExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        bookTitle={book.title}
+        authorName={book.author?.name || user.user_metadata?.full_name || "Author"}
         chapters={chapters}
       />
     </div>
