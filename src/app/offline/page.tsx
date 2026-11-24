@@ -15,11 +15,13 @@ import { getAllOfflineBooks } from "@/lib/offline/db";
 import { OfflineBook } from "@/types/offline";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { OfflineStorageManager } from "@/components/offline/OfflineStorageManager";
 
 export default function OfflineFallbackPage() {
   const [offlineBooks, setOfflineBooks] = React.useState<OfflineBook[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRetrying, setIsRetrying] = React.useState(false);
+  const [storageModalOpen, setStorageModalOpen] = React.useState(false);
 
   const loadBooks = React.useCallback(async () => {
     setIsLoading(true);
@@ -73,7 +75,7 @@ export default function OfflineFallbackPage() {
           No internet connection was detected. You can continue reading any stories previously saved to your local device.
         </p>
 
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Button
             variant="outline"
             size="sm"
@@ -83,6 +85,16 @@ export default function OfflineFallbackPage() {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRetrying ? "animate-spin" : ""}`} />
             <span>{isRetrying ? "Checking Connection..." : "Check Connection"}</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setStorageModalOpen(true)}
+            className="gap-2 cursor-pointer text-xs"
+          >
+            <HardDrive className="w-3.5 h-3.5" />
+            <span>Manage Storage</span>
           </Button>
 
           <Link href="/library">
@@ -192,6 +204,12 @@ export default function OfflineFallbackPage() {
           </div>
         )}
       </div>
+
+      {/* Offline Storage Manager Modal */}
+      <OfflineStorageManager
+        isOpen={storageModalOpen}
+        onClose={() => setStorageModalOpen(false)}
+      />
     </div>
   );
 }

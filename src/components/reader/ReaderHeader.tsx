@@ -30,6 +30,7 @@ interface ReaderHeaderProps {
   annotationsCount?: number;
   onExitReader?: () => void;
   isOffline?: boolean;
+  onlineReadersCount?: number;
 }
 
 export function ReaderHeader({
@@ -48,6 +49,7 @@ export function ReaderHeader({
   annotationsCount = 0,
   onExitReader,
   isOffline = false,
+  onlineReadersCount,
 }: ReaderHeaderProps) {
   return (
     <>
@@ -109,6 +111,17 @@ export function ReaderHeader({
 
           {/* Right: Controls & Drawer Triggers */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Live Reader Presence Pill */}
+            {onlineReadersCount !== undefined && onlineReadersCount > 0 && (
+              <div
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-[10px] font-mono font-medium shadow-xs"
+                title={`${onlineReadersCount} reader${onlineReadersCount > 1 ? "s" : ""} on this chapter right now`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{onlineReadersCount} Live</span>
+              </div>
+            )}
+
             {/* Quick Bookmark Current Position */}
             {onBookmarkCurrent && (
               <button

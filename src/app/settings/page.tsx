@@ -18,6 +18,8 @@ import {
   CheckCircle2,
   Sliders,
   BookOpen,
+  HardDrive,
+  DownloadCloud,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -25,6 +27,8 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import { getMfaStatus, unenrollMfaFactor, MfaStatus } from "@/lib/auth/mfa";
 import { MfaSetupModal } from "@/components/auth/MfaSetupModal";
+import { OfflineStorageManager } from "@/components/offline/OfflineStorageManager";
+import { PwaInstallButton } from "@/components/pwa/PwaInstallButton";
 import { createSecurityNotification } from "@/lib/security/notifications";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -39,6 +43,7 @@ export default function SettingsPage() {
   const [mfaStatus, setMfaStatus] = React.useState<MfaStatus | null>(null);
   const [loadingMfa, setLoadingMfa] = React.useState(true);
   const [showSetupModal, setShowSetupModal] = React.useState(false);
+  const [showStorageModal, setShowStorageModal] = React.useState(false);
   const [removingFactorId, setRemovingFactorId] = React.useState<string | null>(null);
   const [userRole, setUserRole] = React.useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
@@ -499,7 +504,57 @@ export default function SettingsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Section 4: Offline PWA & Local Storage */}
+        <Card className="border border-border/80 bg-card/80 backdrop-blur-md shadow-sm">
+          <CardHeader className="pb-4 border-b border-border/60">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-primary font-semibold text-xs uppercase tracking-wider">
+                <HardDrive className="w-4 h-4" />
+                <span>Offline Reading & Storage</span>
+              </div>
+            </div>
+            <CardTitle className="font-serif text-xl font-bold mt-1 text-foreground">
+              Offline Sanctuary & PWA
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground mt-0.5">
+              Manage downloaded books in IndexedDB, review disk cache consumption, and install Taleora on your home screen.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="pt-6 pb-6 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border border-amber-500/25 bg-amber-500/5">
+              <div className="flex flex-col gap-0.5">
+                <p className="text-sm font-serif font-bold text-foreground">
+                  Local Device Storage Manager
+                </p>
+                <p className="text-xs text-muted-foreground max-w-md">
+                  Inspect chapter backups, manage offline downloads, and clear cached assets.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowStorageModal(true)}
+                  className="gap-2 cursor-pointer text-xs"
+                >
+                  <HardDrive className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Inspect Storage</span>
+                </Button>
+                <PwaInstallButton />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Offline Storage Manager Modal */}
+      <OfflineStorageManager
+        isOpen={showStorageModal}
+        onClose={() => setShowStorageModal(false)}
+      />
 
       {/* MFA Setup Modal */}
       <MfaSetupModal

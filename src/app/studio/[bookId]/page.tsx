@@ -13,6 +13,7 @@ import {
   Layers,
   Save,
   ExternalLink,
+  Wand2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import {
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/network/api-client";
 import { DeleteConfirmationModal } from "@/components/ui/DeleteConfirmationModal";
+import { LuxuryCoverGeneratorModal } from "@/components/studio/LuxuryCoverGeneratorModal";
 
 const GRADIENT_PRESETS = [
   {
@@ -90,6 +92,7 @@ export default function EditStoryDetailsPage() {
   const [accentColor, setAccentColor] = React.useState(GRADIENT_PRESETS[0].accent);
   const [coverImageUrl, setCoverImageUrl] = React.useState<string | null>(null);
   const [uploadingFile, setUploadingFile] = React.useState(false);
+  const [coverModalOpen, setCoverModalOpen] = React.useState(false);
 
   const [isSaving, setIsSaving] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -427,36 +430,54 @@ export default function EditStoryDetailsPage() {
 
         {/* Section 2: Cover Art */}
         <div className="flex flex-col gap-4 p-6 rounded-2xl border border-border bg-card">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg font-bold text-foreground">
-              Book Cover Appearance
-            </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="font-serif text-lg font-bold text-foreground">
+                Book Cover Appearance
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Generate foil-embossed hardcover artwork, adjust palettes, or upload custom imagery.
+              </p>
+            </div>
 
-            <div className="flex items-center p-1 rounded-xl bg-secondary/50 border border-border text-xs font-medium">
-              <button
+            <div className="flex items-center gap-2">
+              <Button
                 type="button"
-                onClick={() => setCoverType("preset")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg transition-colors cursor-pointer",
-                  coverType === "preset"
-                    ? "bg-card text-foreground font-semibold shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                size="sm"
+                variant="outline"
+                onClick={() => setCoverModalOpen(true)}
+                className="h-8 px-3 rounded-xl border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 dark:text-amber-400 text-xs font-semibold gap-1.5 cursor-pointer shadow-xs"
               >
-                Curated Gradient
-              </button>
-              <button
-                type="button"
-                onClick={() => setCoverType("upload")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg transition-colors cursor-pointer",
-                  coverType === "upload"
-                    ? "bg-card text-foreground font-semibold shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Upload Image
-              </button>
+                <Wand2 className="w-3.5 h-3.5" />
+                <span>Cover Studio</span>
+              </Button>
+
+              <div className="flex items-center p-1 rounded-xl bg-secondary/50 border border-border text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => setCoverType("preset")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg transition-colors cursor-pointer",
+                    coverType === "preset"
+                      ? "bg-card text-foreground font-semibold shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Curated
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCoverType("upload")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg transition-colors cursor-pointer",
+                    coverType === "upload"
+                      ? "bg-card text-foreground font-semibold shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Upload
+                </button>
+              </div>
             </div>
           </div>
 
@@ -644,6 +665,21 @@ export default function EditStoryDetailsPage() {
         onCancel={() => {
           setIsDeleteModalOpen(false);
           setDeleteError(null);
+        }}
+      />
+
+      {/* Luxury Cover Studio Modal */}
+      <LuxuryCoverGeneratorModal
+        isOpen={coverModalOpen}
+        onClose={() => setCoverModalOpen(false)}
+        title={title || "Untitled Story"}
+        subtitle={subtitle}
+        authorName={book?.author?.name || user?.user_metadata?.full_name || "Author"}
+        onApplyCover={(dataUrl, gradient, accent) => {
+          setCoverType("upload");
+          setCoverImageUrl(dataUrl);
+          setSelectedGradient(gradient);
+          setAccentColor(accent);
         }}
       />
     </div>

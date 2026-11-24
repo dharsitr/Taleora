@@ -32,6 +32,9 @@ import { HighlightToolbar } from "./HighlightToolbar";
 import { HighlightNoteModal } from "./HighlightNoteModal";
 import { ReaderBookmarksDrawer } from "./ReaderBookmarksDrawer";
 import { BookCanvas } from "./BookCanvas";
+import { ReaderTTSPlayer } from "./ReaderTTSPlayer";
+import { textToSpeechEngine, TtsState } from "@/lib/audio/text-to-speech";
+import { readerPresenceEngine, PresenceState } from "@/lib/network/reader-presence";
 import { usePagePaginator, splitContentIntoParagraphs } from "./usePagePaginator";
 import { cn } from "@/lib/utils";
 
@@ -346,6 +349,19 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     initialPageIndex: initialParams.pageIndex,
   });
 
+  // Listen to TTS Engine updates
+  const [ttsState, setTtsState] = React.useState<TtsState>(() => textToSpeechEngine.getState());
+
+  React.useEffect(() => {
+    const unsub = textToSpeechEngine.subscribe((state) => {
+      setTtsState({ ...state });
+      if (state.isPlaying && !state.isPaused && state.currentParagraphIndex !== undefined) {
+        jumpToParagraph(state.currentParagraphIndex);
+      }
+    });
+    return () => unsub();
+  }, [jumpToParagraph]);
+
   // Calculate Chapter & Book Progress
   const progressPercentage = React.useMemo(() => {
     if (totalPages <= 1) return 100;
@@ -370,23 +386,42 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
     };
   }, [user, book.id]);
 
-  // Load Highlights for current chapter
-  React.useEffect(() => {
-    if (!user) return;
-    let isMounted = true;
+  // Realtime Reader Presence on Current Chapter
+  const [presenceState, setPresenceState] = React.useState<PresenceState>(() =>
+    readerPresenceEngine.getState()
+  );
 
-    getChapterHighlights(user.id, currentChapter.id)
-      .then((res) => {
-        if (isMounted) {
-          setHighlights(res);
-        }
-      })
-      .catch((err) => console.error("Error loading highlights:", err));
+  React.useEffect(() => {
+    const unsubPresence = readerPresenceEngine.subscribePresence((st) => {
+      setPresenceState({ ...st });
+    });
+
+    readerPresenceEngine.joinChapter({
+      chapterId: currentChapter.id,
+      bookId: book.id,
+      currentUser: user
+        ? {
+            id: user.id,
+            name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Reader",
+            avatarUrl: user.user_metadata?.avatar_url || null,
+          }
+        : null,
+      onRemoteHighlightCreated: (remoteHighlight) => {
+        setHighlights((prev) => [
+          remoteHighlight,
+          ...prev.filter((h) => h.id !== remoteHighlight.id),
+        ]);
+      },
+      onRemoteHighlightDeleted: (remoteId) => {
+        setHighlights((prev) => prev.filter((h) => h.id !== remoteId));
+      },
+    });
 
     return () => {
-      isMounted = false;
+      unsubPresence();
+      readerPresenceEngine.leaveChapter();
     };
-  }, [user, currentChapter.id]);
+  }, [currentChapter.id, book.id, user]);
 
   // Handle Deep Linking from query param (?p=index) once paginated
   React.useEffect(() => {
@@ -1000,6 +1035,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
           setHighlights((prev) =>
             prev.map((h) => (h.id === tempId ? created : h))
           );
+          readerPresenceEngine.broadcastHighlight(created);
         }
       } catch (err) {
         console.error("Failed to sync highlight to database:", err);
@@ -1036,6 +1072,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
 
   const handleDeleteHighlight = async (highlightId: string) => {
     setHighlights((prev) => prev.filter((h) => h.id !== highlightId));
+    readerPresenceEngine.broadcastDeleteHighlight(highlightId);
 
     if (user && !highlightId.startsWith("hl-")) {
       await deleteHighlight(highlightId, user.id);
@@ -1098,6 +1135,9 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         onParagraphSelect={(idx) => jumpToParagraph(idx)}
       />
 
+      {/* Floating Active In-Reader TTS Player */}
+      <ReaderTTSPlayer visible={!settings.zenMode} />
+
       {/* Reader Top Bar */}
       <ReaderHeader
         bookSlug={book.slug}
@@ -1115,6 +1155,7 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         onBookmarkCurrent={handleBookmarkCurrentPosition}
         isBookmarked={isBookmarked}
         annotationsCount={bookmarks.length + highlights.length}
+        onlineReadersCount={presenceState.onlineCount}
         onExitReader={handleCloseAndExit}
         isOffline={isOffline}
       />
@@ -1164,6 +1205,12 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
           onOpenBook={handleOpenBook}
           authorName={book.author?.name}
           coverImageUrl={book.cover_image_url || undefined}
+          activeTtsState={{
+            paragraphIndex: ttsState.currentParagraphIndex,
+            sentenceText: ttsState.currentSentenceText,
+            isPlaying: ttsState.isPlaying && !ttsState.isPaused,
+          }}
+          onOpenMarginNotes={() => setAnnotationsDrawerOpen(true)}
         />
       </main>
 

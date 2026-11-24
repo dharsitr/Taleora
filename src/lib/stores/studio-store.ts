@@ -14,16 +14,20 @@ export interface LocalDraftBackup {
 }
 
 const DRAFT_STORAGE_PREFIX = "taleora_draft_backup_";
+const inMemoryDrafts = new Map<string, string>();
 
 /**
  * Persists a snapshot of an author's active chapter draft into localStorage.
  */
 export function saveLocalDraftBackup(key: string, data: LocalDraftBackup): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(`${DRAFT_STORAGE_PREFIX}${key}`, JSON.stringify(data));
-  } catch (err) {
-    console.warn("Failed to write draft backup to localStorage:", err);
+  const serialized = JSON.stringify(data);
+  inMemoryDrafts.set(key, serialized);
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      localStorage.setItem(`${DRAFT_STORAGE_PREFIX}${key}`, serialized);
+    } catch (err) {
+      console.warn("Failed to write draft backup to localStorage:", err);
+    }
   }
 }
 
@@ -31,24 +35,29 @@ export function saveLocalDraftBackup(key: string, data: LocalDraftBackup): void 
  * Retrieves a previously saved local draft backup if one exists.
  */
 export function getLocalDraftBackup(key: string): LocalDraftBackup | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(`${DRAFT_STORAGE_PREFIX}${key}`);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      const raw = localStorage.getItem(`${DRAFT_STORAGE_PREFIX}${key}`);
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // Fallback to in-memory store
+    }
   }
+  const mem = inMemoryDrafts.get(key);
+  return mem ? JSON.parse(mem) : null;
 }
 
 /**
  * Purges a local draft backup after a successful database publication or manual discard.
  */
 export function clearLocalDraftBackup(key: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(`${DRAFT_STORAGE_PREFIX}${key}`);
-  } catch {
-    // Ignore storage exceptions
+  inMemoryDrafts.delete(key);
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      localStorage.removeItem(`${DRAFT_STORAGE_PREFIX}${key}`);
+    } catch {
+      // Ignore storage exceptions
+    }
   }
 }
 

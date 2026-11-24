@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth/use-auth";
 import { getUserReadingStats } from "@/lib/stats/queries";
 import { UserStatsPayload, ReadingGoalRow } from "@/types/stats";
 import { StatsSummaryGrid } from "./StatsSummaryGrid";
+import { ReadingRitualRings } from "./ReadingRitualRings";
 import { DailyGoalCard } from "./DailyGoalCard";
 import { WeeklyActivityChart } from "./WeeklyActivityChart";
 import { StreakTrackerCard } from "./StreakTrackerCard";
@@ -247,11 +248,15 @@ export function ReadingDashboard() {
               {/* High-level summary metrics grid */}
               <StatsSummaryGrid summary={statsData.summary} />
 
-              {/* Middle Row: Circular Goal Progress Ring & Streak Tracker */}
+              {/* Middle Row: Concentric Ritual Rings & Streak Tracker */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <DailyGoalCard
+                <ReadingRitualRings
                   todayMinutes={statsData.summary.todayMinutesRead}
                   dailyGoalMinutes={statsData.summary.dailyGoalMinutes}
+                  currentStreakDays={statsData.summary.currentStreakDays}
+                  streakGoalDays={statsData.goals?.weekly_days_goal || 7}
+                  completedBooks={statsData.summary.totalBooksCompleted}
+                  annualBookGoal={statsData.goals?.annual_books_goal || 12}
                   onOpenGoalModal={() => setGoalModalOpen(true)}
                 />
                 <StreakTrackerCard

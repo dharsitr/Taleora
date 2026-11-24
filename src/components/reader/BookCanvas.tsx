@@ -48,6 +48,12 @@ interface BookCanvasProps {
   onOpenBook?: () => void;
   authorName?: string;
   coverImageUrl?: string | null;
+  activeTtsState?: {
+    paragraphIndex: number;
+    sentenceText: string;
+    isPlaying: boolean;
+  };
+  onOpenMarginNotes?: (paragraphIndex?: number) => void;
 }
 
 interface SinglePageRenderProps {
@@ -64,6 +70,12 @@ interface SinglePageRenderProps {
   nextChapter: ChapterRow | null;
   side: "left" | "right" | "single";
   isFirstPageOfChapter?: boolean;
+  activeTtsState?: {
+    paragraphIndex: number;
+    sentenceText: string;
+    isPlaying: boolean;
+  };
+  onOpenMarginNotes?: (paragraphIndex?: number) => void;
 }
 
 /**
@@ -83,6 +95,8 @@ export function SingleBookPageContent({
   nextChapter,
   side,
   isFirstPageOfChapter = false,
+  activeTtsState,
+  onOpenMarginNotes,
 }: SinglePageRenderProps) {
   const fontClass =
     settings.fontFamily === "sans"
@@ -179,6 +193,10 @@ export function SingleBookPageContent({
               const pHighlights = highlights.filter(
                 (h) => h.paragraph_index === chunk.paragraphIndex
               );
+              const hasNotes = pHighlights.some((h) => Boolean(h.note && h.note.trim().length > 0));
+              const isTtsActive =
+                activeTtsState?.isPlaying &&
+                activeTtsState?.paragraphIndex === chunk.paragraphIndex;
 
               const showDropCap = Boolean(chunk.isDropCap && chunk.text.length > 0);
               const firstLetter = showDropCap ? chunk.text.charAt(0) : "";
@@ -191,11 +209,28 @@ export function SingleBookPageContent({
                   id={`p-${chunk.paragraphIndex}`}
                   data-paragraph-index={chunk.paragraphIndex}
                   className={cn(
-                    "tracking-normal relative transition-all duration-150 select-text cursor-text pointer-events-auto",
+                    "tracking-normal relative transition-all duration-200 select-text cursor-text pointer-events-auto",
                     chunk.isContinuedFromPrev && "indent-0 opacity-95",
-                    !chunk.isContinuedFromPrev && !showDropCap && "indent-4 sm:indent-6"
+                    !chunk.isContinuedFromPrev && !showDropCap && "indent-4 sm:indent-6",
+                    isTtsActive &&
+                      "bg-amber-500/10 dark:bg-amber-500/15 border-l-3 border-amber-500 pl-2.5 -ml-2.5 py-0.5 rounded-r-lg shadow-xs"
                   )}
                 >
+                  {/* Margin Note Badge Button */}
+                  {hasNotes && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenMarginNotes?.(chunk.paragraphIndex);
+                      }}
+                      className="absolute -right-2.5 sm:-right-4.5 top-0.5 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 flex items-center justify-center text-[10px] hover:scale-125 transition-transform cursor-pointer shadow-xs select-none z-30"
+                      title="View margin thoughts on this passage"
+                    >
+                      💬
+                    </button>
+                  )}
+
                   {showDropCap && (
                     <span className="literary-drop-cap text-primary font-bold">
                       {firstLetter}
@@ -327,6 +362,8 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
       onOpenBook,
       authorName,
       coverImageUrl,
+      activeTtsState,
+      onOpenMarginNotes,
     },
     ref
   ) {
@@ -611,6 +648,8 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                     nextChapter={nextChapter}
                     side="left"
                     isFirstPageOfChapter={effectiveLeftPageNum === 1}
+                    activeTtsState={activeTtsState}
+                    onOpenMarginNotes={onOpenMarginNotes}
                   />
                 </div>
 
@@ -652,6 +691,8 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                     bookSlug={bookSlug}
                     nextChapter={nextChapter}
                     side="right"
+                    activeTtsState={activeTtsState}
+                    onOpenMarginNotes={onOpenMarginNotes}
                   />
                 </div>
 
@@ -878,6 +919,8 @@ export const BookCanvas = React.forwardRef<HTMLDivElement, BookCanvasProps>(
                     isFirstPageOfChapter={
                       pageNumber === 1 && (!isTurning || turnDirection !== "next")
                     }
+                    activeTtsState={activeTtsState}
+                    onOpenMarginNotes={onOpenMarginNotes}
                   />
                   {/* Underlying page reveal shadow that lifts off */}
                   {isTurning && (
