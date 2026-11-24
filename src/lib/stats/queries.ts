@@ -134,63 +134,87 @@ export async function updateUserReadingGoal(
 
 /**
  * Helper to compute consecutive day streaks from a list of date strings (YYYY-MM-DD).
+ * Strict Rule:
+ * - If the user has not read today AND has not read yesterday -> streak is 0.
+ * - If user read only today (1 day) -> streak is 0 (first day starting the ritual).
+ * - If user read today AND yesterday (2 consecutive days) -> streak is 1.
+ * - If user read 3 consecutive days -> streak is 2.
+ * Streak increments by 1 for each consecutive day completed beyond the starting day!
  */
 export function calculateStreaks(dates: string[]): { currentStreak: number; longestStreak: number } {
   if (!dates || dates.length === 0) return { currentStreak: 0, longestStreak: 0 };
 
+  // Deduplicate and sort descending (most recent first)
   const uniqueSortedDates = Array.from(new Set(dates)).sort().reverse();
-  const todayStr = new Date().toISOString().split("T")[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
-  let currentStreak = 0;
-  let longestStreak = 0;
-  let runningStreak = 0;
-  let previousDate: Date | null = null;
+  // Local calendar date strings
+  const now = new Date();
+  const formatYmd = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-  // Check if today or yesterday has activity to maintain active streak
+  const todayStr = formatYmd(now);
+  const yesterdayDate = new Date(now);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayStr = formatYmd(yesterdayDate);
+
   const hasReadToday = uniqueSortedDates.includes(todayStr);
-  const hasReadYesterday = uniqueSortedDates.includes(yesterday);
+  const hasReadYesterday = uniqueSortedDates.includes(yesterdayStr);
 
-  if (!hasReadToday && !hasReadYesterday) {
-    currentStreak = 0;
+  // Count consecutive active days leading up to today/yesterday
+  let consecutiveDays = 0;
+  if (hasReadToday || hasReadYesterday) {
+    let checkDate = hasReadToday ? new Date(now) : yesterdayDate;
+
+    while (true) {
+      const checkStr = formatYmd(checkDate);
+      if (uniqueSortedDates.includes(checkStr)) {
+        consecutiveDays++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
   }
+
+  // Streak definition:
+  // 0 or 1 active day = 0 streak
+  // 2 consecutive days = 1 streak
+  // N consecutive days = N - 1 streak
+  const currentStreak = Math.max(0, consecutiveDays - 1);
+
+  // Compute historical longest streak across all recorded activity
+  let longestConsecutive = 0;
+  let running = 0;
+  let prevDate: Date | null = null;
 
   for (let i = 0; i < uniqueSortedDates.length; i++) {
-    const curDate = new Date(uniqueSortedDates[i] + "T00:00:00Z");
+    const parts = uniqueSortedDates[i].split("-").map(Number);
+    const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
 
-    if (previousDate === null) {
-      runningStreak = 1;
+    if (!prevDate) {
+      running = 1;
     } else {
-      const diffMs = previousDate.getTime() - curDate.getTime();
+      const diffMs = prevDate.getTime() - d.getTime();
       const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
       if (diffDays === 1) {
-        runningStreak++;
-      } else if (diffDays > 1) {
-        runningStreak = 1;
+        running++;
+      } else {
+        running = 1;
       }
     }
-
-    if (i === 0 && (hasReadToday || hasReadYesterday)) {
-      currentStreak = runningStreak;
-    } else if (hasReadToday || hasReadYesterday) {
-      // Continue tracking current streak as long as consecutive
-      if (runningStreak > currentStreak && i === runningStreak - 1) {
-        currentStreak = runningStreak;
-      }
+    if (running > longestConsecutive) {
+      longestConsecutive = running;
     }
-
-    if (runningStreak > longestStreak) {
-      longestStreak = runningStreak;
-    }
-
-    previousDate = curDate;
+    prevDate = d;
   }
 
-  return {
-    currentStreak: Math.max(currentStreak, (hasReadToday || hasReadYesterday) ? currentStreak : 0),
-    longestStreak: Math.max(longestStreak, currentStreak),
-  };
+  const longestStreak = Math.max(currentStreak, Math.max(0, longestConsecutive - 1));
+
+  return { currentStreak, longestStreak };
 }
 
 /**

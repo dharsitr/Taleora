@@ -13,7 +13,6 @@ import {
   WifiOff,
   Users,
   Compass,
-  GitFork,
   Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,7 +36,6 @@ interface ReaderHeaderProps {
   onlineReadersCount?: number;
   onOpenParlor?: () => void;
   onOpenDossier?: () => void;
-  onOpenRelationshipMap?: () => void;
   onOpenBadges?: () => void;
 }
 
@@ -60,7 +58,6 @@ export function ReaderHeader({
   onlineReadersCount,
   onOpenParlor,
   onOpenDossier,
-  onOpenRelationshipMap,
   onOpenBadges,
 }: ReaderHeaderProps) {
   return (
@@ -209,19 +206,6 @@ export function ReaderHeader({
                 className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
               >
                 <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-            )}
-
-            {/* Character & Faction Relationship Web */}
-            {onOpenRelationshipMap && (
-              <button
-                type="button"
-                onClick={onOpenRelationshipMap}
-                title="Character Relationship Graph"
-                aria-label="Character Relationship Graph"
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-border/80 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
-              >
-                <GitFork className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             )}
 

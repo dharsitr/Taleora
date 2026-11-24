@@ -72,10 +72,10 @@ export async function getUserHomeStats(): Promise<UserHomeStats | null> {
     if (profile?.last_read_date) activeDatesSet.add(profile.last_read_date);
     if (currentRead?.last_read_at) activeDatesSet.add(currentRead.last_read_at.split("T")[0]);
 
-    // Calculate streak
+    // Calculate real dynamic streak
     const allActivityDates = Array.from(activeDatesSet);
     const computedStreak = calculateStreaks(allActivityDates).currentStreak;
-    const streakDays = Math.max(profile?.streak_days ?? 0, computedStreak);
+    const streakDays = computedStreak;
 
     // Daily goal
     const dailyGoalMinutes =

@@ -7,10 +7,8 @@ import {
   Shield,
   Sparkles,
   Share2,
-  Calendar,
   CheckCircle2,
   Lock,
-  Download,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -27,71 +25,80 @@ export interface ParchmentBadge {
   progressPercent: number;
 }
 
-const BADGES: ParchmentBadge[] = [
-  {
-    id: "streak-7",
-    title: "The Seven-Day Candle",
-    description: "Read consistently for 7 consecutive days without extinguishing the flame.",
-    icon: "🕯️",
-    category: "streak",
-    isUnlocked: true,
-    unlockedDate: "Yesterday",
-    progressPercent: 100,
-  },
-  {
-    id: "night-owl",
-    title: "Midnight Alchemist",
-    description: "Read for more than 45 minutes between midnight and 4:00 AM.",
-    icon: "🌙",
-    category: "night",
-    isUnlocked: true,
-    unlockedDate: "3 days ago",
-    progressPercent: 100,
-  },
-  {
-    id: "parchment-turner",
-    title: "Master of Leaves",
-    description: "Flip through over 500 illustrated parchment pages in Taleora.",
-    icon: "📜",
-    category: "scholarly",
-    isUnlocked: false,
-    progressPercent: 68,
-  },
-  {
-    id: "streak-30",
-    title: "Librarian's Eternal Ring",
-    description: "Maintain an unbroken 30-day active reading streak.",
-    icon: "👑",
-    category: "streak",
-    isUnlocked: false,
-    progressPercent: 23,
-  },
-  {
-    id: "annotator",
-    title: "Marginalia Scholar",
-    description: "Leave 25 insightful margin highlights or notes across published serials.",
-    icon: "🖋️",
-    category: "scholarly",
-    isUnlocked: true,
-    unlockedDate: "1 week ago",
-    progressPercent: 100,
-  },
-];
-
 interface ReadingBadgesModalProps {
   isOpen: boolean;
   onClose: () => void;
   streakDays?: number;
   userName?: string;
+  totalChaptersRead?: number;
+  totalPagesRead?: number;
 }
 
 export function ReadingBadgesModal({
   isOpen,
   onClose,
-  streakDays = 7,
+  streakDays = 0,
   userName = "Fellow Reader",
+  totalChaptersRead = 0,
+  totalPagesRead = 0,
 }: ReadingBadgesModalProps) {
   const [selectedBadgeForShare, setSelectedBadgeForShare] = React.useState<ParchmentBadge | null>(null);
+
+  // Compute real dynamic badges based strictly on actual user progress
+  const badges: ParchmentBadge[] = React.useMemo(() => {
+    return [
+      {
+        id: "streak-1",
+        title: "The Second Flame",
+        description: "Read on 2 consecutive days to kindle your first reading streak.",
+        icon: "🕯️",
+        category: "streak",
+        isUnlocked: streakDays >= 1,
+        unlockedDate: streakDays >= 1 ? "Active Streak" : undefined,
+        progressPercent: Math.min(100, Math.round((streakDays / 1) * 100)),
+      },
+      {
+        id: "streak-7",
+        title: "The Seven-Day Candle",
+        description: "Read consistently for 7 consecutive streak days without extinguishing the flame.",
+        icon: "🔥",
+        category: "streak",
+        isUnlocked: streakDays >= 7,
+        unlockedDate: streakDays >= 7 ? "Active Streak" : undefined,
+        progressPercent: Math.min(100, Math.round((streakDays / 7) * 100)),
+      },
+      {
+        id: "parchment-turner",
+        title: "Master of Leaves",
+        description: "Read through 50 illustrated parchment pages in Taleora.",
+        icon: "📜",
+        category: "scholarly",
+        isUnlocked: totalPagesRead >= 50,
+        unlockedDate: totalPagesRead >= 50 ? "Unlocked" : undefined,
+        progressPercent: Math.min(100, Math.round((totalPagesRead / 50) * 100)),
+      },
+      {
+        id: "first-chapter",
+        title: "The Novice Scribe",
+        description: "Complete reading your very first story chapter.",
+        icon: "🖋️",
+        category: "scholarly",
+        isUnlocked: totalChaptersRead >= 1,
+        unlockedDate: totalChaptersRead >= 1 ? "Unlocked" : undefined,
+        progressPercent: Math.min(100, Math.round((totalChaptersRead / 1) * 100)),
+      },
+      {
+        id: "streak-30",
+        title: "Librarian's Eternal Ring",
+        description: "Maintain an unbroken 30-day active reading streak.",
+        icon: "👑",
+        category: "streak",
+        isUnlocked: streakDays >= 30,
+        unlockedDate: streakDays >= 30 ? "Active Streak" : undefined,
+        progressPercent: Math.min(100, Math.round((streakDays / 30) * 100)),
+      },
+    ];
+  }, [streakDays, totalPagesRead, totalChaptersRead]);
 
   if (!isOpen) return null;
 
@@ -114,10 +121,10 @@ export function ReadingBadgesModal({
             </div>
             <div>
               <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">
-                Ritual Badges & Streaks
+                Ritual Badges &amp; Streaks
               </h2>
               <p className="text-xs text-muted-foreground">
-                Earned accolades for scholarly focus and reading habits
+                Real accolades earned through your reading habits
               </p>
             </div>
           </div>
@@ -134,19 +141,27 @@ export function ReadingBadgesModal({
         <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-primary/10 to-transparent border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 text-2xl shadow-sm">
-              <Flame className="w-6 h-6 animate-pulse" />
+              <Flame className={cn("w-6 h-6", streakDays > 0 ? "text-amber-500 animate-pulse" : "text-muted-foreground opacity-50")} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-serif text-2xl font-bold text-foreground">
-                  {streakDays} Day Streak!
+                  {streakDays} Day Streak
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-[10px] font-bold">
-                  <Shield className="w-3 h-3" /> Streak Shield Active
-                </span>
+                {streakDays > 0 ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-[10px] font-bold">
+                    <Shield className="w-3 h-3" /> Streak Active
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground text-[10px] font-medium">
+                    Read today &amp; tomorrow to reach Streak 1
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Read at least 15 minutes today to keep your candle burning.
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {streakDays === 0
+                  ? "Read a chapter today to start your journey, then read tomorrow to earn your first streak!"
+                  : "Keep reading daily to preserve your streak flame."}
               </p>
             </div>
           </div>
@@ -154,7 +169,7 @@ export function ReadingBadgesModal({
 
         {/* Badge Grid */}
         <div className="p-4 sm:p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {BADGES.map((b) => (
+          {badges.map((b) => (
             <div
               key={b.id}
               className={cn(
@@ -194,7 +209,7 @@ export function ReadingBadgesModal({
                 {b.isUnlocked ? (
                   <>
                     <span className="text-muted-foreground italic">
-                      Unlocked {b.unlockedDate}
+                      {b.unlockedDate}
                     </span>
                     <button
                       type="button"
@@ -225,7 +240,6 @@ export function ReadingBadgesModal({
         {/* Shareable Card Preview Modal */}
         {selectedBadgeForShare && (
           <div className="absolute inset-0 z-20 bg-black/90 flex flex-col items-center justify-center p-6 animate-in fade-in">
-            {/* The aesthetic parchment share card */}
             <div className="w-full max-w-sm rounded-3xl bg-zinc-900 border-2 border-amber-500/40 p-6 shadow-2xl flex flex-col items-center text-center gap-4 text-zinc-100 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 

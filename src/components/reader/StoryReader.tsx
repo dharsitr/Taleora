@@ -41,8 +41,9 @@ import { FloatingReactions } from "./FloatingReactions";
 import { ReadingParlorModal } from "./ReadingParlorModal";
 import { CharacterDossierModal } from "./CharacterDossierModal";
 import { ChapterRecapCard } from "./ChapterRecapCard";
+import { getUserReadingStats } from "@/lib/stats/queries";
+import { UserStatsPayload } from "@/types/stats";
 import { ParagraphDiscussionDrawer } from "./ParagraphDiscussionDrawer";
-import { CharacterRelationshipMap } from "./CharacterRelationshipMap";
 import { ReadingBadgesModal } from "@/components/stats/ReadingBadgesModal";
 import { usePagePaginator, splitContentIntoParagraphs } from "./usePagePaginator";
 import { cn } from "@/lib/utils";
@@ -209,8 +210,15 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   const [annotationsDrawerOpen, setAnnotationsDrawerOpen] = React.useState(false);
   const [parlorModalOpen, setParlorModalOpen] = React.useState(false);
   const [dossierModalOpen, setDossierModalOpen] = React.useState(false);
-  const [relationshipMapOpen, setRelationshipMapOpen] = React.useState(false);
   const [badgesModalOpen, setBadgesModalOpen] = React.useState(false);
+  const [userStats, setUserStats] = React.useState<UserStatsPayload | null>(null);
+
+  React.useEffect(() => {
+    if (!user) return;
+    getUserReadingStats(user.id)
+      .then((st) => setUserStats(st))
+      .catch((err) => console.warn("Could not load user stats for badges:", err));
+  }, [user]);
 
   // Paragraph Margin Discussions Drawer state
   const [marginDiscussionState, setMarginDiscussionState] = React.useState<{
@@ -1217,7 +1225,6 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         isOffline={isOffline}
         onOpenParlor={() => setParlorModalOpen(true)}
         onOpenDossier={() => setDossierModalOpen(true)}
-        onOpenRelationshipMap={() => setRelationshipMapOpen(true)}
         onOpenBadges={() => setBadgesModalOpen(true)}
       />
 
@@ -1243,19 +1250,14 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         currentChapterNumber={currentChapter.chapter_number}
       />
 
-      {/* Dynamic Character Relationship Graph Modal */}
-      <CharacterRelationshipMap
-        isOpen={relationshipMapOpen}
-        onClose={() => setRelationshipMapOpen(false)}
-        bookTitle={book.title}
-        currentChapterNumber={currentChapter.chapter_number}
-      />
-
       {/* Reading Streaks & Ritual Badges Modal */}
       <ReadingBadgesModal
         isOpen={badgesModalOpen}
         onClose={() => setBadgesModalOpen(false)}
         userName={user?.user_metadata?.full_name || "Fellow Reader"}
+        streakDays={userStats?.summary.currentStreakDays ?? 0}
+        totalChaptersRead={userStats?.summary.totalChaptersRead ?? 0}
+        totalPagesRead={userStats?.summary.totalPagesRead ?? 0}
       />
 
       {/* Paragraph Margin Discussions Drawer */}
