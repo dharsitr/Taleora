@@ -30,12 +30,12 @@ export function CuratedShelves({ books }: CuratedShelvesProps) {
     return (
       <section className="flex flex-col gap-6">
         <div>
-          <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-amber-500 text-xs font-semibold uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Curated Collections</span>
+            <span>Nocturnal Selection</span>
           </div>
-          <h2 className="font-serif text-2xl font-bold tracking-tight text-foreground">
-            Featured Tales &amp; Novellas
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Curated Tonight
           </h2>
         </div>
         <div className="text-center py-16 rounded-xl border border-dashed border-border flex flex-col items-center gap-4">
@@ -55,12 +55,12 @@ export function CuratedShelves({ books }: CuratedShelvesProps) {
     <section className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-amber-500 text-xs font-semibold uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Curated Collections</span>
+            <span>Nocturnal Selection</span>
           </div>
-          <h2 className="font-serif text-2xl font-bold tracking-tight text-foreground">
-            Featured Tales &amp; Novellas
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Curated Tonight
           </h2>
         </div>
         <span className="text-xs text-muted-foreground self-start sm:self-auto">
@@ -88,7 +88,7 @@ export function CuratedShelves({ books }: CuratedShelvesProps) {
       </div>
 
       {/* Story Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {filtered.map((book) => (
           <StoryCard key={book.id} book={book} />
         ))}

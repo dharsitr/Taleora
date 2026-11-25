@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkles, ArrowRight, BookOpen, Flame, Clock, Headphones } from "lucide-react";
+import { Sparkles, ArrowRight, BookOpen, Flame, Feather } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { BookWithAuthorAndGenres } from "@/types/books";
@@ -16,147 +16,152 @@ interface HeroSectionProps {
 
 export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
   const { user, profile } = useAuth();
-  const bookTitle = featuredBook?.title || "The Black Orchid Promise";
+  const bookTitle = featuredBook?.title || "Taleora Library";
   const authorName = featuredBook?.author?.name || "Taleora Edition";
   const bookSlug = featuredBook?.slug;
 
   const isLoggedIn = Boolean(userStats?.isLoggedIn || user);
   const streakDays = userStats?.streakDays ?? profile?.streak_days ?? 0;
+  const todayMinutes = userStats?.todayMinutes ?? 0;
+  const dailyGoalMinutes = userStats?.dailyGoalMinutes ?? profile?.daily_reading_goal_minutes ?? 30;
   const currentRead = userStats?.currentRead;
 
   // Interactive 3D gyroscopic cursor tracking tilt
-  const [tilt, setTilt] = React.useState({ x: -14, y: 7 });
+  const [tilt, setTilt] = React.useState({ x: -14, y: 6 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     setTilt({
-      x: -14 + x * 16,
-      y: 7 - y * 12,
+      x: -14 + x * 14,
+      y: 6 - y * 10,
     });
   };
 
   const handleMouseLeave = () => {
-    setTilt({ x: -14, y: 7 });
+    setTilt({ x: -14, y: 6 });
   };
 
-  // Before login: show rich preview mockup
-  // After login: show user's real streak and progress
-  const displayPercentage = isLoggedIn
-    ? (currentRead ? currentRead.progressPercentage : 0)
-    : 24;
+  const displayPercentage = isLoggedIn && currentRead ? (currentRead.progressPercentage ?? 0) : 0;
+  const ringPercent = Math.min(
+    100,
+    Math.round((todayMinutes / Math.max(1, dailyGoalMinutes)) * 100)
+  );
+  const ringRadius = 18;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCircumference - (ringPercent / 100) * ringCircumference;
 
-  const displayTitle = isLoggedIn
-    ? (currentRead
-        ? (currentRead.chapterTitle
-            ? `Chapter ${currentRead.chapterNumber || 1} · ${currentRead.chapterTitle}`
-            : currentRead.bookTitle)
-        : "Ready to start reading")
-    : (featuredBook ? `Chapter 1 · The Billionaire's Return` : "Chapter 1 · The Beginning");
+  const displayTitle =
+    isLoggedIn && currentRead
+      ? currentRead.chapterTitle
+        ? `Ch. ${currentRead.chapterNumber || 1} · ${currentRead.chapterTitle}`
+        : currentRead.bookTitle
+      : featuredBook
+      ? featuredBook.title
+      : "Open a story to begin";
 
-  const displayStreak = isLoggedIn
-    ? `${streakDays} ${streakDays === 1 ? "day" : "days"}`
-    : "7 days";
+  const primaryHref =
+    isLoggedIn && currentRead?.bookSlug
+      ? `/read/${currentRead.bookSlug}`
+      : bookSlug
+      ? `/books/${bookSlug}`
+      : "/library";
+
+  const primaryLabel =
+    isLoggedIn && currentRead ? "Continue Reading" : "Start Reading";
 
   return (
     <section
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 dark:border-white/10 bg-gradient-to-b from-card/90 via-card/50 to-background/95 p-5 sm:p-10 lg:p-14 shadow-2xl backdrop-blur-2xl transition-all"
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-amber-500/20 dark:border-white/10 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-10 lg:p-14 shadow-2xl transition-all"
     >
-      {/* Cinematic Ambient Backdrop Glows */}
-      <div className="absolute top-1/4 -right-10 w-[550px] h-[550px] bg-amber-500/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute -top-24 -left-20 w-[450px] h-[450px] bg-rose-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-20 left-1/3 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+      {/* Nocturnal Candlelight Ambient Backdrops */}
+      <div className="absolute -top-24 right-0 w-[520px] h-[520px] bg-[#E28743]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute -bottom-32 -left-20 w-[420px] h-[420px] bg-amber-600/10 rounded-full blur-[130px] pointer-events-none" />
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)",
+          backgroundSize: "24px 24px",
+        }}
+      />
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-10 items-center">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
         {/* Left Column: Editorial Headline & Actions */}
-        <div className="lg:col-span-7 flex flex-col gap-4 sm:gap-6 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-500 dark:text-amber-400 text-xs font-semibold w-fit backdrop-blur-md shadow-xs shadow-amber-500/10">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-            <span>Welcome to Taleora · The Art of Reading</span>
+        <div className="lg:col-span-7 flex flex-col gap-5 sm:gap-6 text-left">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] font-semibold uppercase tracking-[0.18em] w-fit backdrop-blur-md">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Live Serials &amp; Curated Books</span>
           </div>
 
-          <h1 className="font-serif text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.14] sm:leading-[1.10]">
-            Every Page Turned is a{" "}
-            <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 dark:from-amber-200 dark:via-amber-300 dark:to-amber-100 bg-clip-text text-transparent drop-shadow-sm">
-              New World Awakened
+          <h1 className="font-serif text-3xl xs:text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-zinc-50 leading-[1.12]">
+            Stories crafted for{" "}
+            <span className="bg-gradient-to-r from-amber-200 via-[#E28743] to-amber-200 bg-clip-text text-transparent">
+              unhurried nights.
             </span>
           </h1>
 
-          <p className="text-xs sm:text-base lg:text-lg text-muted-foreground leading-relaxed max-w-xl">
-            Immerse yourself in thoughtfully curated tales, novellas, and reflective essays.
-            Designed with warm paper tones, refined typography, and zero distractions for true story lovers.
+          <p className="text-sm sm:text-base lg:text-lg text-zinc-400 leading-relaxed max-w-xl">
+            Step into a distraction-free nocturnal library. Warm parchment pages,
+            immersive ambient soundscapes, and mindful reading rituals built for
+            dedicated readers and authors.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2 sm:pt-3 w-full sm:w-auto">
-            <Link href="/library" className="w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2 w-full sm:w-auto">
+            <Link href={primaryHref} className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="w-full sm:w-auto h-12 px-6 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-400 text-white shadow-xl shadow-amber-500/30 border border-amber-400/40 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 group"
+                className="w-full sm:w-auto h-12 px-7 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#D97736] via-[#E28743] to-[#C86628] hover:brightness-110 text-zinc-950 shadow-xl shadow-amber-900/30 border border-amber-300/40 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 group"
               >
-                <span>Explore the Library</span>
+                <span>{primaryLabel}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
 
-            <Link href={bookSlug ? `/books/${bookSlug}` : "/discover"} className="w-full sm:w-auto">
+            <Link href="/studio" className="w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto h-12 px-6 rounded-xl text-xs sm:text-sm font-medium border-white/15 dark:border-white/10 bg-secondary/50 dark:bg-card/40 backdrop-blur-xl hover:bg-secondary hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
+                className="w-full sm:w-auto h-12 px-6 rounded-xl text-sm font-medium border-white/15 bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08] hover:border-amber-400/40 hover:text-white backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Try Reader View</span>
+                <Feather className="w-4 h-4 text-amber-400" />
+                <span>Open Author Studio</span>
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Right Column: 3D Luxury Hardcover Book & Floating Glassmorphic HUD */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[360px] sm:min-h-[460px] pt-4 lg:pt-0">
-          {/* Ambient Glowing Backlight directly radiating from behind the book */}
+        {/* Right Column: Floating 3D Amber-Lit Hardcover & Glassmorphic Ritual/Progress Dock */}
+        <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[360px] sm:min-h-[430px] pt-2 lg:pt-0">
+          {/* Warm Amber Rim Backlight */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-64 h-64 sm:w-92 sm:h-92 bg-gradient-to-tr from-amber-500/25 via-rose-500/15 to-amber-400/20 rounded-full blur-[90px]" />
-          </div>
-
-          {/* Orbiting Glassmorphic Widget 1: Live Soundscape Pill */}
-          <div className="absolute -top-3 left-2 sm:-left-4 z-30 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/60 dark:bg-[#0B0D11]/80 backdrop-blur-xl shadow-2xl shadow-black/50 flex items-center gap-2 text-white animate-in fade-in duration-500">
-            <Headphones className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-medium text-amber-200/90 tracking-wide">
-                Soft Hearth & Rain
-              </span>
-              <div className="flex items-end gap-0.5 h-3 ml-1">
-                <span className="w-0.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
-                <span className="w-0.5 h-3 bg-amber-400 rounded-full animate-pulse [animation-delay:150ms]" />
-                <span className="w-0.5 h-2 bg-amber-400 rounded-full animate-pulse [animation-delay:300ms]" />
-              </div>
-            </div>
+            <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gradient-to-tr from-[#E28743]/30 via-amber-500/15 to-transparent rounded-full blur-[85px]" />
           </div>
 
           {/* 3D Tilted Hardcover Book Showcase */}
-          <div
-            className="relative transition-transform duration-500 ease-out cursor-pointer"
-            style={{
-              perspective: "1400px",
-            }}
+          <Link
+            href={bookSlug ? `/books/${bookSlug}` : "/library"}
+            className="relative transition-transform duration-500 ease-out cursor-pointer group"
+            style={{ perspective: "1400px" }}
           >
             <div
-              className="relative w-48 xs:w-56 sm:w-68 h-72 xs:h-84 sm:h-96 rounded-r-2xl rounded-l-xs shadow-2xl shadow-black/80 transition-transform duration-300 ease-out book-glow-aura"
+              className="relative w-48 xs:w-52 sm:w-64 h-72 xs:h-80 sm:h-92 rounded-r-2xl rounded-l-xs shadow-[0_25px_60px_rgba(0,0,0,0.85)] transition-transform duration-300 ease-out"
               style={{
                 transform: `rotateY(${tilt.x}deg) rotateX(${tilt.y}deg) rotateZ(1deg)`,
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Crimson Satin Bookmark Ribbon Draping over top */}
-              <div className="absolute -top-4 right-8 w-4 h-14 crimson-satin-ribbon z-40 shadow-xl pointer-events-none rounded-t-xs">
-                <div className="absolute bottom-0 left-0 right-0 h-2.5 bg-transparent [clip-path:polygon(0_100%,50%_0,100%_100%)] bg-card dark:bg-[#0d0f14]" />
+              {/* Crimson Satin Bookmark Ribbon */}
+              <div className="absolute -top-3 right-7 w-4 h-12 crimson-satin-ribbon z-40 shadow-xl pointer-events-none rounded-t-xs">
+                <div className="absolute bottom-0 left-0 right-0 h-2.5 [clip-path:polygon(0_100%,50%_0,100%_100%)] bg-[#0A0B0F]" />
               </div>
 
-              {/* Spine Crease Depth Illusion */}
-              <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/80 via-black/40 to-transparent rounded-l-xs z-30 pointer-events-none" />
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/20 z-30 pointer-events-none" />
+              {/* Spine Crease */}
+              <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/85 via-black/40 to-transparent rounded-l-xs z-30 pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-amber-300/30 z-30 pointer-events-none" />
 
               {/* Book Cover Surface */}
               <div
@@ -166,123 +171,140 @@ export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
                     : "bg-gradient-to-br from-stone-900 via-neutral-900 to-zinc-950"
                 }`}
               >
-                {/* Book Cover Image if available */}
                 {featuredBook?.cover_image_url ? (
                   <>
                     <Image
                       src={featuredBook.cover_image_url}
                       alt={bookTitle}
                       fill
-                      sizes="340px"
+                      sizes="320px"
                       priority
-                      unoptimized={!featuredBook.cover_image_url.includes(".supabase.co") && !featuredBook.cover_image_url.startsWith("/")}
-                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      unoptimized={
+                        !featuredBook.cover_image_url.includes(".supabase.co") &&
+                        !featuredBook.cover_image_url.startsWith("/")
+                      }
+                      className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                     />
-
-                    {/* Hardcover Ambient Lighting & Sheen */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-black/30 via-transparent to-white/[0.12] pointer-events-none z-10" />
-
-                    {/* Delicate Gold Foil Edging Frame */}
-                    <div className="absolute inset-3 border border-amber-400/40 rounded-xl pointer-events-none z-10" />
-                    <div className="absolute top-3.5 left-3.5 w-2.5 h-2.5 border-t-2 border-l-2 border-amber-400/60 pointer-events-none z-10" />
-                    <div className="absolute top-3.5 right-3.5 w-2.5 h-2.5 border-t-2 border-r-2 border-amber-400/60 pointer-events-none z-10" />
-                    <div className="absolute bottom-3.5 left-3.5 w-2.5 h-2.5 border-b-2 border-l-2 border-amber-400/60 pointer-events-none z-10" />
-                    <div className="absolute bottom-3.5 right-3.5 w-2.5 h-2.5 border-b-2 border-r-2 border-amber-400/60 pointer-events-none z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25 pointer-events-none z-10" />
+                    <div className="absolute inset-3 border border-amber-400/35 rounded-xl pointer-events-none z-10" />
                   </>
                 ) : (
                   <>
-                    {/* Ornate Gold Foil Filigree Borders */}
                     <div className="absolute inset-3 border border-amber-400/40 rounded-xl pointer-events-none" />
-                    <div className="absolute inset-4.5 border border-amber-500/20 rounded-lg pointer-events-none" />
-
-                    {/* Corner Ornaments */}
-                    <div className="absolute top-4 left-4 w-3.5 h-3.5 border-t-2 border-l-2 border-amber-400/70" />
-                    <div className="absolute top-4 right-4 w-3.5 h-3.5 border-t-2 border-r-2 border-amber-400/70" />
-                    <div className="absolute bottom-4 left-4 w-3.5 h-3.5 border-b-2 border-l-2 border-amber-400/70" />
-                    <div className="absolute bottom-4 right-4 w-3.5 h-3.5 border-b-2 border-r-2 border-amber-400/70" />
-
-                    {/* Book Header / Emblem */}
                     <div className="relative z-10 flex flex-col items-center pt-3 text-center">
-                      <div className="w-8 h-8 rounded-full border border-amber-400/40 flex items-center justify-center text-amber-400/90 mb-1">
+                      <div className="w-8 h-8 rounded-full border border-amber-400/40 flex items-center justify-center text-amber-400/90 mb-1.5">
                         <BookOpen className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] tracking-[0.2em] uppercase text-amber-300/80 font-serif">
-                        Taleora Classics
+                      <span className="text-[10px] tracking-[0.22em] uppercase text-amber-300/80 font-serif">
+                        Taleora Edition
                       </span>
                     </div>
 
-                    {/* Book Title & Author in Gold Foil Look */}
                     <div className="relative z-10 text-center my-auto px-2">
-                      <h3 className="font-serif text-lg sm:text-xl font-bold tracking-normal text-amber-100 drop-shadow-md leading-tight line-clamp-3">
+                      <h3 className="font-serif text-lg sm:text-xl font-bold text-amber-100 leading-tight line-clamp-3">
                         {bookTitle}
                       </h3>
-                      <div className="w-12 h-[1px] bg-amber-400/50 mx-auto my-2" />
-                      <p className="text-[11px] text-amber-200/80 font-serif italic tracking-wide">
+                      <div className="w-12 h-[1px] bg-amber-400/50 mx-auto my-2.5" />
+                      <p className="text-xs text-amber-200/80 font-serif italic">
                         {authorName}
                       </p>
                     </div>
 
-                    {/* Book Bottom Seal */}
                     <div className="relative z-10 text-center pb-1">
                       <span className="text-[9px] text-amber-400/60 uppercase tracking-widest font-mono">
-                        Special Novella Edition
+                        Featured Selection
                       </span>
                     </div>
                   </>
                 )}
               </div>
 
-              {/* Book Pages Edge (Depth illusion with layered paper block) */}
+              {/* Book Pages Edge */}
               <div
-                className="absolute top-1 -right-3.5 w-4 h-[calc(100%-8px)] rounded-r-xs bg-gradient-to-r from-stone-200 via-amber-100 to-stone-300 dark:from-stone-800 dark:via-stone-700 dark:to-stone-900 border-y border-r border-stone-400/40 shadow-inner"
+                className="absolute top-1 -right-3.5 w-4 h-[calc(100%-8px)] rounded-r-xs bg-gradient-to-r from-stone-800 via-stone-700 to-stone-900 border-y border-r border-amber-500/20 shadow-inner"
                 style={{
                   transform: "rotateY(78deg)",
                   transformOrigin: "left center",
                 }}
               />
             </div>
-          </div>
+          </Link>
 
-          {/* Orbiting Glassmorphic Widget 2: Floating Currently Reading Dock */}
-          <div className="relative sm:absolute mt-6 sm:mt-0 sm:-bottom-5 sm:-right-4 z-30 w-full sm:w-72 max-w-xs rounded-2xl border border-white/20 dark:border-white/10 bg-card/85 dark:bg-[#12151D]/85 backdrop-blur-2xl p-4 shadow-2xl shadow-black/60 flex flex-col gap-2.5 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[11px] font-semibold text-foreground/90">
-                  Currently Reading
-                </span>
-              </div>
-              <span className="text-xs font-bold text-amber-500 font-mono">
-                {displayPercentage}%
-              </span>
-            </div>
-
-            {/* Reading Progress Bar */}
-            <div className="w-full h-1.5 rounded-full bg-secondary/80 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 shadow-sm shadow-amber-500/40 transition-all duration-500"
-                style={{ width: `${displayPercentage}%` }}
+          {/* Compact Glassmorphic Continue Reading + Reading Ritual Ring Dock */}
+          <div className="relative sm:absolute mt-6 sm:mt-0 sm:-bottom-4 sm:-right-2 z-30 w-full sm:w-80 max-w-xs rounded-2xl border border-white/15 bg-[#12151E]/90 backdrop-blur-2xl p-4 shadow-2xl shadow-black/70 flex items-center gap-3.5">
+            {/* Glowing Mini Reading Ritual Ring */}
+            <div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
+              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 44 44">
+                <circle
+                  cx="22"
+                  cy="22"
+                  r={ringRadius}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth="4"
+                />
+                <circle
+                  cx="22"
+                  cy="22"
+                  r={ringRadius}
+                  fill="none"
+                  stroke="#E28743"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={ringCircumference}
+                  strokeDashoffset={ringOffset}
+                  className="transition-all duration-700"
+                />
+              </svg>
+              <Flame
+                className={`w-4 h-4 absolute ${
+                  streakDays > 0 || todayMinutes > 0
+                    ? "text-amber-400 fill-amber-400"
+                    : "text-zinc-500"
+                }`}
               />
             </div>
 
-            <div>
-              <span className="text-[9px] text-muted-foreground uppercase tracking-wider block font-medium">
-                Reading Progress
-              </span>
-              <p className="font-serif text-xs font-semibold text-foreground truncate mt-0.5" title={displayTitle}>
+            {/* Live Progress & Streak Info */}
+            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">
+                  {isLoggedIn && currentRead ? "Continue Reading" : "Reading Ritual"}
+                </span>
+                <span className="text-[11px] font-mono font-bold text-zinc-200">
+                  {isLoggedIn && currentRead ? `${displayPercentage}%` : `${todayMinutes}/${dailyGoalMinutes}m`}
+                </span>
+              </div>
+
+              <p
+                className="font-serif text-xs font-semibold text-zinc-100 truncate"
+                title={displayTitle}
+              >
                 {displayTitle}
               </p>
-            </div>
 
-            <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-1.5 text-amber-500 font-semibold">
-                <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>Daily reading streak</span>
+              <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#E28743] to-amber-400 transition-all duration-500"
+                  style={{
+                    width: `${
+                      isLoggedIn && currentRead ? Math.max(displayPercentage, 4) : ringPercent
+                    }%`,
+                  }}
+                />
               </div>
-              <span className="text-[10px] text-muted-foreground font-semibold">
-                {displayStreak}
-              </span>
+
+              <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                <span>
+                  Streak:{" "}
+                  <strong className="text-zinc-200">
+                    {streakDays} {streakDays === 1 ? "day" : "days"}
+                  </strong>
+                </span>
+                <Link href="/goals" className="text-amber-400 hover:underline font-medium">
+                  View Goals
+                </Link>
+              </div>
             </div>
           </div>
         </div>

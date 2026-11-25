@@ -8,8 +8,7 @@ import {
   Highlighter,
   Users,
   X,
-  Sparkles,
-  Flame,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ChapterRow } from "@/types/books";
@@ -30,16 +29,9 @@ export function StoryAnalyticsDrawer({
 }: StoryAnalyticsDrawerProps) {
   if (!isOpen) return null;
 
-  // Synthesize realistic chapter retention funnel based on position
-  const retentionFunnel = chapters.map((ch, idx) => {
-    const rate = Math.max(45, Math.round(100 - idx * 7.5 - Math.sin(idx) * 3));
-    return {
-      chapterNumber: ch.chapter_number,
-      title: ch.title,
-      retentionRate: rate,
-      avgMinutes: ch.estimated_read_minutes || 4,
-    };
-  });
+  const totalWords = chapters.reduce((acc, c) => acc + (c.word_count || 0), 0);
+  const totalEstMinutes = chapters.reduce((acc, c) => acc + (c.estimated_read_minutes || 0), 0);
+  const publishedCount = chapters.filter((c) => c.status === "published").length;
 
   return (
     <div
@@ -60,76 +52,83 @@ export function StoryAnalyticsDrawer({
             </div>
             <div>
               <h3 className="font-serif text-base font-bold text-white">
-                Novella Reader Analytics
+                Story Manuscript Analytics
               </h3>
               <p className="text-[11px] text-zinc-400 truncate max-w-xs">
                 {bookTitle}
               </p>
             </div>
           </div>
-
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-full border border-white/10 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* High-level KPIs */}
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col gap-0.5">
-            <span className="text-[10px] font-mono text-zinc-400 uppercase">Readers</span>
-            <span className="font-serif text-lg font-bold text-amber-400">148</span>
-            <span className="text-[9px] text-emerald-400 flex items-center gap-0.5">
-              <TrendingUp className="w-2.5 h-2.5" /> +18%
+        {/* Live Top Metrics Cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-amber-400" /> Total Words
+            </span>
+            <span className="font-serif text-2xl font-bold text-white">
+              {totalWords.toLocaleString()}
             </span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col gap-0.5">
-            <span className="text-[10px] font-mono text-zinc-400 uppercase">Completion</span>
-            <span className="font-serif text-lg font-bold text-emerald-400">76%</span>
-            <span className="text-[9px] text-zinc-400">Novella Finish</span>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col gap-0.5">
-            <span className="text-[10px] font-mono text-zinc-400 uppercase">Highlights</span>
-            <span className="font-serif text-lg font-bold text-purple-400">62</span>
-            <span className="text-[9px] text-zinc-400">Public Notes</span>
+          <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-sky-400" /> Read Duration
+            </span>
+            <span className="font-serif text-2xl font-bold text-white">
+              {totalEstMinutes} mins
+            </span>
           </div>
         </div>
 
-        {/* Chapter Retention Funnel */}
-        <div className="flex flex-col gap-2 pt-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            Chapter Retention Funnel
-          </span>
+        {/* Chapter Breakdown */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+              Chapter Index &amp; Lengths
+            </span>
+            <span className="text-[10px] text-zinc-400 font-mono">
+              {publishedCount} Published / {chapters.length} Total
+            </span>
+          </div>
 
-          <div className="space-y-2.5">
-            {retentionFunnel.map((item) => (
-              <div
-                key={item.chapterNumber}
-                className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1.5"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-serif font-bold text-zinc-200 truncate max-w-[220px]">
-                    Ch. {item.chapterNumber}: {item.title}
-                  </span>
-                  <span className="font-mono text-amber-400 font-semibold">
-                    {item.retentionRate}%
-                  </span>
-                </div>
+          <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+            {chapters.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic text-center py-8">
+                No chapters written yet.
+              </p>
+            ) : (
+              chapters.map((ch) => (
+                <div
+                  key={ch.id}
+                  className="p-3 rounded-xl bg-zinc-900/40 border border-white/5 flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center font-mono text-[10px] text-zinc-400 shrink-0">
+                      {ch.chapter_number}
+                    </span>
+                    <span className="font-serif text-white truncate max-w-[180px] sm:max-w-[220px]">
+                      {ch.title}
+                    </span>
+                  </div>
 
-                {/* Funnel Progress Bar */}
-                <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500"
-                    style={{ width: `${item.retentionRate}%` }}
-                  />
+                  <div className="flex items-center gap-3 shrink-0 text-zinc-400 font-mono text-[11px]">
+                    <span>{(ch.word_count || 0).toLocaleString()} words</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300">
+                      {ch.status}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

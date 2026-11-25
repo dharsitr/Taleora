@@ -36,24 +36,27 @@ export function DiscoverHero({
   onGenreChange,
 }: DiscoverHeroProps) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-amber-500/25 bg-card/85 p-6 sm:p-10 shadow-[0_12px_45px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+    <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-10 shadow-2xl">
       {/* Warm Ambient Backdrop Halos */}
-      <div className="absolute top-0 right-1/4 -mt-16 w-[450px] h-[450px] bg-amber-500/12 rounded-full blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-0 left-10 -mb-16 w-80 h-80 bg-amber-600/8 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute -top-16 right-1/4 w-[450px] h-[450px] bg-[#E28743]/15 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-0 left-10 -mb-16 w-80 h-80 bg-amber-600/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 max-w-4xl flex flex-col gap-6">
         {/* Category Pill Header */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold uppercase tracking-wider self-start">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold uppercase tracking-wider self-start">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span className="font-mono text-[11px] tracking-widest">Curated Literary Archive</span>
         </div>
 
         {/* Hero Headings */}
         <div className="flex flex-col gap-2.5">
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-foreground leading-[1.12]">
-            Discover Your Next Obsession
+          <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-zinc-50 leading-[1.12]">
+            Discover Your Next{" "}
+            <span className="bg-gradient-to-r from-amber-200 via-[#E28743] to-amber-200 bg-clip-text text-transparent">
+              Obsession
+            </span>
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl font-sans">
+          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl font-sans">
             Explore deep romantic sagas, gothic mysteries, and philosophical novellas. Search across stories, verified authors, and episodic literary themes.
           </p>
         </div>

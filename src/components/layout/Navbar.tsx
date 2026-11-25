@@ -79,8 +79,9 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
   const streakDays = profile?.streak_days ?? 0;
 
   const navItems = [
-    { label: "Explore", href: "/discover" },
+    { label: "Discover", href: "/discover" },
     { label: "Library", href: "/library" },
+    { label: "Goals", href: "/goals" },
     { label: "Studio", href: "/studio" },
   ];
 

@@ -39,8 +39,6 @@ import { readingParlorEngine } from "@/lib/network/parlor-sync";
 import { foleyAudio } from "@/lib/audio/foley-audio";
 import { FloatingReactions } from "./FloatingReactions";
 import { ReadingParlorModal } from "./ReadingParlorModal";
-import { CharacterDossierModal } from "./CharacterDossierModal";
-import { ChapterRecapCard } from "./ChapterRecapCard";
 import { getUserReadingStats } from "@/lib/stats/queries";
 import { UserStatsPayload } from "@/types/stats";
 import { ParagraphDiscussionDrawer } from "./ParagraphDiscussionDrawer";
@@ -209,7 +207,6 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   const [settingsDrawerOpen, setSettingsDrawerOpen] = React.useState(false);
   const [annotationsDrawerOpen, setAnnotationsDrawerOpen] = React.useState(false);
   const [parlorModalOpen, setParlorModalOpen] = React.useState(false);
-  const [dossierModalOpen, setDossierModalOpen] = React.useState(false);
   const [badgesModalOpen, setBadgesModalOpen] = React.useState(false);
   const [userStats, setUserStats] = React.useState<UserStatsPayload | null>(null);
 
@@ -1224,7 +1221,6 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         onExitReader={handleCloseAndExit}
         isOffline={isOffline}
         onOpenParlor={() => setParlorModalOpen(true)}
-        onOpenDossier={() => setDossierModalOpen(true)}
         onOpenBadges={() => setBadgesModalOpen(true)}
       />
 
@@ -1240,14 +1236,6 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
         onClose={() => setParlorModalOpen(false)}
         bookTitle={book.title}
         currentChapterTitle={currentChapter.title}
-      />
-
-      {/* Character & Lore Dossier Modal */}
-      <CharacterDossierModal
-        isOpen={dossierModalOpen}
-        onClose={() => setDossierModalOpen(false)}
-        bookTitle={book.title}
-        currentChapterNumber={currentChapter.chapter_number}
       />
 
       {/* Reading Streaks & Ritual Badges Modal */}

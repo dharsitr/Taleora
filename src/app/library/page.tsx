@@ -225,11 +225,11 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      {/* "Currently Reading" Hero Spotlight Card matching Concept Mockup */}
+      {/* "Currently Reading" Hero Spotlight Card */}
       {activeContinueItem && (
-        <section className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-card/85 p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.3)] backdrop-blur-2xl">
+        <section className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-8 shadow-2xl">
           {/* Ambient Warm Golden Orb */}
-          <div className="absolute top-1/2 -left-10 -translate-y-1/2 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 -left-10 -translate-y-1/2 w-80 h-80 bg-[#E28743]/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">

@@ -6,14 +6,13 @@ import {
   History,
   RotateCcw,
   Sparkles,
-  Check,
   X,
-  Users,
   FileText,
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { getLocalDraftBackup } from "@/lib/stores/studio-store";
 
 export interface DraftSnapshot {
   id: string;
@@ -39,36 +38,42 @@ export function DraftDiffModal({
   currentContent,
   onRestoreSnapshot,
 }: DraftDiffModalProps) {
-  const [snapshots, setSnapshots] = React.useState<DraftSnapshot[]>([
-    {
-      id: "snap-1",
-      timestamp: "10 minutes ago",
-      label: "Auto-saved revision",
-      authorName: "You",
-      wordCount: 1420,
-      content: currentContent + "\n\n(Early draft fragment before edits)",
-    },
-    {
-      id: "snap-2",
-      timestamp: "1 hour ago",
-      label: "Opening scene refinement",
-      authorName: "Co-writer Elena",
-      wordCount: 1390,
-      content: currentContent.slice(0, Math.floor(currentContent.length * 0.8)),
-    },
-    {
-      id: "snap-3",
-      timestamp: "Yesterday, 9:30 PM",
-      label: "First rough draft",
-      authorName: "You",
-      wordCount: 1100,
-      content: currentContent.slice(0, Math.floor(currentContent.length * 0.5)),
-    },
-  ]);
+  const [snapshots, setSnapshots] = React.useState<DraftSnapshot[]>([]);
+  const [selectedSnapshot, setSelectedSnapshot] = React.useState<DraftSnapshot | null>(null);
 
-  const [selectedSnapshot, setSelectedSnapshot] = React.useState<DraftSnapshot>(snapshots[0]);
+  React.useEffect(() => {
+    const list: DraftSnapshot[] = [];
 
-  if (!isOpen) return null;
+    // Current working editor buffer
+    list.push({
+      id: "current",
+      timestamp: "Just now",
+      label: "Current Editor Buffer",
+      authorName: "You",
+      wordCount: currentContent.trim().split(/\s+/).filter(Boolean).length,
+      content: currentContent,
+    });
+
+    // Check actual local backup if saved
+    if (typeof window !== "undefined") {
+      const backup = getLocalDraftBackup("current_edit");
+      if (backup && backup.content !== currentContent) {
+        list.push({
+          id: "local_backup",
+          timestamp: new Date(backup.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          label: "Auto-Saved Local Backup",
+          authorName: "Studio Auto-Save",
+          wordCount: backup.wordCount,
+          content: backup.content,
+        });
+      }
+    }
+
+    setSnapshots(list);
+    setSelectedSnapshot(list[0]);
+  }, [currentContent, isOpen]);
+
+  if (!isOpen || !selectedSnapshot) return null;
 
   return (
     <div
@@ -92,7 +97,7 @@ export function DraftDiffModal({
                 Writer&apos;s Room &amp; Version History
               </h2>
               <p className="text-xs text-muted-foreground">
-                {chapterTitle} · Visual Draft Diff &amp; Rollback
+                {chapterTitle} · Live Editor Snapshots
               </p>
             </div>
           </div>
@@ -110,7 +115,7 @@ export function DraftDiffModal({
           {/* Left: Snapshot List */}
           <div className="border-r border-border p-4 overflow-y-auto space-y-2 bg-secondary/20">
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              Draft Snapshots
+              Available Revisions
             </span>
             {snapshots.map((snap) => (
               <button
@@ -119,7 +124,7 @@ export function DraftDiffModal({
                 onClick={() => setSelectedSnapshot(snap)}
                 className={cn(
                   "w-full p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1",
-                  selectedSnapshot.id === snap.id
+                  selectedSnapshot?.id === snap.id
                     ? "bg-card border-primary/40 shadow-xs"
                     : "border-border/60 hover:bg-card/50"
                 )}
@@ -140,7 +145,7 @@ export function DraftDiffModal({
             ))}
           </div>
 
-          {/* Right: Side-by-side or Draft Viewer */}
+          {/* Right: Snapshot Viewer */}
           <div className="col-span-2 p-5 overflow-y-auto flex flex-col justify-between bg-card">
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-border">
@@ -151,13 +156,13 @@ export function DraftDiffModal({
                   </span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  Captured {selectedSnapshot.timestamp} by {selectedSnapshot.authorName}
+                  {selectedSnapshot.timestamp} by {selectedSnapshot.authorName}
                 </span>
               </div>
 
               {/* Text Body */}
               <div className="p-4 rounded-2xl bg-background border border-border/70 font-serif text-xs leading-relaxed text-foreground/90 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
-                {selectedSnapshot.content}
+                {selectedSnapshot.content || "(No prose content in this revision)"}
               </div>
             </div>
 

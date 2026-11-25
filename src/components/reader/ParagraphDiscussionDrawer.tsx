@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MessageSquare, Send, Sparkles, Pin, Flame, X, User } from "lucide-react";
+import { MessageSquare, Send, Sparkles, Pin, Flame, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -25,41 +25,6 @@ interface ParagraphDiscussionDrawerProps {
   currentUserName?: string;
 }
 
-const INITIAL_COMMENTS: Record<number, ParagraphComment[]> = {
-  0: [
-    {
-      id: "c-1",
-      paragraphIndex: 0,
-      authorName: "Kaelen Archon",
-      authorRole: "author",
-      content: "A subtle foreshadowing hint here — keep an eye on the phrase 'brass pendulum' in chapter 4!",
-      timestamp: "2 hours ago",
-      likes: 18,
-      isPinned: true,
-    },
-    {
-      id: "c-2",
-      paragraphIndex: 0,
-      authorName: "Astrid Read",
-      authorRole: "patron",
-      content: "The cadence of this opening sentence gives immediate chills.",
-      timestamp: "45 mins ago",
-      likes: 6,
-    },
-  ],
-  1: [
-    {
-      id: "c-3",
-      paragraphIndex: 1,
-      authorName: "Theodore",
-      authorRole: "reader",
-      content: "Wait, isn't this the tavern mentioned in the Veridia chronicles?",
-      timestamp: "10 mins ago",
-      likes: 3,
-    },
-  ],
-};
-
 export function ParagraphDiscussionDrawer({
   isOpen,
   onClose,
@@ -71,24 +36,24 @@ export function ParagraphDiscussionDrawer({
   const [commentList, setCommentList] = React.useState<ParagraphComment[]>([]);
   const [inputVal, setInputVal] = React.useState("");
 
+  // Load live discussions from localStorage storage key for the current chapter/paragraph
   React.useEffect(() => {
     if (paragraphIndex === null) {
       setCommentList([]);
       return;
     }
-    const existing = INITIAL_COMMENTS[paragraphIndex] || [
-      {
-        id: `mock-${paragraphIndex}-1`,
-        paragraphIndex,
-        authorName: "Seraphina",
-        authorRole: "reader",
-        content: "Loved the sensory details here — particularly the smell of rain on stone.",
-        timestamp: "Just now",
-        likes: 2,
-      },
-    ];
-    setCommentList(existing);
-  }, [paragraphIndex]);
+
+    try {
+      const stored = localStorage.getItem(`taleora-para-comments-${chapterNumber}-${paragraphIndex}`);
+      if (stored) {
+        setCommentList(JSON.parse(stored));
+      } else {
+        setCommentList([]);
+      }
+    } catch {
+      setCommentList([]);
+    }
+  }, [chapterNumber, paragraphIndex]);
 
   if (!isOpen || paragraphIndex === null) return null;
 
@@ -106,8 +71,33 @@ export function ParagraphDiscussionDrawer({
       likes: 0,
     };
 
-    setCommentList((prev) => [...prev, newComment]);
+    const updated = [...commentList, newComment];
+    setCommentList(updated);
     setInputVal("");
+
+    try {
+      localStorage.setItem(
+        `taleora-para-comments-${chapterNumber}-${paragraphIndex}`,
+        JSON.stringify(updated)
+      );
+    } catch {
+      // Ignore write errors
+    }
+  };
+
+  const handleLike = (commentId: string) => {
+    const updated = commentList.map((c) =>
+      c.id === commentId ? { ...c, likes: c.likes + 1 } : c
+    );
+    setCommentList(updated);
+    try {
+      localStorage.setItem(
+        `taleora-para-comments-${chapterNumber}-${paragraphIndex}`,
+        JSON.stringify(updated)
+      );
+    } catch {
+      // Ignore write errors
+    }
   };
 
   return (
@@ -158,7 +148,7 @@ export function ParagraphDiscussionDrawer({
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground gap-2">
               <Sparkles className="w-6 h-6 text-amber-500/50" />
               <p className="text-xs">No comments on this paragraph yet.</p>
-              <p className="text-[10px] opacity-70">Be the first to leave a thought or theory!</p>
+              <p className="text-[10px] opacity-70">Share your thoughts on this passage.</p>
             </div>
           ) : (
             commentList.map((comm) => (
@@ -181,11 +171,6 @@ export function ParagraphDiscussionDrawer({
                         <Pin className="w-2.5 h-2.5" /> Author
                       </span>
                     )}
-                    {comm.authorRole === "patron" && (
-                      <span className="px-1.5 py-0.2 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-500 text-[9px] font-bold uppercase">
-                        Patron
-                      </span>
-                    )}
                   </div>
                   <span className="text-[10px] text-muted-foreground">{comm.timestamp}</span>
                 </div>
@@ -195,13 +180,7 @@ export function ParagraphDiscussionDrawer({
                 <div className="mt-2.5 flex items-center gap-3 text-[10px] text-muted-foreground">
                   <button
                     type="button"
-                    onClick={() => {
-                      setCommentList((prev) =>
-                        prev.map((c) =>
-                          c.id === comm.id ? { ...c, likes: c.likes + 1 } : c
-                        )
-                      );
-                    }}
+                    onClick={() => handleLike(comm.id)}
                     className="flex items-center gap-1 hover:text-rose-500 transition-colors cursor-pointer"
                   >
                     <Flame className="w-3 h-3" />

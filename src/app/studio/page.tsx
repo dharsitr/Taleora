@@ -166,17 +166,27 @@ export default function AuthorStudioPage() {
       {/* Background Ambient Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
 
-      {/* Studio Header (Creative Sanctum) */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border/60 pb-8">
-        <div className="flex flex-col gap-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 w-fit text-amber-500 text-[11px] font-semibold uppercase tracking-widest">
-            <Feather className="w-3.5 h-3.5 text-amber-500" />
-            <span>Creative Sanctum • Author Studio</span>
+      {/* Studio Header (Nocturnal Obsidian Creative Sanctum) */}
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="absolute -top-20 right-0 w-96 h-96 bg-[#E28743]/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col gap-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 w-fit text-amber-300 text-[11px] font-semibold uppercase tracking-widest">
+            <Feather className="w-3.5 h-3.5 text-amber-400" />
+            <span>Creative Sanctum · Author Studio</span>
           </div>
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            {author ? `Welcome back, ${author.name}` : "Creation Workspace"}
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-zinc-50">
+            {author ? (
+              <>
+                Welcome back,{" "}
+                <span className="bg-gradient-to-r from-amber-200 via-[#E28743] to-amber-200 bg-clip-text text-transparent">
+                  {author.name}
+                </span>
+              </>
+            ) : (
+              "Creation Workspace"
+            )}
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
             Craft your novellas, manage serialized chapters, and schedule releases for your readers.
           </p>
         </div>

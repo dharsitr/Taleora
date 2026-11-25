@@ -65,9 +65,9 @@ export default async function Home() {
         <UserContinueReading />
       </React.Suspense>
 
-      <BentoShowcase books={books} userStats={userStats} />
-
       <CuratedShelves books={books} />
+
+      <BentoShowcase books={books} userStats={userStats} />
     </div>
   );
 }

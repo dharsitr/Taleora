@@ -80,12 +80,7 @@ export function ContinueReadingCard({ progress }: Props) {
 
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-medium">
                 <Sparkles className="w-3 h-3 text-amber-400" />
-                <span>Live Serial</span>
-              </span>
-
-              <span className="text-[11px] text-muted-foreground/75 hidden sm:inline-flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>42 readers online</span>
+                <span>Active Story</span>
               </span>
             </div>
 
@@ -106,8 +101,6 @@ export function ContinueReadingCard({ progress }: Props) {
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-amber-400" />
                   <span>Chapter {chapterNum} of {book.total_chapters}</span>
-                  <span className="text-muted-foreground/50">·</span>
-                  <span className="text-amber-400 font-semibold">~18m left</span>
                 </span>
                 <span className="text-amber-500 font-mono font-bold">{pct}%</span>
               </div>

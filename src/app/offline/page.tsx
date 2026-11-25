@@ -56,26 +56,30 @@ export default function OfflineFallbackPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:py-16 flex flex-col gap-10">
       {/* Header Banner */}
-      <div className="text-center flex flex-col items-center gap-4">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-lg shadow-amber-500/5 animate-pulse">
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-8 sm:p-10 shadow-2xl text-center flex flex-col items-center gap-4">
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 bg-[#E28743]/15 rounded-full blur-[110px] pointer-events-none" />
+        <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
           <WifiOff className="w-8 h-8 sm:w-10 sm:h-10" />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="relative z-10 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-          <Badge variant="warm" className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 font-semibold text-xs">
-            Offline Mode
+          <Badge variant="warm" className="bg-amber-500/15 text-amber-300 border-amber-500/30 font-semibold text-xs">
+            Offline Vault
           </Badge>
         </div>
 
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-          Quiet In The Library
+        <h1 className="relative z-10 font-serif text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
+          Quiet In The{" "}
+          <span className="bg-gradient-to-r from-amber-200 via-[#E28743] to-amber-200 bg-clip-text text-transparent">
+            Library
+          </span>
         </h1>
-        <p className="text-muted-foreground text-sm sm:text-base max-w-lg leading-relaxed">
+        <p className="relative z-10 text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed">
           No internet connection was detected. You can continue reading any stories previously saved to your local device.
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 pt-2">
           <Button
             variant="outline"
             size="sm"

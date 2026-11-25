@@ -126,21 +126,24 @@ export function ReadingDashboard() {
 
   return (
     <div className="flex flex-col gap-8 pb-16 max-w-6xl mx-auto w-full">
-      {/* Top Header & Page Title with Ambient Warm Lighting */}
-      <div className="relative overflow-hidden rounded-3xl border border-amber-500/25 bg-card/80 p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-amber-600/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Top Header & Page Title with Nocturnal Obsidian Lighting */}
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-8 shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#E28743]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[11px] font-mono tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-              <span>The Reader&apos;s Chronicle & Habit Sanctum</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] font-mono tracking-widest uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>The Reader&apos;s Chronicle &amp; Habit Sanctum</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Reading Goals & Analytics
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
+              Reading Goals &amp;{" "}
+              <span className="bg-gradient-to-r from-amber-200 via-[#E28743] to-amber-200 bg-clip-text text-transparent">
+                Analytics
+              </span>
             </h1>
-            <p className="text-sm text-muted-foreground max-w-2xl">
+            <p className="text-sm text-zinc-400 max-w-2xl">
               Track daily literary rituals, cultivate continuous streaks, and archive your achievements within Taleora&apos;s private reading vault.
             </p>
           </div>

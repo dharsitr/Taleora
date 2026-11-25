@@ -4,7 +4,7 @@ import { BookOpen, Feather } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full border-t border-border/80 bg-background/50 text-foreground py-10 px-4 sm:px-6 lg:px-8 transition-colors mt-auto pb-24 md:pb-10">
+    <footer className="w-full border-t border-border/80 dark:border-white/10 bg-background/80 dark:bg-[#0A0B0F] text-foreground py-12 px-4 sm:px-6 lg:px-8 transition-colors mt-auto pb-24 md:pb-12">
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex flex-col gap-2">

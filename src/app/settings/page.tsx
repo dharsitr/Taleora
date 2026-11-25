@@ -98,19 +98,22 @@ export default function SettingsPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-80 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
 
       {/* Top Header Card */}
-      <div className="relative overflow-hidden rounded-3xl border border-amber-500/25 bg-card/85 p-6 sm:p-8 shadow-[0_12px_45px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-8 shadow-2xl">
+        <div className="absolute top-0 right-0 w-72 h-72 bg-[#E28743]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span className="font-mono text-[11px] tracking-widest">Sanctum Preferences</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Display & Reader Settings
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
+              Display &amp; Reader{" "}
+              <span className="bg-gradient-to-r from-amber-200 via-[#E28743] to-amber-200 bg-clip-text text-transparent">
+                Settings
+              </span>
             </h1>
-            <p className="text-sm text-muted-foreground max-w-xl">
+            <p className="text-sm text-zinc-400 max-w-xl">
               Curate your reading atmosphere, typography scaling, distraction-free focus, and vault security.
             </p>
           </div>

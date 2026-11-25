@@ -183,32 +183,36 @@ export default function BookmarksPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-6xl mx-auto pb-16">
-      {/* Page Header */}
-      <div className="flex flex-col gap-2 border-b border-border/70 pb-5">
-        <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider">
-          <BookmarkIcon className="w-4 h-4" />
-          <span>Curated Personal Archive</span>
+      {/* Nocturnal Obsidian Page Header */}
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-8 shadow-2xl flex flex-col gap-5">
+        <div className="absolute -top-16 right-0 w-80 h-80 bg-[#E28743]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold uppercase tracking-wider w-fit">
+          <BookmarkIcon className="w-3.5 h-3.5 text-amber-400" />
+          <span className="font-mono text-[11px] tracking-widest">Curated Personal Archive</span>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Bookmarks & Annotations
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
+              Bookmarks &amp;{" "}
+              <span className="bg-gradient-to-r from-amber-200 via-[#E28743] to-amber-200 bg-clip-text text-transparent">
+                Annotations
+              </span>
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-zinc-400 mt-1">
               Review saved reading spots, literary highlights, and private reflections across your library.
             </p>
           </div>
 
           <Link href="/discover" prefetch={true}>
-            <Button variant="outline" size="sm" className="gap-2 cursor-pointer">
-              <Compass className="w-4 h-4 text-primary" />
+            <Button variant="outline" size="sm" className="gap-2 cursor-pointer border-white/15 bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08] hover:border-amber-400/40">
+              <Compass className="w-4 h-4 text-amber-400" />
               <span>Explore Stories</span>
             </Button>
           </Link>
         </div>
 
         {/* Tab Selection & Search Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 border-t border-white/10">
           <div className="flex border-b border-border sm:border-none gap-2">
             <button
               type="button"

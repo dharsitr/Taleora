@@ -114,9 +114,9 @@ export default async function BookDetailsPage({ params }: BookPageProps) {
       </nav>
 
       {/* Cinematic Book Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-card/85 p-6 sm:p-10 lg:p-12 shadow-[0_12px_45px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+      <section className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-[#0A0B0F] text-zinc-100 p-6 sm:p-10 lg:p-12 shadow-2xl">
         {/* Warm Ambient Backdrop Halos */}
-        <div className="absolute top-1/4 left-1/4 w-[450px] h-[450px] bg-amber-500/15 rounded-full blur-[120px] pointer-events-none -z-10" />
+        <div className="absolute top-1/4 left-1/4 w-[450px] h-[450px] bg-[#E28743]/15 rounded-full blur-[130px] pointer-events-none -z-10" />
         <div className="absolute -top-16 -right-16 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
