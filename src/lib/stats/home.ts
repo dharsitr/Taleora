@@ -18,10 +18,17 @@ export async function getUserHomeStats(): Promise<UserHomeStats | null> {
 
     if (!user) return null;
 
-    const todayStr = new Date().toISOString().split("T")[0];
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 14);
-    const fourteenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0];
+    const formatLocalYmd = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const todayStr = formatLocalYmd(new Date());
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const fourteenDaysAgoStr = formatLocalYmd(fourteenDaysAgo);
 
     const [profileRes, goalsRes, sessionsRes, progressRes] = await Promise.all([
       supabase
@@ -70,7 +77,7 @@ export async function getUserHomeStats(): Promise<UserHomeStats | null> {
     const activeDatesSet = new Set<string>();
     sessions.forEach((s) => activeDatesSet.add(s.session_date));
     if (profile?.last_read_date) activeDatesSet.add(profile.last_read_date);
-    if (currentRead?.last_read_at) activeDatesSet.add(currentRead.last_read_at.split("T")[0]);
+    if (currentRead?.last_read_at) activeDatesSet.add(formatLocalYmd(new Date(currentRead.last_read_at)));
 
     // Calculate real dynamic streak
     const allActivityDates = Array.from(activeDatesSet);

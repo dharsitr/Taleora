@@ -658,10 +658,11 @@ export function StoryReader({ data, isOfflineInitial = false }: StoryReaderProps
   const sessionPagesTurnedRef = React.useRef<number>(0);
   const lastPageRef = React.useRef<number>(currentPage);
 
-  // Track page turns during active reading
+  // Track page turns during active reading (ignore large chapter-jump sentinel deltas like 9999)
   React.useEffect(() => {
     if (currentPage !== lastPageRef.current) {
-      sessionPagesTurnedRef.current += Math.max(1, Math.abs(currentPage - lastPageRef.current));
+      const delta = Math.abs(currentPage - lastPageRef.current);
+      sessionPagesTurnedRef.current += delta <= 2 ? delta : 1;
       lastPageRef.current = currentPage;
     }
   }, [currentPage]);

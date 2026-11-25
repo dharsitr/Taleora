@@ -24,6 +24,7 @@ import {
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth/use-auth";
+import { getUserLiveStreak } from "@/lib/stats/queries";
 import { NotificationBell } from "@/components/social";
 import { PwaInstallButton } from "@/components/pwa/PwaInstallButton";
 import { ProfileModal } from "@/components/profile/ProfileModal";
@@ -41,6 +42,23 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const { user, profile, signOut, isLoading } = useAuth();
+  const [liveStreak, setLiveStreak] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    if (!user) {
+      setLiveStreak(0);
+      return;
+    }
+    let mounted = true;
+    getUserLiveStreak(user.id)
+      .then((s) => {
+        if (mounted) setLiveStreak(s);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [user, pathname]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +94,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  const streakDays = profile?.streak_days ?? 0;
+  const streakDays = liveStreak;
 
   const navItems = [
     { label: "Discover", href: "/discover" },

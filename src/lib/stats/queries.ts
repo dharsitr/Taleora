@@ -218,6 +218,33 @@ export function calculateStreaks(dates: string[]): { currentStreak: number; long
 }
 
 /**
+ * Lightweight live streak fetcher for Navbar and headers.
+ */
+export async function getUserLiveStreak(userId: string): Promise<number> {
+  const supabase = createClient();
+  const [sessionsRes, progressRes] = await Promise.all([
+    supabase.from("reading_sessions").select("session_date").eq("user_id", userId),
+    supabase.from("reading_progress").select("last_read_at").eq("user_id", userId),
+  ]);
+
+  const formatLocalYmd = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const dates = [
+    ...(sessionsRes.data || []).map((s) => s.session_date),
+    ...(progressRes.data || []).map((p) =>
+      p.last_read_at ? formatLocalYmd(new Date(p.last_read_at)) : ""
+    ),
+  ].filter(Boolean);
+
+  return calculateStreaks(dates).currentStreak;
+}
+
+/**
  * Fetch and aggregate comprehensive user reading statistics and gamification progress.
  */
 export async function getUserReadingStats(userId: string): Promise<UserStatsPayload> {
@@ -282,8 +309,16 @@ export async function getUserReadingStats(userId: string): Promise<UserStatsPayl
   const sessions: ReadingSessionRow[] = sessionRows || [];
   const progressList = progressRows || [];
 
+  // Local calendar YYYY-MM-DD formatter
+  const formatLocalYmd = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Date constants
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = formatLocalYmd(new Date());
 
   // A. Total Books Completed
   const completedBooks = progressList.filter((p) => p.is_completed || Number(p.progress_percentage) >= 100);
@@ -294,34 +329,16 @@ export async function getUserReadingStats(userId: string): Promise<UserStatsPayl
   progressList.forEach((p) => {
     const totalCh = p.book?.total_chapters || 1;
     const progressFrac = Math.min(100, Number(p.progress_percentage || 0)) / 100;
-    totalChaptersRead += Math.max(1, Math.round(totalCh * progressFrac));
+    totalChaptersRead += Math.max(0, Math.round(totalCh * progressFrac));
   });
 
-  // C. Total Pages Read
-  let totalPagesRead = 0;
-  if (sessions.length > 0) {
-    totalPagesRead = sessions.reduce((acc, s) => acc + (s.pages_read || 0), 0);
-  }
-  if (totalPagesRead === 0 && progressList.length > 0) {
-    // Fallback: estimate ~4 pages per chapter
-    totalPagesRead = totalChaptersRead * 4;
-  }
+  // C. Total Pages Read (strictly from real recorded reading sessions)
+  const totalPagesRead = sessions.reduce((acc, s) => acc + (s.pages_read || 0), 0);
 
-  // D. Total Reading Time (minutes)
-  let totalMinutesRead = 0;
-  if (sessions.length > 0) {
-    totalMinutesRead = Math.round(
-      sessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0) / 60
-    );
-  }
-  if (totalMinutesRead === 0 && progressList.length > 0) {
-    // Fallback based on chapters and estimated_read_minutes
-    totalMinutesRead = progressList.reduce((acc, p) => {
-      const chMinutes = p.current_chapter?.estimated_read_minutes || 4;
-      const chCount = Math.max(1, Math.round((p.book?.total_chapters || 1) * (Number(p.progress_percentage || 0) / 100)));
-      return acc + chCount * chMinutes;
-    }, 0);
-  }
+  // D. Total Reading Time in minutes (strictly from real recorded reading sessions)
+  const totalMinutesRead = Math.round(
+    sessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0) / 60
+  );
 
   // E. Today Minutes Read
   const todaySessions = sessions.filter((s) => s.session_date === todayStr);
@@ -332,7 +349,7 @@ export async function getUserReadingStats(userId: string): Promise<UserStatsPayl
   // F. Streaks
   const activityDates: string[] = [
     ...sessions.map((s) => s.session_date),
-    ...progressList.map((p) => p.last_read_at ? p.last_read_at.split("T")[0] : ""),
+    ...progressList.map((p) => p.last_read_at ? formatLocalYmd(new Date(p.last_read_at)) : ""),
   ].filter(Boolean);
 
   const { currentStreak, longestStreak } = calculateStreaks(activityDates);
@@ -344,7 +361,7 @@ export async function getUserReadingStats(userId: string): Promise<UserStatsPayl
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = formatLocalYmd(d);
     const dayName = dayNames[d.getDay()];
 
     const daySessions = sessions.filter((s) => s.session_date === dateStr);
@@ -447,7 +464,7 @@ export async function getUserReadingStats(userId: string): Promise<UserStatsPayl
   else if (maxSlot === eveningHits && eveningHits > 0) bestTimeOfDay = "Evening";
   else if (maxSlot === nightHits && nightHits > 0) bestTimeOfDay = "Night";
 
-  let mostActiveDay = "Sunday";
+  let mostActiveDay = "—";
   let maxDayCount = 0;
   Object.entries(dayOfWeekCount).forEach(([d, count]) => {
     if (count > maxDayCount) {
@@ -456,9 +473,9 @@ export async function getUserReadingStats(userId: string): Promise<UserStatsPayl
     }
   });
 
-  const avgSessionMinutes = totalSessionCount > 0 ? Math.round(totalMinutesRead / totalSessionCount) : 15;
-  const activeDaysCount = Math.max(1, new Set(activityDates).size);
-  const avgDailyMinutes = Math.round(totalMinutesRead / activeDaysCount);
+  const avgSessionMinutes = totalSessionCount > 0 ? Math.round(totalMinutesRead / totalSessionCount) : 0;
+  const activeDaysCount = new Set(activityDates).size;
+  const avgDailyMinutes = activeDaysCount > 0 ? Math.round(totalMinutesRead / activeDaysCount) : 0;
   const completionRate = progressList.length > 0 ? Math.round((totalBooksCompleted / progressList.length) * 100) : 0;
 
   const insights: ReadingInsight = {

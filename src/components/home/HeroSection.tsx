@@ -21,7 +21,7 @@ export function HeroSection({ featuredBook, userStats }: HeroSectionProps) {
   const bookSlug = featuredBook?.slug;
 
   const isLoggedIn = Boolean(userStats?.isLoggedIn || user);
-  const streakDays = userStats?.streakDays ?? profile?.streak_days ?? 0;
+  const streakDays = userStats?.streakDays ?? 0;
   const todayMinutes = userStats?.todayMinutes ?? 0;
   const dailyGoalMinutes = userStats?.dailyGoalMinutes ?? profile?.daily_reading_goal_minutes ?? 30;
   const currentRead = userStats?.currentRead;

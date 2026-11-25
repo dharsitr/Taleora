@@ -24,16 +24,6 @@ interface BentoShowcaseProps {
   userStats?: UserHomeStats | null;
 }
 
-const MOCK_STREAK_DAYS = [
-  { day: "Mon", active: true },
-  { day: "Tue", active: true },
-  { day: "Wed", active: true },
-  { day: "Thu", active: true },
-  { day: "Fri", active: true },
-  { day: "Sat", active: true },
-  { day: "Sun", active: false },
-];
-
 export function BentoShowcase({ books, userStats }: BentoShowcaseProps) {
   const { user, profile } = useAuth();
   const [clientStats, setClientStats] = React.useState<UserStatsPayload | null>(null);
@@ -48,36 +38,28 @@ export function BentoShowcase({ books, userStats }: BentoShowcaseProps) {
 
   const isLoggedIn = Boolean(userStats?.isLoggedIn || user);
 
-  // Streaks calculation:
-  // Before login: Mock preview (14 Days, Mon-Sat active)
-  // After login: Real user streak and active calendar week days
   const streakDays = isLoggedIn
-    ? (userStats?.streakDays ?? clientStats?.summary.currentStreakDays ?? profile?.streak_days ?? 0)
-    : 14;
+    ? (userStats?.streakDays ?? clientStats?.summary.currentStreakDays ?? 0)
+    : 0;
 
-  const streakDaysLabel = isLoggedIn
-    ? `${streakDays} ${streakDays === 1 ? "Day" : "Days"}`
-    : "14 Days";
+  const streakDaysLabel = `${streakDays} ${streakDays === 1 ? "Day" : "Days"}`;
 
   const streakSubtitle = isLoggedIn
     ? (streakDays > 0
         ? "Daily habit building without stressful gamification."
-        : "Read a chapter today to start your reading streak!")
-    : "Daily habit building without stressful gamification.";
+        : "Read today and tomorrow to kindle your first streak!")
+    : "Sign in and read daily to track your real reading streak.";
 
-  const activeDates = userStats?.activeDates ?? (
-    clientStats
-      ? clientStats.dailyActivity.filter((d) => d.minutes > 0).map((d) => d.date)
-      : (profile?.last_read_date ? [profile.last_read_date] : [])
-  );
+  const activeDates = isLoggedIn
+    ? (userStats?.activeDates ?? (
+        clientStats
+          ? clientStats.dailyActivity.filter((d) => d.minutes > 0).map((d) => d.date)
+          : []
+      ))
+    : [];
 
-  const displayWeekDays = isLoggedIn
-    ? getCurrentWeekDays(activeDates)
-    : MOCK_STREAK_DAYS.map((d) => ({ ...d, isToday: false, date: "" }));
+  const displayWeekDays = getCurrentWeekDays(activeDates);
 
-  // Daily goal calculation:
-  // Before login: Mock preview (100%, 30/30 mins, achieved)
-  // After login: Real today minutes vs daily goal minutes
   const dailyGoalMinutes = isLoggedIn
     ? (userStats?.dailyGoalMinutes ??
         (clientStats?.summary.dailyGoalMinutes && clientStats.summary.dailyGoalMinutes > 0
@@ -87,7 +69,7 @@ export function BentoShowcase({ books, userStats }: BentoShowcaseProps) {
 
   const todayMinutes = isLoggedIn
     ? (userStats?.todayMinutes ?? clientStats?.summary.todayMinutesRead ?? 0)
-    : 30;
+    : 0;
 
   const goalPercent = Math.min(
     100,
