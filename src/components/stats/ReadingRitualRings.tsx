@@ -42,15 +42,16 @@ export function ReadingRitualRings({
     ? Math.min(100, Math.round((todayMinutes / dailyGoalMinutes) * 100))
     : 0;
 
-  const streakPercent = streakGoalDays > 0
-    ? Math.min(100, Math.round((currentStreakDays / streakGoalDays) * 100))
-    : 0;
+  // Daily streak is continuous (not capped at 5 days):
+  // Ring is full (100%) when user is on an active streak or has read today, else 0%
+  const isStreakActiveToday = currentStreakDays > 0 || todayMinutes > 0;
+  const streakPercent = isStreakActiveToday ? 100 : 0;
 
   const booksPercent = annualBookGoal > 0
     ? Math.min(100, Math.round((completedBooks / annualBookGoal) * 100))
     : 0;
 
-  const allCompleted = minutesPercent >= 100 && streakPercent >= 100;
+  const allCompleted = minutesPercent >= 100 && isStreakActiveToday;
 
   // Radii for the 3 concentric rings
   // Outer (Minutes), Middle (Streak), Inner (Stories)
@@ -90,7 +91,7 @@ export function ReadingRitualRings({
               Reading Ritual Rings
             </h3>
             <p className="text-[11px] text-muted-foreground">
-              Daily minutes, weekly streak & novella goals
+              Daily minutes, continuous streak &amp; novella goals
             </p>
           </div>
         </div>
@@ -251,7 +252,7 @@ export function ReadingRitualRings({
             </span>
           </div>
 
-          {/* Ring 2: Streak Consistency */}
+          {/* Ring 2: Continuous Daily Streak */}
           <div className="flex items-center justify-between p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25">
             <div className="flex items-center gap-2.5">
               <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
@@ -261,12 +262,16 @@ export function ReadingRitualRings({
                   Daily Streak
                 </span>
                 <span className="text-[10px] text-muted-foreground">
-                  {currentStreakDays} of {streakGoalDays} days
+                  {currentStreakDays > 0
+                    ? "Active daily until a day is missed"
+                    : todayMinutes > 0
+                    ? "Started today · Read tomorrow for 1"
+                    : "Read a chapter today to begin"}
                 </span>
               </div>
             </div>
             <span className="text-xs font-bold font-mono text-emerald-500">
-              {streakPercent}%
+              {currentStreakDays} {currentStreakDays === 1 ? "day" : "days"}
             </span>
           </div>
 
